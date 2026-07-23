@@ -75,7 +75,7 @@ export default function Home() {
           <div>
             <h1 className="text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
               {t(
-                "Монголын Эрүүл Мэндийн Даатгалын Эмч Нарын Холбоо",
+                "Монголын Даатгалын Эмч Нарын Холбоо",
                 "Mongolian Health Insurance Doctors Association"
               )}
             </h1>

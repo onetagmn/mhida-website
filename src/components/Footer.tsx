@@ -19,7 +19,7 @@ export default function Footer() {
           </div>
           <p className="mt-3 text-sm text-slate-600">
             {t(
-              "Монголын Эрүүл Мэндийн Даатгалын Эмч Нарын Холбоо",
+              "Монголын Даатгалын Эмч Нарын Холбоо",
               "Mongolian Health Insurance Doctors Association"
             )}
           </p>

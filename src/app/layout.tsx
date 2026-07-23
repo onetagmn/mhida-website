@@ -15,7 +15,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "MHIDA — Монголын Эрүүл Мэндийн Даатгалын Эмч Нарын Холбоо",
+  title: "MHIDA — Монголын Даатгалын Эмч Нарын Холбоо",
   description:
     "Mongolian Health Insurance Doctors Association (MHIDA) — member registration, trainings, and resources.",
   icons: {
