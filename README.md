@@ -1,6 +1,6 @@
 # MHIDA Website
 
-Website for **MHIDA** (Mongolian Health Insurance Doctors Association / Монголын Эрүүл Мэндийн Даатгалын Эмч Нарын Холбоо), built to replace the current Jotform-based setup at **mhida.org**.
+Website for **MHIDA** (Mongolian Health Insurance Doctors Association / Монголын Даатгалын Эмч Нарын Холбоо, МДЭНХ), built to replace the current Jotform-based setup at **mhida.org**.
 
 Built with [Next.js](https://nextjs.org) (App Router) + [Tailwind CSS](https://tailwindcss.com), bilingual Mongolian/English throughout.
 
