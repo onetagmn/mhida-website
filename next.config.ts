@@ -1,7 +1,18 @@
 import type { NextConfig } from "next";
 
+// Static export so the site can be hosted on GitHub Pages.
+// basePath is injected at build time by the deploy workflow when the
+// site is served from a subpath (onetagmn.github.io/mhida-website);
+// it's empty for local dev and for the eventual custom domain.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "export",
+  basePath,
+  images: {
+    // GitHub Pages has no image-optimization server.
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

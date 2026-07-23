@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/language-context";
+import { asset } from "@/lib/asset";
 import DraftNotice from "@/components/DraftNotice";
 
 const quickActions = [
@@ -76,7 +77,7 @@ export default function Home() {
           </div>
           <div className="flex justify-center md:justify-end">
             <Image
-              src="/logo.png"
+              src={asset("/logo.png")}
               alt="MHIDA logo"
               width={320}
               height={330}
@@ -114,7 +115,7 @@ export default function Home() {
           {trainingNews.map((item) => (
             <a
               key={item.href}
-              href={item.href}
+              href={asset(item.href)}
               target="_blank"
               rel="noopener noreferrer"
               className="group rounded-xl border border-slate-200 p-6 shadow-sm transition-shadow hover:shadow-md"

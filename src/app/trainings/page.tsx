@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
+import { asset } from "@/lib/asset";
 import PageHeader from "@/components/PageHeader";
 
 const systemTrainings = [
@@ -76,7 +77,7 @@ export default function TrainingsPage() {
           {partnerTrainings.map((p) => (
             <a
               key={p.href}
-              href={p.href}
+              href={asset(p.href)}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-xl border border-slate-200 p-6 shadow-sm transition-shadow hover:shadow-md"

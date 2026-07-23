@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/language-context";
+import { asset } from "@/lib/asset";
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -13,7 +14,7 @@ export default function Footer() {
       <div className="container-page grid gap-8 py-10 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="MHIDA" width={32} height={32} className="h-8 w-auto" />
+            <Image src={asset("/logo.png")} alt="MHIDA" width={32} height={32} className="h-8 w-auto" />
             <span className="font-bold text-[var(--brand-blue)]">MHIDA</span>
           </div>
           <p className="mt-3 text-sm text-slate-600">

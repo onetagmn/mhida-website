@@ -20,10 +20,10 @@ export const metadata: Metadata = {
     "Mongolian Health Insurance Doctors Association (MHIDA) — member registration, trainings, and resources.",
   icons: {
     icon: [
-      { url: "/logo-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo-48.png", sizes: "48x48", type: "image/png" },
+      { url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo-32.png`, sizes: "32x32", type: "image/png" },
+      { url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo-48.png`, sizes: "48x48", type: "image/png" },
     ],
-    apple: "/logo-180.png",
+    apple: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo-180.png`,
   },
 };
 

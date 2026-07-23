@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/language-context";
+import { asset } from "@/lib/asset";
 
 const navLinks = [
   { href: "/", mn: "Нүүр", en: "Home" },
@@ -31,7 +32,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image src="/logo.png" alt="MHIDA" width={40} height={40} className="h-10 w-auto" priority />
+          <Image src={asset("/logo.png")} alt="MHIDA" width={40} height={40} className="h-10 w-auto" priority />
           <span className="text-sm font-bold leading-tight text-[var(--brand-blue)] sm:text-base">
             MHIDA
           </span>
