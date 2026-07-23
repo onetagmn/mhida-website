@@ -20,10 +20,10 @@ const quickActions: {
   { kind: "internal", href: "/register", mn: "Бүртгүүлэх", en: "Register", live: true },
   {
     kind: "external",
-    href: "#",
+    href: "https://m.me/j/AbYXmAkq96iY984q/",
     mn: "Чат",
     en: "Chat",
-    live: false,
+    live: true,
     noteMn: "Facebook Messenger",
     noteEn: "Facebook Messenger",
   },
