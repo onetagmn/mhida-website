@@ -53,11 +53,18 @@ export default function Footer() {
 
         <div>
           <h3 className="text-sm font-semibold text-slate-900">{t("Холбоо барих", "Contact")}</h3>
-          <p className="mt-3 text-sm text-slate-500">
-            <span className="draft-badge">{t("Түр агуулга", "Draft")}</span>
+          <p className="mt-3 space-x-3 text-sm text-slate-600">
+            <a href="tel:+97699978179" className="hover:text-[var(--brand-red)]">
+              ✆ 9997 8179
+            </a>
+            <a href="tel:+97699854040" className="hover:text-[var(--brand-red)]">
+              ✆ 9985 4040
+            </a>
           </p>
-          <p className="mt-2 text-sm text-slate-600">
-            {t("И-мэйл, утасны дугаар энд орно.", "Email and phone number to be added here.")}
+          <p className="mt-2 text-sm">
+            <Link href="/contact" className="text-[var(--brand-blue)] hover:text-[var(--brand-red)]">
+              {t("И-мэйл илгээх →", "Send Email →")}
+            </Link>
           </p>
         </div>
       </div>
