@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
-import { NewsPost, formatDate } from "@/lib/news";
+import { NewsPost, formatDate, pdfName } from "@/lib/news";
 
 export default function AdminNewsPage() {
   const { t, lang } = useLanguage();
@@ -19,6 +20,8 @@ export default function AdminNewsPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [pdfs, setPdfs] = useState<string[]>([]);
+  const [category, setCategory] = useState<"news" | "partner">("news");
   const [uploading, setUploading] = useState(false);
   const [savingPost, setSavingPost] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -31,7 +34,7 @@ export default function AdminNewsPage() {
     if (!me?.is_admin) { setDenied(true); setLoading(false); return; }
     const { data } = await supabase
       .from("news")
-      .select("id, title, body, image_urls, published, created_at")
+      .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
       .order("created_at", { ascending: false });
     setPosts(data ?? []);
     setLoading(false);
@@ -42,13 +45,34 @@ export default function AdminNewsPage() {
   useEffect(() => { void load(); }, [load]);
 
   function resetEditor() {
-    setEditingId(null); setTitle(""); setBody(""); setImages([]); setMsg(null);
+    setEditingId(null); setTitle(""); setBody(""); setImages([]); setPdfs([]);
+    setCategory("news"); setMsg(null);
   }
 
   function startEdit(p: NewsPost) {
     setEditingId(p.id); setTitle(p.title); setBody(p.body); setImages(p.image_urls);
+    setPdfs(p.pdf_urls ?? []); setCategory(p.category ?? "news");
     setMsg(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function uploadPdfs(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setUploading(true); setMsg(null);
+    for (const file of files) {
+      const safe = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `pdf/${Date.now()}-${safe}`;
+      const { error } = await supabase.storage.from("news-photos").upload(path, file, {
+        cacheControl: "31536000",
+        contentType: "application/pdf",
+      });
+      if (error) { setMsg(t("PDF илгээхэд алдаа: ", "PDF upload error: ") + error.message); continue; }
+      const { data } = supabase.storage.from("news-photos").getPublicUrl(path);
+      setPdfs((prev) => [...prev, data.publicUrl]);
+    }
+    setUploading(false);
+    e.target.value = "";
   }
 
   async function uploadPhotos(e: React.ChangeEvent<HTMLInputElement>) {
@@ -76,7 +100,14 @@ export default function AdminNewsPage() {
     e.preventDefault();
     if (!title.trim()) { setMsg(t("Гарчиг оруулна уу.", "Please enter a title.")); return; }
     setSavingPost(true); setMsg(null);
-    const payload = { title: title.trim(), body: body.trim(), image_urls: images, updated_at: new Date().toISOString() };
+    const payload = {
+      title: title.trim(),
+      body: body.trim(),
+      image_urls: images,
+      pdf_urls: pdfs,
+      category,
+      updated_at: new Date().toISOString(),
+    };
     const { error } = editingId
       ? await supabase.from("news").update(payload).eq("id", editingId)
       : await supabase.from("news").insert(payload);
@@ -121,12 +152,32 @@ export default function AdminNewsPage() {
         )}
       />
 
+      <div className="container-page pt-6">
+        <Link
+          href="/admin"
+          className="inline-block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50"
+        >
+          {t("← Гишүүдийн удирдлага", "← Member Management")}
+        </Link>
+      </div>
+
       <div className="container-page grid gap-10 py-10 lg:grid-cols-2">
         {/* Editor */}
         <form onSubmit={savePost} className="space-y-4 rounded-2xl border border-slate-200 p-6">
           <h2 className="text-lg font-bold text-slate-900">
             {editingId ? t("Мэдээ засах", "Edit Post") : t("Шинэ мэдээ", "New Post")}
           </h2>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Төрөл", "Type")}</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as "news" | "partner")}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-blue)]"
+            >
+              <option value="news">{t("Мэдээ (Мэдээ хуудас + нүүр)", "News (news feed + homepage)")}</option>
+              <option value="partner">{t("Түншлэл ба мэдээ (TIHTC г.м.)", "Partnership & News (TIHTC etc.)")}</option>
+            </select>
+          </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Гарчиг", "Title")} *</label>
             <input
@@ -166,6 +217,28 @@ export default function AdminNewsPage() {
               </div>
             )}
           </div>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">
+              {t("PDF хавсралт", "PDF attachments")}
+            </label>
+            <input type="file" accept="application/pdf" multiple onChange={uploadPdfs} className="block w-full text-sm" />
+            {pdfs.length > 0 && (
+              <ul className="mt-2 space-y-1.5">
+                {pdfs.map((url, i) => (
+                  <li key={i} className="flex items-center justify-between gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-xs">
+                    <span className="truncate">{pdfName(url)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setPdfs((ps) => ps.filter((_, j) => j !== i))}
+                      className="shrink-0 font-bold text-red-500"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div className="flex gap-3">
             <button
               type="submit"
@@ -198,6 +271,11 @@ export default function AdminNewsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-slate-900">{p.title}</p>
                   <p className="text-xs text-slate-400">
+                    {p.category === "partner" && (
+                      <span className="mr-1.5 rounded bg-blue-100 px-1.5 py-0.5 font-bold text-[var(--brand-blue)]">
+                        {t("Түншлэл", "Partner")}
+                      </span>
+                    )}
                     {formatDate(p.created_at, lang)} · {p.published ? t("Нийтэд харагдана", "Public") : t("Нуугдсан", "Hidden")}
                   </p>
                 </div>

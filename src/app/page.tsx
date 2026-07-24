@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/language-context";
 import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
-import { NewsPost, formatDate, firstYoutubeThumb } from "@/lib/news";
+import { NewsPost, formatDate, firstYoutubeThumb, pdfHref, pdfName } from "@/lib/news";
+import { MAP_KEY_TO_MN, countColor } from "@/lib/map-provinces";
+
+const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
 
 // Chat: waiting on the Facebook Messenger group link — flips to live once provided.
 // Upgrade Membership: goes live with QPay payments (Phase 6).
@@ -47,41 +52,56 @@ const quickActions: {
   },
 ];
 
-const trainingNews = [
-  {
-    title: "Healthcare Management & National Health Insurance Project Training",
-    titleMn: "Эрүүл мэндийн менежмент ба Үндэсний эрүүл мэндийн даатгалын төслийн сургалт",
-    dates: "October 12–23, 2026",
-    location: "Taipei, Taiwan",
-    href: "/docs/TIHTC_Healthcare_Management_2026.pdf",
-    deadline: "September 12, 2026",
-  },
-  {
-    title: "Smart Healthcare & Sustainable Hospital Project Training",
-    titleMn: "Ухаалаг эрүүл мэндийн үйлчилгээ ба тогтвортой эмнэлгийн төслийн сургалт",
-    dates: "November 30 – December 5, 2026",
-    location: "Taipei, Taiwan",
-    href: "/docs/TIHTC_Smart_Healthcare_2026.pdf",
-    deadline: "October 30, 2026",
-  },
-];
+type FacilityStat = { province: string | null; workplace: string; member_count: number };
 
 export default function Home() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const [latest, setLatest] = useState<NewsPost[]>([]);
+  const [partner, setPartner] = useState<NewsPost[]>([]);
+  const [mapStats, setMapStats] = useState<FacilityStat[]>([]);
+  const [mapSize, setMapSize] = useState(640);
 
-  // Fetch the 3 most recent published posts for the news strip.
-   
+  // Fetch latest news, partner posts, and map stats.
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("news")
-        .select("id, title, body, image_urls, published, created_at")
-        .order("created_at", { ascending: false })
-        .limit(3);
-      setLatest(data ?? []);
+      const [newsRes, partnerRes, statsRes] = await Promise.all([
+        supabase
+          .from("news")
+          .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
+          .eq("category", "news")
+          .order("created_at", { ascending: false })
+          .limit(3),
+        supabase
+          .from("news")
+          .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
+          .eq("category", "partner")
+          .order("created_at", { ascending: false })
+          .limit(4),
+        supabase.rpc("facility_stats"),
+      ]);
+      setLatest(newsRes.data ?? []);
+      setPartner(partnerRes.data ?? []);
+      setMapStats((statsRes.data as FacilityStat[]) ?? []);
     })();
+    const update = () => setMapSize(Math.min(680, window.innerWidth - 48));
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
+
+  const mapColors = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of mapStats) {
+      if (!s.province) continue;
+      counts.set(s.province, (counts.get(s.province) ?? 0) + Number(s.member_count));
+    }
+    const colors: Record<string, string> = {};
+    for (const [mapKey, mn] of Object.entries(MAP_KEY_TO_MN)) {
+      colors[mapKey] = countColor(counts.get(mn) ?? 0);
+    }
+    return colors;
+  }, [mapStats]);
 
   return (
     <div>
@@ -181,27 +201,25 @@ export default function Home() {
         </p>
 
         <div className="grid gap-6 sm:grid-cols-2">
-          {trainingNews.map((item) => (
-            <a
-              key={item.href}
-              href={asset(item.href)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-xl border border-slate-200 p-6 shadow-sm transition-shadow hover:shadow-md"
+          {partner.map((item) => (
+            <div
+              key={item.id}
+              className="rounded-xl border border-slate-200 p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-blue)]">
-                {item.dates} · {item.location}
-              </p>
-              <h3 className="mt-2 font-bold text-slate-900 group-hover:text-[var(--brand-red)]">
-                {t(item.titleMn, item.title)}
-              </h3>
-              <p className="mt-2 text-sm text-slate-500">
-                {t("Өргөдлийн эцсийн хугацаа:", "Application deadline:")} {item.deadline}
-              </p>
-              <p className="mt-4 text-sm font-semibold text-[var(--brand-red)]">
-                {t("PDF татах →", "Download PDF →")}
-              </p>
-            </a>
+              <h3 className="font-bold text-slate-900">{item.title}</h3>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{item.body}</p>
+              {(item.pdf_urls ?? []).map((url, i) => (
+                <a
+                  key={i}
+                  href={pdfHref(url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block text-sm font-semibold text-[var(--brand-red)] hover:opacity-80"
+                >
+                  📄 {pdfName(url)} — {t("PDF татах →", "Download PDF →")}
+                </a>
+              ))}
+            </div>
           ))}
         </div>
       </section>
@@ -260,23 +278,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Member map */}
+      {/* Member map — live preview, click anywhere to open the full page */}
       <section className="container-page py-14">
-        <h2 className="mb-2 text-2xl font-bold text-slate-900">
+        <h2 className="mb-6 text-2xl font-bold text-slate-900">
           {t("Гишүүдийн газрын зураг", "Member Map")}
         </h2>
-        <p className="mb-6 max-w-2xl text-sm text-slate-600">
-          {t(
-            "Аймаг, хотоор шүүж хайх боломжтой Монголын интерактив газрын зураг: гишүүд ажилладаг эмнэлэг, эрүүл мэндийн байгууллагуудын мэдээлэл. Шинэ гишүүн бүртгүүлэх бүрд автоматаар шинэчлэгдэнэ. Нэвтэрсэн гишүүд байгууллага бүрийн гишүүдийг харна.",
-            "An interactive map of Mongolia showing the medical facilities where our members work — searchable by province and facility, auto-updating with every registration. Logged-in members can see who works where."
-          )}
-        </p>
-        <Link
-          href="/map"
-          className="inline-block rounded-md bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        <div
+          onClick={() => router.push("/map")}
+          className="flex cursor-pointer justify-center rounded-2xl border border-slate-200 p-4 transition-shadow hover:shadow-md"
+          title={t("Дэлгэрэнгүй газрын зураг нээх", "Open the full map")}
         >
-          {t("Газрын зураг нээх →", "Open the map →")}
-        </Link>
+          <Mongolia
+            type="select-single"
+            size={mapSize}
+            mapColor="#EDF1F6"
+            strokeColor="#ffffff"
+            strokeWidth={1}
+            hoverColor="#d98d92"
+            selectColor="#c42730"
+            hints={false}
+            cityColors={mapColors}
+            onSelect={() => router.push("/map")}
+          />
+        </div>
+        <div className="mt-4 text-center">
+          <Link
+            href="/map"
+            className="inline-block rounded-md bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          >
+            {t("Газрын зураг нээх →", "Open the map →")}
+          </Link>
+        </div>
       </section>
     </div>
   );

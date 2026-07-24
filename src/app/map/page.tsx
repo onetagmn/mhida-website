@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { MAP_KEY_TO_MN, MN_TO_MAP_KEY, countColor } from "@/lib/map-provinces";
+import { PROVINCES } from "@/lib/provinces";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
 
@@ -14,10 +15,17 @@ type FacilityStat = { province: string | null; workplace: string; member_count: 
 type FacilityMember = {
   member_id: string; first_name: string; last_name: string;
   position: string | null; membership: string;
+  email: string | null; phone: string | null;
 };
 
+const MN_TO_EN: Record<string, string> = Object.fromEntries(
+  PROVINCES.map((p) => [p.mn, p.en])
+);
+
+type Tooltip = { x: number; y: number; mn: string; en: string; count: number };
+
 export default function MapPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [stats, setStats] = useState<FacilityStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -26,6 +34,10 @@ export default function MapPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, FacilityMember[]>>({});
   const [mapSize, setMapSize] = useState(760);
+  const [tip, setTip] = useState<Tooltip | null>(null);
+
+  const provinceLabel = (mn: string) =>
+    lang === "mn" ? mn : MN_TO_EN[mn] ?? mn;
 
   // Fetch stats + session once on mount.
    
@@ -103,6 +115,23 @@ export default function MapPage() {
   const totalFacilities = stats.length;
   const unknownList = byProvince.get("__unknown__") ?? [];
 
+  // Custom bilingual tooltip: the SVG paths carry ids like "<code>-<n>",
+  // so hover resolves the province and we render our own label.
+  function handleMapMove(e: React.MouseEvent) {
+    const path = (e.target as Element).closest?.("path");
+    if (!path?.id) { setTip(null); return; }
+    const key = Object.keys(MAP_KEY_TO_MN).find((k) => path.id.startsWith(k + "-"));
+    if (!key) { setTip(null); return; }
+    const mn = MAP_KEY_TO_MN[key];
+    setTip({
+      x: e.clientX,
+      y: e.clientY,
+      mn,
+      en: MN_TO_EN[mn] ?? key,
+      count: provinceCounts.get(mn) ?? 0,
+    });
+  }
+
   return (
     <div>
       <PageHeader
@@ -114,7 +143,11 @@ export default function MapPage() {
       <div className="container-page grid gap-8 py-10 lg:grid-cols-5">
         {/* Map */}
         <div className="lg:col-span-3">
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 p-4">
+          <div
+            className="overflow-x-auto rounded-2xl border border-slate-200 p-4"
+            onMouseMove={handleMapMove}
+            onMouseLeave={() => setTip(null)}
+          >
             {loading ? (
               <div className="flex h-72 items-center justify-center text-slate-400">
                 {t("Ачааллаж байна...", "Loading...")}
@@ -128,9 +161,7 @@ export default function MapPage() {
                 strokeWidth={1}
                 hoverColor="#d98d92"
                 selectColor="#c42730"
-                hints
-                hintTextColor="#ffffff"
-                hintBackgroundColor="#0f2f4f"
+                hints={false}
                 cityColors={cityColors}
                 onSelect={(state) => {
                   setSearch("");
@@ -140,6 +171,17 @@ export default function MapPage() {
               />
             )}
           </div>
+          {tip && (
+            <div
+              className="pointer-events-none fixed z-50 rounded-md bg-[#0f2f4f] px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
+              style={{ left: tip.x + 14, top: tip.y + 14 }}
+            >
+              {lang === "mn" ? tip.mn : tip.en}
+              <span className="ml-1.5 font-normal opacity-75">
+                · {tip.count} {t("гишүүн", "members")}
+              </span>
+            </div>
+          )}
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="font-semibold">{t("Гишүүдийн тоо:", "Members:")}</span>
             {[["0", "#EDF1F6"], ["1–2", "#BBD2E8"], ["3–5", "#7AA6CE"], ["6–10", "#3E7BB0"], ["10+", "#015196"]].map(([label, color]) => (
@@ -172,7 +214,7 @@ export default function MapPage() {
           {selectedProvince && !search.trim() && (
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">
-                {selectedProvince}
+                {provinceLabel(selectedProvince)}
                 <span className="ml-2 text-sm font-normal text-slate-500">
                   {provinceCounts.get(selectedProvince) ?? 0} {t("гишүүн", "members")}
                 </span>
@@ -196,7 +238,7 @@ export default function MapPage() {
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold text-slate-800">{f.workplace}</span>
                     {search.trim() && f.province && (
-                      <span className="text-xs text-slate-400">{f.province}</span>
+                      <span className="text-xs text-slate-400">{provinceLabel(f.province)}</span>
                     )}
                   </span>
                   <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-[var(--brand-blue)]">
@@ -216,19 +258,33 @@ export default function MapPage() {
                     ) : !members[f.workplace] ? (
                       <p className="text-xs text-slate-400">{t("Ачааллаж байна...", "Loading...")}</p>
                     ) : (
-                      <ul className="space-y-1.5">
+                      <ul className="space-y-2.5">
                         {members[f.workplace].map((m) => (
-                          <li key={m.member_id} className="flex items-center justify-between gap-2 text-sm">
-                            <span className="min-w-0 truncate">
-                              <span className="font-mono text-xs font-semibold text-[var(--brand-blue)]">{m.member_id}</span>{" "}
-                              {m.first_name} {m.last_name}
-                              {m.position && <span className="text-xs text-slate-400"> · {m.position}</span>}
-                            </span>
-                            {m.membership === "professional" && (
-                              <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-[var(--brand-blue)]">
-                                {t("Мэргэжлийн", "Pro")}
+                          <li key={m.member_id} className="text-sm">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="min-w-0 truncate">
+                                <span className="font-mono text-xs font-semibold text-[var(--brand-blue)]">{m.member_id}</span>{" "}
+                                {m.first_name} {m.last_name}
+                                {m.position && <span className="text-xs text-slate-400"> · {m.position}</span>}
                               </span>
-                            )}
+                              {m.membership === "professional" && (
+                                <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-[var(--brand-blue)]">
+                                  {t("Мэргэжлийн", "Pro")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-0.5 flex flex-wrap gap-x-4 text-xs text-slate-500">
+                              {m.phone && (
+                                <a href={`tel:+976${m.phone}`} className="hover:text-[var(--brand-red)]">
+                                  ✆ {m.phone}
+                                </a>
+                              )}
+                              {m.email && (
+                                <a href={`mailto:${m.email}`} className="truncate hover:text-[var(--brand-red)]">
+                                  ✉ {m.email}
+                                </a>
+                              )}
+                            </div>
                           </li>
                         ))}
                       </ul>

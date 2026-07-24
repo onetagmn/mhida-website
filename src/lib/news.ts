@@ -1,11 +1,26 @@
+import { asset } from "@/lib/asset";
+
 export type NewsPost = {
   id: string;
   title: string;
   body: string;
   image_urls: string[];
+  pdf_urls: string[];
+  category: "news" | "partner";
   published: boolean;
   created_at: string;
 };
+
+/** Resolve a stored PDF reference: full URLs pass through, site-relative
+ *  paths (e.g. "docs/file.pdf") get the deployment base path. */
+export function pdfHref(url: string): string {
+  return /^https?:\/\//.test(url) ? url : asset("/" + url.replace(/^\//, ""));
+}
+
+export function pdfName(url: string): string {
+  const raw = url.split("/").pop() ?? "PDF";
+  return decodeURIComponent(raw).replace(/[_-]+/g, " ").replace(/\.pdf$/i, "");
+}
 
 export function firstYoutubeThumb(body: string): string | null {
   const m =
