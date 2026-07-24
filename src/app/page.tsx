@@ -7,7 +7,6 @@ import { useLanguage } from "@/lib/language-context";
 import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
 import { NewsPost, formatDate, firstYoutubeThumb } from "@/lib/news";
-import DraftNotice from "@/components/DraftNotice";
 
 // Chat: waiting on the Facebook Messenger group link — flips to live once provided.
 // Upgrade Membership: goes live with QPay payments (Phase 6).
@@ -261,26 +260,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Member map placeholder */}
+      {/* Member map */}
       <section className="container-page py-14">
         <h2 className="mb-2 text-2xl font-bold text-slate-900">
           {t("Гишүүдийн газрын зураг", "Member Map")}
         </h2>
         <p className="mb-6 max-w-2xl text-sm text-slate-600">
           {t(
-            "Аймаг, хотоор шүүж хайх боломжтой Монголын интерактив газрын зураг: гишүүд ажилладаг эмнэлэг, эрүүл мэндийн байгууллагуудын мэдээллийг харуулна. Шинэ гишүүн бүртгүүлэх бүрд автоматаар шинэчлэгдэнэ. Нэвтэрсэн гишүүд дэлгэрэнгүй мэдээлэл харах боломжтой болно.",
-            "An interactive map of Mongolia showing medical facilities where our members work — searchable and filterable by province and city, auto-updating with every new registration. Logged-in members will see additional details."
+            "Аймаг, хотоор шүүж хайх боломжтой Монголын интерактив газрын зураг: гишүүд ажилладаг эмнэлэг, эрүүл мэндийн байгууллагуудын мэдээлэл. Шинэ гишүүн бүртгүүлэх бүрд автоматаар шинэчлэгдэнэ. Нэвтэрсэн гишүүд байгууллага бүрийн гишүүдийг харна.",
+            "An interactive map of Mongolia showing the medical facilities where our members work — searchable by province and facility, auto-updating with every registration. Logged-in members can see who works where."
           )}
         </p>
-        <DraftNotice
-          note={t(
-            "Газрын зураг бодит бүртгэлийн өгөгдөл бэлэн болсны дараа холбогдоно.",
-            "The interactive map goes live once real registration data is available to plot."
-          )}
-        />
-        <div className="flex h-64 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 sm:h-80">
-          {t("Газрын зураг — тун удахгүй", "Map — coming soon")}
-        </div>
+        <Link
+          href="/map"
+          className="inline-block rounded-md bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          {t("Газрын зураг нээх →", "Open the map →")}
+        </Link>
       </section>
     </div>
   );
