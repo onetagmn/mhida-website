@@ -83,6 +83,12 @@ export default function Navbar() {
             {lang === "mn" ? "EN" : "МН"}
           </button>
           <Link
+            href="/login"
+            className="hidden rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50 sm:inline-block"
+          >
+            {t("Нэвтрэх", "Log in")}
+          </Link>
+          <Link
             href="/register"
             className="hidden rounded-md bg-[var(--brand-red)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:inline-block"
           >
@@ -142,6 +148,13 @@ export default function Navbar() {
             onClick={() => setMobileOpen(false)}
           >
             {t("Холбоо барих", "Contact")}
+          </Link>
+          <Link
+            href="/login"
+            className="mt-2 block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-center text-sm font-semibold text-[var(--brand-blue)]"
+            onClick={() => setMobileOpen(false)}
+          >
+            {t("Нэвтрэх", "Log in")}
           </Link>
           <Link
             href="/register"

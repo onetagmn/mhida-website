@@ -48,6 +48,7 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [memberId, setMemberId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [yearsSelect, setYearsSelect] = useState("");
 
   const set = (key: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -283,15 +284,42 @@ export default function RegisterPage() {
                   <label className={label} htmlFor="yearsWorked">
                     {t("Даатгалын эмчээр ажилласан жил", "Years as insurance doctor")} *
                   </label>
-                  <input
+                  <select
                     id="yearsWorked"
-                    type="number"
-                    min="0"
-                    max="60"
                     className={inputClass("yearsWorked")}
-                    value={form.yearsWorked}
-                    onChange={set("yearsWorked")}
-                  />
+                    value={yearsSelect}
+                    onChange={(e) => {
+                      setYearsSelect(e.target.value);
+                      if (e.target.value !== "more") {
+                        setForm((f) => ({ ...f, yearsWorked: e.target.value }));
+                        setErrors((prev) => ({ ...prev, yearsWorked: undefined }));
+                      } else {
+                        setForm((f) => ({ ...f, yearsWorked: "" }));
+                      }
+                    }}
+                  >
+                    <option value="">{t("Сонгох...", "Select...")}</option>
+                    {Array.from({ length: 10 }, (_, i) => String(i + 1)).map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                    <option value="more">{t("10-аас дээш", "More than 10")}</option>
+                  </select>
+                  {yearsSelect === "more" && (
+                    <input
+                      aria-label={t("Ажилласан жил (тоогоор)", "Years (number)")}
+                      inputMode="numeric"
+                      placeholder={t("Жилийн тоо", "Number of years")}
+                      className={`mt-2 ${inputClass("yearsWorked")}`}
+                      value={form.yearsWorked}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^\d]/g, "").slice(0, 2);
+                        setForm((f) => ({ ...f, yearsWorked: v }));
+                        setErrors((prev) => ({ ...prev, yearsWorked: undefined }));
+                      }}
+                    />
+                  )}
                   {err("yearsWorked")}
                 </div>
               </div>
