@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
-import { NewsPost, formatDate } from "@/lib/news";
+import { NewsPost, formatDate, firstYoutubeThumb } from "@/lib/news";
 import DraftNotice from "@/components/DraftNotice";
 
 // Chat: waiting on the Facebook Messenger group link — flips to live once provided.
@@ -121,15 +121,27 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid gap-6 sm:grid-cols-3">
-              {latest.map((p) => (
+              {latest.map((p) => {
+                const thumb = p.image_urls[0] ?? firstYoutubeThumb(p.body);
+                const isVideo = !p.image_urls[0] && !!thumb;
+                return (
                 <Link
                   key={p.id}
                   href="/news"
                   className="group overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
                 >
-                  {p.image_urls[0] && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.image_urls[0]} alt="" className="h-40 w-full object-cover" loading="lazy" />
+                  {thumb && (
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={thumb} alt="" className="h-40 w-full object-cover" loading="lazy" />
+                      {isVideo && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 pl-1 text-xl text-white">
+                            ▶
+                          </span>
+                        </span>
+                      )}
+                    </div>
                   )}
                   <div className="p-4">
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -139,7 +151,8 @@ export default function Home() {
                     <p className="mt-1 line-clamp-2 text-sm text-slate-600">{p.body}</p>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
