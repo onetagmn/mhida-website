@@ -5,6 +5,7 @@ import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { NewsPost, formatDate } from "@/lib/news";
+import NewsBody from "@/components/NewsBody";
 
 export default function NewsPage() {
   const { t, lang } = useLanguage();
@@ -63,8 +64,8 @@ export default function NewsPage() {
                   {formatDate(p.created_at, lang)}
                 </p>
                 <h2 className="text-xl font-bold text-slate-900">{p.title}</h2>
-                <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
-                  {p.body}
+                <div className="mt-3">
+                  <NewsBody body={p.body} />
                 </div>
               </div>
             </article>
