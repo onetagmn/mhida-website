@@ -50,6 +50,15 @@ const quickActions: {
     en: "Upgrade Membership",
     live: false,
   },
+  {
+    kind: "external",
+    href: "https://app.jotform.com/233173421900446?utm_source=copy-link&utm_medium=website&utm_campaign=portal-app&utm_term=233173421900446",
+    mn: "Гар утасны апп",
+    en: "Mobile App",
+    live: true,
+    noteMn: "Jotform апп нээх / татах",
+    noteEn: "Open / install Jotform app",
+  },
 ];
 
 type FacilityStat = { province: string | null; workplace: string; member_count: number };

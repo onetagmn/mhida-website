@@ -1,8 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import DraftNotice from "@/components/DraftNotice";
+import { supabase } from "@/lib/supabase";
+
+type Leader = {
+  id: string;
+  name: string;
+  title: string;
+  photo_url: string | null;
+  is_president: boolean;
+  sort_order: number;
+};
+
+type Stats = { members: number; facilities: number; provinces: number };
 
 const activities: { mn: string; en: string }[] = [
   {
@@ -68,6 +81,31 @@ const duties: { mn: string; en: string }[] = [
 
 export default function AboutPage() {
   const { t } = useLanguage();
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [leaders, setLeaders] = useState<Leader[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [statsRes, leadersRes] = await Promise.all([
+        supabase.rpc("facility_stats"),
+        supabase
+          .from("leadership")
+          .select("id, name, title, photo_url, is_president, sort_order")
+          .order("is_president", { ascending: false })
+          .order("sort_order"),
+      ]);
+      const rows = (statsRes.data as { province: string | null; workplace: string; member_count: number }[]) ?? [];
+      setStats({
+        members: rows.reduce((a, r) => a + Number(r.member_count), 0),
+        facilities: rows.length,
+        provinces: new Set(rows.map((r) => r.province).filter(Boolean)).size,
+      });
+      setLeaders(leadersRes.data ?? []);
+    })();
+  }, []);
+
+  const president = leaders.filter((l) => l.is_president);
+  const board = leaders.filter((l) => !l.is_president);
 
   return (
     <div>
@@ -148,15 +186,52 @@ export default function AboutPage() {
 
           {/* Leadership */}
           <section>
-            <h2 className="mb-3 text-xl font-bold text-slate-900">
+            <h2 className="mb-5 text-xl font-bold text-slate-900">
               {t("Удирдлага", "Leadership")}
             </h2>
-            <DraftNotice
-              note={t(
-                "Удирдах зөвлөлийн гишүүдийн нэр, зураг, албан тушаалыг энд нэмнэ.",
-                "Add board/leadership members' names, photos, and titles here."
-              )}
-            />
+            {leaders.length === 0 ? (
+              <DraftNotice
+                note={t(
+                  "Удирдлагын мэдээллийг админ самбараас нэмнэ.",
+                  "Leadership is added from the admin panel."
+                )}
+              />
+            ) : (
+              <div className="space-y-8">
+                {president.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-8">
+                    {president.map((l) => (
+                      <div key={l.id} className="text-center">
+                        {l.photo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={l.photo_url} alt={l.name} className="mx-auto h-36 w-36 rounded-full border-4 border-blue-100 object-cover" />
+                        ) : (
+                          <span className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-slate-100 text-4xl">👤</span>
+                        )}
+                        <p className="mt-3 text-lg font-bold text-slate-900">{l.name}</p>
+                        <p className="text-sm font-semibold text-[var(--brand-red)]">{l.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {board.length > 0 && (
+                  <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
+                    {board.map((l) => (
+                      <div key={l.id} className="text-center">
+                        {l.photo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={l.photo_url} alt={l.name} className="mx-auto h-24 w-24 rounded-full object-cover" />
+                        ) : (
+                          <span className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100 text-2xl">👤</span>
+                        )}
+                        <p className="mt-2 text-sm font-bold text-slate-900">{l.name}</p>
+                        <p className="text-xs text-slate-500">{l.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </section>
 
           {/* Partnership */}
@@ -178,15 +253,30 @@ export default function AboutPage() {
 
         <aside className="space-y-4">
           <div className="rounded-xl border border-slate-200 p-5">
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
               {t("Одоогийн байдал", "At a glance")}
             </h3>
-            <DraftNotice
-              note={t(
-                "Гишүүдийн тоо, аймгийн тоо зэрэг статистикийг бодит бүртгэлийн өгөгдөл бэлэн болсны дараа энд харуулна.",
-                "Member count, province coverage, and similar stats will display here once real registration data is available."
-              )}
-            />
+            {stats === null ? (
+              <p className="text-sm text-slate-400">{t("Ачааллаж байна...", "Loading...")}</p>
+            ) : (
+              <dl className="space-y-4">
+                <div>
+                  <dd className="text-3xl font-extrabold text-[var(--brand-blue)]">{stats.members}</dd>
+                  <dt className="text-sm text-slate-600">{t("Гишүүн", "Members")}</dt>
+                </div>
+                <div>
+                  <dd className="text-3xl font-extrabold text-[var(--brand-blue)]">{stats.facilities}</dd>
+                  <dt className="text-sm text-slate-600">{t("Эмнэлэг, байгууллага", "Facilities")}</dt>
+                </div>
+                <div>
+                  <dd className="text-3xl font-extrabold text-[var(--brand-blue)]">{stats.provinces}</dd>
+                  <dt className="text-sm text-slate-600">{t("Аймаг, хот", "Provinces")}</dt>
+                </div>
+              </dl>
+            )}
+            <p className="mt-4 text-xs text-slate-400">
+              {t("Бүртгэлийн сангаас автоматаар шинэчлэгдэнэ.", "Updates automatically from the live registry.")}
+            </p>
           </div>
         </aside>
       </div>

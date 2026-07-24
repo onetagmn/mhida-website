@@ -49,6 +49,8 @@ export default function RegisterPage() {
   const [memberId, setMemberId] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [yearsSelect, setYearsSelect] = useState("");
+  const [consented, setConsented] = useState(false);
+  const [wasProfessional, setWasProfessional] = useState(false);
 
   const set = (key: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -121,6 +123,7 @@ export default function RegisterPage() {
           .single();
         if (row?.member_id) setMemberId(row.member_id);
       }
+      setWasProfessional(form.membershipType === "professional");
       setSubmitted(true);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -178,6 +181,44 @@ export default function RegisterPage() {
               </p>
             )}
           </div>
+
+          {wasProfessional && (
+            <div className="mx-auto mt-6 max-w-lg rounded-2xl border border-blue-200 bg-blue-50 p-8">
+              <h3 className="text-lg font-bold text-slate-900">
+                {t("Мэргэжлийн гишүүнчлэлийн төлбөр", "Professional Membership Payment")}
+              </h3>
+              <p className="mt-2 text-sm text-slate-700">
+                {t(
+                  "Жилийн татвар: 240,000₮. Доорх дансанд шилжүүлэг хийхдээ гүйлгээний утга дээр гишүүний дугаараа заавал бичнэ үү.",
+                  "Annual fee: 240,000₮. When transferring to the account below, please include your member ID in the transaction description."
+                )}
+              </p>
+              <dl className="mt-4 space-y-1.5 rounded-xl bg-white p-4 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">{t("Банк", "Bank")}</dt>
+                  <dd className="font-semibold text-slate-800">[Банкны нэр]</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">{t("Дансны дугаар", "Account number")}</dt>
+                  <dd className="font-semibold text-slate-800">[Дансны дугаар]</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">{t("Хүлээн авагч", "Account name")}</dt>
+                  <dd className="font-semibold text-slate-800">[МДЭНХ]</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">{t("Гүйлгээний утга", "Description")}</dt>
+                  <dd className="font-bold text-[var(--brand-red)]">{memberId ?? "MD###"}</dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs text-slate-500">
+                {t(
+                  "Төлбөр баталгаажсаны дараа таны гишүүнчлэл Мэргэжлийн болж идэвхжинэ.",
+                  "Once payment is confirmed, your membership is activated as Professional."
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -432,6 +473,53 @@ export default function RegisterPage() {
               </div>
             </fieldset>
 
+            {/* Terms & consent */}
+            <fieldset>
+              <legend className="mb-3 text-lg font-bold text-slate-900">
+                {t("Нөхцөл, журам", "Terms & Conditions")}
+              </legend>
+              <div className="max-h-56 space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
+                <p className="font-semibold text-slate-800">
+                  «МОНГОЛЫН ДААТГАЛЫН ЭМЧ НАРЫН ХОЛБОО» ТББ (товчоор «МДЭНХ»)
+                </p>
+                <p>
+                  Би доорх нөхцөл, журмыг сайтар уншиж танилцсан бөгөөд «Монголын даатгалын
+                  эмч нарын холбоо» ТББ-ын гишүүнээр элсэх хүсэлтэй байна. Ингэснээр би
+                  холбооны дүрэм, журам, эрх үүргийг бүрэн хүлээн зөвшөөрч буйгаа баталж байна.
+                </p>
+                <p className="font-semibold text-slate-800">
+                  ХОЛБООНЫ ЗОРИЛГО, ҮЙЛ АЖИЛЛАГААНЫ ЧИГЛЭЛ
+                </p>
+                <p>
+                  МДЭНХ нь Монгол Улсад эрүүл мэндийн даатгалын салбарыг хөгжүүлэх, даатгалын
+                  эмч нарын мэргэжлийн чадавхыг дээшлүүлэх, нийгмийн эрүүл мэндийг сайжруулах,
+                  эрүүл мэндийн даатгалын талаарх мэдлэг ойлголтыг нэмэгдүүлэх зорилготой.
+                </p>
+                <p className="font-semibold text-slate-800">ГИШҮҮНИЙ ҮҮРЭГ:</p>
+                <p>
+                  ✅ Даатгалын эмч нарын чадавхыг хөгжүүлэхэд хувь нэмрээ оруулах<br />
+                  ✅ Судалгаа, сургалт, өвчнөөс урьдчилан сэргийлэх ажил зохион байгуулах<br />
+                  ✅ Жил бүр гишүүний татвар төлөх<br />
+                  ✅ Холбооны дүрэм, шийдвэрийг мөрдөж хэрэгжүүлэх<br />
+                  ✅ Холбоонд хандив, дэмжлэг үзүүлэх боломжтой бол сайн дурын үндсэн дээр оролцох
+                </p>
+              </div>
+              <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors border-slate-200 has-[:checked]:border-[var(--brand-blue)] has-[:checked]:bg-blue-50">
+                <input
+                  type="checkbox"
+                  checked={consented}
+                  onChange={(e) => setConsented(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span className="text-sm font-semibold text-slate-800">
+                  {t(
+                    "Би дээрх нөхцөл, шаардлагыг бүрэн ойлгож, хүлээн зөвшөөрч байна.",
+                    "I have fully read, understood, and accept the terms above."
+                  )}
+                </span>
+              </label>
+            </fieldset>
+
             {serverError && (
               <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {serverError}
@@ -440,8 +528,9 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={submitting}
-              className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto sm:px-10"
+              disabled={submitting || !consented}
+              className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto sm:px-10"
+              title={!consented ? t("Эхлээд нөхцөлийг зөвшөөрнө үү", "Accept the terms first") : undefined}
             >
               {submitting ? t("Илгээж байна...", "Submitting...") : t("Бүртгүүлэх", "Register")}
             </button>

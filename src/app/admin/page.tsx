@@ -167,12 +167,24 @@ export default function AdminPage() {
       />
 
       <div className="container-page py-10">
-        <div className="mb-6">
+        <div className="mb-6 flex flex-wrap gap-2">
           <Link
             href="/admin/news"
             className="inline-block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50"
           >
-            {t("Мэдээ нийтлэх самбар →", "News Publishing →")}
+            {t("Мэдээ нийтлэх →", "News →")}
+          </Link>
+          <Link
+            href="/admin/content"
+            className="inline-block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50"
+          >
+            {t("Хуудасны агуулга (AXIS, e-Health, курс, хууль) →", "Page Content →")}
+          </Link>
+          <Link
+            href="/admin/leadership"
+            className="inline-block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50"
+          >
+            {t("Удирдлага →", "Leadership →")}
           </Link>
         </div>
         <div className="mb-4 flex flex-wrap items-center gap-3">

@@ -2,7 +2,6 @@
 
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
-import DraftNotice from "@/components/DraftNotice";
 
 // Assembled at click time so the addresses never sit in the visible
 // page text (basic protection against email-harvesting bots).
@@ -25,8 +24,8 @@ export default function ContactPage() {
     <div>
       <PageHeader eyebrow={t("Холбоо барих", "Contact")} title={t("Бидэнтэй холбогдох", "Get in Touch")} />
 
-      <div className="container-page grid gap-10 py-12 md:grid-cols-2">
-        <div className="space-y-6">
+      <div className="container-page py-12">
+        <div className="mx-auto max-w-md space-y-8">
           <div>
             <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
               {t("Утас", "Phone")}
@@ -58,30 +57,6 @@ export default function ContactPage() {
               )}
             </p>
           </div>
-
-          <div>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-              {t("Хаяг", "Address")}
-            </h2>
-            <DraftNotice
-              note={t(
-                "Байгууллагын хаягийг энд оруулна.",
-                "Add the association's street address here."
-              )}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-3 text-lg font-bold text-slate-900">
-            {t("Санал хүсэлт", "Feedback")}
-          </h2>
-          <DraftNotice
-            note={t(
-              "Санал асуулга / feedback маягтыг бүртгэлийн системтэй хамт бүтээнэ.",
-              "The survey/feedback form will be built alongside the registration system."
-            )}
-          />
         </div>
       </div>
     </div>
