@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { asset } from "@/lib/asset";
+import { supabase } from "@/lib/supabase";
+import { NewsPost, formatDate } from "@/lib/news";
 import DraftNotice from "@/components/DraftNotice";
 
 // Chat: waiting on the Facebook Messenger group link — flips to live once provided.
@@ -65,7 +68,21 @@ const trainingNews = [
 ];
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const [latest, setLatest] = useState<NewsPost[]>([]);
+
+  // Fetch the 3 most recent published posts for the news strip.
+   
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("news")
+        .select("id, title, body, image_urls, published, created_at")
+        .order("created_at", { ascending: false })
+        .limit(3);
+      setLatest(data ?? []);
+    })();
+  }, []);
 
   return (
     <div>
@@ -92,6 +109,41 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Latest news (from the live database) */}
+      {latest.length > 0 && (
+        <section className="border-b border-slate-200 bg-white">
+          <div className="container-page py-14">
+            <div className="mb-6 flex items-end justify-between">
+              <h2 className="text-2xl font-bold text-slate-900">{t("Сүүлийн мэдээ", "Latest News")}</h2>
+              <Link href="/news" className="text-sm font-semibold text-[var(--brand-red)] hover:opacity-80">
+                {t("Бүх мэдээ →", "All news →")}
+              </Link>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-3">
+              {latest.map((p) => (
+                <Link
+                  key={p.id}
+                  href="/news"
+                  className="group overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {p.image_urls[0] && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.image_urls[0]} alt="" className="h-40 w-full object-cover" loading="lazy" />
+                  )}
+                  <div className="p-4">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      {formatDate(p.created_at, lang)}
+                    </p>
+                    <h3 className="font-bold text-slate-900 group-hover:text-[var(--brand-red)]">{p.title}</h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-slate-600">{p.body}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Partnership / News */}
       <section className="container-page py-14">

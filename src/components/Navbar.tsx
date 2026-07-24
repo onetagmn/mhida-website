@@ -9,6 +9,7 @@ import { asset } from "@/lib/asset";
 
 const navLinks = [
   { href: "/", mn: "Нүүр", en: "Home" },
+  { href: "/news", mn: "Мэдээ", en: "News" },
   { href: "/about", mn: "Танилцуулга", en: "About" },
 ];
 

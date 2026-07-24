@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
@@ -166,6 +167,14 @@ export default function AdminPage() {
       />
 
       <div className="container-page py-10">
+        <div className="mb-6">
+          <Link
+            href="/admin/news"
+            className="inline-block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50"
+          >
+            {t("Мэдээ нийтлэх самбар →", "News Publishing →")}
+          </Link>
+        </div>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <input
             placeholder={t("Хайх: нэр, дугаар, эмнэлэг, утас...", "Search: name, ID, hospital, phone...")}
