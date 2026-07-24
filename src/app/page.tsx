@@ -206,21 +206,31 @@ export default function Home() {
           {partner.map((item) => (
             <div
               key={item.id}
-              className="rounded-xl border border-slate-200 p-6 shadow-sm transition-shadow hover:shadow-md"
+              className="overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
             >
-              <h3 className="font-bold text-slate-900">{item.title}</h3>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{item.body}</p>
-              {(item.pdf_urls ?? []).map((url, i) => (
-                <a
-                  key={i}
-                  href={pdfHref(url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-block text-sm font-semibold text-[var(--brand-red)] hover:opacity-80"
-                >
-                  📄 {pdfName(url)} — {t("PDF татах →", "Download PDF →")}
-                </a>
-              ))}
+              {(item.image_urls ?? []).length > 0 && (
+                <div className={`grid gap-0.5 ${item.image_urls.length > 1 ? "grid-cols-2" : ""}`}>
+                  {item.image_urls.map((url, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={url} alt="" className="h-40 w-full object-cover" loading="lazy" />
+                  ))}
+                </div>
+              )}
+              <div className="p-6">
+                <h3 className="font-bold text-slate-900">{item.title}</h3>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{item.body}</p>
+                {(item.pdf_urls ?? []).map((url, i) => (
+                  <a
+                    key={i}
+                    href={pdfHref(url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-sm font-semibold text-[var(--brand-red)] hover:opacity-80"
+                  >
+                    📄 {pdfName(url)} — {t("PDF татах →", "Download PDF →")}
+                  </a>
+                ))}
+              </div>
             </div>
           ))}
         </div>

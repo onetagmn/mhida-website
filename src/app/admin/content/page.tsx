@@ -16,7 +16,6 @@ const SECTIONS: { value: Section; mn: string; en: string }[] = [
   { value: "ehealth", mn: "e-Health сургалт", en: "e-Health training" },
   { value: "english", mn: "Англи хэлний курс", en: "English course" },
   { value: "legal", mn: "Хууль эрх зүй", en: "Legal acts" },
-  { value: "partnership", mn: "Түншлэл (Танилцуулга хуудас)", en: "Partnership (About page)" },
 ];
 
 export default function AdminContentPage() {
