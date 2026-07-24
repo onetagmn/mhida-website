@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
-import DraftNotice from "@/components/DraftNotice";
 import { PROVINCES } from "@/lib/provinces";
+import { supabase } from "@/lib/supabase";
 
 type FormState = {
   lastName: string;
@@ -45,6 +45,9 @@ export default function RegisterPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [memberId, setMemberId] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const set = (key: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -80,9 +83,61 @@ export default function RegisterPage() {
     return Object.keys(e).length === 0;
   }
 
-  function onSubmit(ev: React.FormEvent) {
+  async function onSubmit(ev: React.FormEvent) {
     ev.preventDefault();
-    if (validate()) setSubmitted(true);
+    if (!validate()) return;
+    setSubmitting(true);
+    setServerError(null);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+        options: {
+          data: {
+            last_name: form.lastName.trim(),
+            first_name: form.firstName.trim(),
+            birth_date: form.birthDate,
+            gender: form.gender,
+            province: form.province,
+            workplace: form.workplace.trim(),
+            position: form.position.trim(),
+            years_worked: String(form.yearsWorked).trim(),
+            facebook: form.facebookId.trim(),
+            phone: form.phone.replace(/[\s-]/g, ""),
+            membership: form.membershipType,
+          },
+        },
+      });
+      if (error) throw error;
+
+      // Fetch the assigned member ID (available when a session exists,
+      // i.e. when email confirmation is disabled in Supabase).
+      if (data.session && data.user) {
+        const { data: row } = await supabase
+          .from("members")
+          .select("member_id")
+          .eq("id", data.user.id)
+          .single();
+        if (row?.member_id) setMemberId(row.member_id);
+      }
+      setSubmitted(true);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/already registered/i.test(msg)) {
+        setServerError(
+          t(
+            "Энэ и-мэйл хаяг аль хэдийн бүртгэлтэй байна. Нэвтрэх эсвэл өөр и-мэйл ашиглана уу.",
+            "This email is already registered. Please log in or use a different email."
+          )
+        );
+      } else {
+        setServerError(
+          t("Алдаа гарлаа: ", "Something went wrong: ") + msg
+        );
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const inputClass = (key: keyof FormState) =>
@@ -99,22 +154,28 @@ export default function RegisterPage() {
       <div>
         <PageHeader eyebrow={t("Бүртгэл", "Registration")} title={t("Гишүүнээр элсэх", "Become a Member")} />
         <div className="container-page py-16">
-          <div className="mx-auto max-w-lg rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+          <div className="mx-auto max-w-lg rounded-2xl border border-green-200 bg-green-50 p-8 text-center">
             <h2 className="text-xl font-bold text-slate-900">
-              {t("Маягт зөв бөглөгдлөө!", "Form filled out correctly!")}
+              {t("Бүртгэл амжилттай!", "Registration successful!")}
             </h2>
-            <p className="mt-3 text-sm text-slate-700">
-              {t(
-                "Энэ бол урьдчилсан хувилбар — бүртгэлийн сан холбогдоогүй тул таны мэдээлэл хараахан хадгалагдаагүй. Систем удахгүй идэвхжинэ.",
-                "This is a preview — the registration database isn't connected yet, so your information has NOT been saved. The system goes live soon."
-              )}
-            </p>
-            <button
-              onClick={() => setSubmitted(false)}
-              className="mt-6 rounded-md border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]"
-            >
-              {t("Буцах", "Back to form")}
-            </button>
+            {memberId ? (
+              <p className="mt-4 text-sm text-slate-700">
+                {t("Таны гишүүний дугаар:", "Your member ID:")}{" "}
+                <span className="text-lg font-extrabold text-[var(--brand-blue)]">{memberId}</span>
+                <br />
+                {t(
+                  "Энэ дугаараа хадгалаарай — нэвтрэхэд ашиглагдана.",
+                  "Save this ID — you'll use it to log in."
+                )}
+              </p>
+            ) : (
+              <p className="mt-4 text-sm text-slate-700">
+                {t(
+                  "Таны бүртгэл хүлээн авагдлаа. Гишүүний дугаарыг и-мэйлээр илгээх болно.",
+                  "Your registration has been received. Your member ID will be sent by email."
+                )}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -134,14 +195,7 @@ export default function RegisterPage() {
 
       <div className="container-page py-12">
         <div className="mx-auto max-w-2xl">
-          <DraftNotice
-            note={t(
-              "Урьдчилсан хувилбар: маягт бүрэн ажиллана, гэхдээ бүртгэлийн сан холбогдох хүртэл мэдээлэл хадгалагдахгүй.",
-              "Preview: the form works fully, but data is not saved until the registration database is connected."
-            )}
-          />
-
-          <form onSubmit={onSubmit} noValidate className="mt-6 space-y-8">
+          <form onSubmit={onSubmit} noValidate className="mt-2 space-y-8">
             {/* Personal info */}
             <fieldset className="space-y-4">
               <legend className="mb-2 text-lg font-bold text-slate-900">
@@ -350,11 +404,18 @@ export default function RegisterPage() {
               </div>
             </fieldset>
 
+            {serverError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {serverError}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:px-10"
+              disabled={submitting}
+              className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto sm:px-10"
             >
-              {t("Бүртгүүлэх", "Register")}
+              {submitting ? t("Илгээж байна...", "Submitting...") : t("Бүртгүүлэх", "Register")}
             </button>
           </form>
         </div>
