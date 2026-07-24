@@ -20,6 +20,7 @@ type Row = {
   birth_date: string | null;
   gender: string | null;
   position: string | null;
+  upgrade_requested: boolean;
 };
 
 type TierFilter = "all" | "regular" | "professional";
@@ -43,7 +44,7 @@ export default function AdminPage() {
     if (!me?.is_admin) { setDenied(true); setLoading(false); return; }
     const { data } = await supabase
       .from("members")
-      .select("id, member_id, first_name, last_name, membership, workplace, province, phone, email, birth_date, gender, position")
+      .select("id, member_id, first_name, last_name, membership, workplace, province, phone, email, birth_date, gender, position, upgrade_requested")
       .order("member_id");
     setRows(data ?? []);
     setLoading(false);
@@ -56,10 +57,13 @@ export default function AdminPage() {
   async function toggleMembership(row: Row) {
     const next = row.membership === "professional" ? "regular" : "professional";
     setSaving(row.id);
+    // Confirming a tier change also clears any pending upgrade request.
     const { error } = await supabase
-      .from("members").update({ membership: next }).eq("id", row.id);
+      .from("members")
+      .update({ membership: next, upgrade_requested: false })
+      .eq("id", row.id);
     if (!error) {
-      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, membership: next } : r)));
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, membership: next, upgrade_requested: false } : r)));
     } else {
       alert(t("Алдаа: ", "Error: ") + error.message);
     }
@@ -266,6 +270,14 @@ export default function AdminPage() {
                     >
                       {r.membership === "professional" ? t("Мэргэжлийн", "Professional") : t("Энгийн", "Regular")}
                     </button>
+                    {r.upgrade_requested && (
+                      <span
+                        className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                        title={t("Төлбөр шилжүүлснээ мэдэгдсэн — банкаа шалгаад баталгаажуулна уу", "Reported payment sent — verify in your bank, then toggle")}
+                      >
+                        💰 {t("Төлсөн гэв", "Paid?")}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <button

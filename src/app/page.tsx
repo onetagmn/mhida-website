@@ -44,13 +44,6 @@ const quickActions: {
     noteEn: "Download template (PPTX)",
   },
   {
-    kind: "internal",
-    href: "/register",
-    mn: "Гишүүнчлэл ахиулах",
-    en: "Upgrade Membership",
-    live: false,
-  },
-  {
     kind: "external",
     href: "https://app.jotform.com/233173421900446?utm_source=copy-link&utm_medium=website&utm_campaign=portal-app&utm_term=233173421900446",
     mn: "Гар утасны апп",

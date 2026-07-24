@@ -6,8 +6,11 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
+import { PAYMENT } from "@/lib/payment";
+import PaymentInfo from "@/components/PaymentInfo";
 
 type Member = {
+  id: string;
   member_id: string;
   first_name: string;
   last_name: string;
@@ -18,6 +21,7 @@ type Member = {
   email: string | null;
   phone: string | null;
   is_admin?: boolean;
+  upgrade_requested?: boolean;
 };
 
 export default function DashboardPage() {
@@ -36,7 +40,7 @@ export default function DashboardPage() {
     }
     const { data } = await supabase
       .from("members")
-      .select("member_id, first_name, last_name, membership, workplace, position, province, email, phone, is_admin")
+      .select("id, member_id, first_name, last_name, membership, workplace, position, province, email, phone, is_admin, upgrade_requested")
       .eq("id", session.user.id)
       .single();
     setMember(data);
@@ -122,6 +126,42 @@ export default function DashboardPage() {
               </div>
             </dl>
           </div>
+
+          {member?.membership === "regular" && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6">
+              <h2 className="text-lg font-bold text-slate-900">
+                {t("Мэргэжлийн гишүүн болох", "Upgrade to Professional")}
+              </h2>
+              <p className="mb-4 mt-1 text-sm text-slate-700">
+                {t(
+                  `Жилийн татвар: ${PAYMENT.feeMnt}. Доорх дансанд шилжүүлээд "Төлбөр шилжүүлснээ мэдэгдэх" товчийг дарна уу.`,
+                  `Annual fee: ${PAYMENT.feeMnt}. Transfer to the account below, then press "Notify payment sent".`
+                )}
+              </p>
+              <PaymentInfo memberId={member.member_id} />
+              {member.upgrade_requested ? (
+                <p className="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
+                  {t(
+                    "Хүсэлт илгээгдсэн — админ төлбөрийг шалгаад гишүүнчлэлийг тань идэвхжүүлнэ.",
+                    "Request sent — an admin will verify your payment and activate your membership."
+                  )}
+                </p>
+              ) : (
+                <button
+                  onClick={async () => {
+                    const { error } = await supabase
+                      .from("members")
+                      .update({ upgrade_requested: true })
+                      .eq("id", member.id);
+                    if (!error) setMember({ ...member, upgrade_requested: true });
+                  }}
+                  className="mt-4 w-full rounded-md bg-[var(--brand-blue)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                >
+                  {t("Төлбөр шилжүүлснээ мэдэгдэх", "Notify payment sent")}
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
             {t(

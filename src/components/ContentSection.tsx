@@ -23,7 +23,7 @@ export default function ContentSection({
   emptyMn,
   emptyEn,
 }: {
-  section: "axis" | "ehealth" | "english" | "legal";
+  section: "axis" | "ehealth" | "english" | "legal" | "partnership";
   emptyMn: string;
   emptyEn: string;
 }) {

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/language-context";
 import { asset } from "@/lib/asset";
+import { supabase } from "@/lib/supabase";
 
 const navLinks = [
   { href: "/", mn: "Нүүр", en: "Home" },
@@ -23,6 +24,15 @@ export default function Navbar() {
   const pathname = usePathname();
   const [trainingsOpen, setTrainingsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setLoggedIn(!!session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setLoggedIn(!!session);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const linkClass = (active: boolean) =>
     `transition-colors hover:text-[var(--brand-red)] ${
@@ -83,18 +93,30 @@ export default function Navbar() {
           >
             {lang === "mn" ? "EN" : "МН"}
           </button>
-          <Link
-            href="/login"
-            className="hidden rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50 sm:inline-block"
-          >
-            {t("Нэвтрэх", "Log in")}
-          </Link>
-          <Link
-            href="/register"
-            className="hidden rounded-md bg-[var(--brand-red)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:inline-block"
-          >
-            {t("Бүртгүүлэх", "Register")}
-          </Link>
+          {loggedIn ? (
+            <Link
+              href="/dashboard"
+              className="hidden items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:inline-flex"
+            >
+              <span className="inline-block h-2 w-2 rounded-full bg-green-400" aria-hidden />
+              {t("Миний булан", "My Account")}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50 sm:inline-block"
+              >
+                {t("Нэвтрэх", "Log in")}
+              </Link>
+              <Link
+                href="/register"
+                className="hidden rounded-md bg-[var(--brand-red)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:inline-block"
+              >
+                {t("Бүртгүүлэх", "Register")}
+              </Link>
+            </>
+          )}
           <button
             className="flex flex-col gap-1.5 md:hidden"
             onClick={() => setMobileOpen((v) => !v)}
@@ -150,20 +172,32 @@ export default function Navbar() {
           >
             {t("Холбоо барих", "Contact")}
           </Link>
-          <Link
-            href="/login"
-            className="mt-2 block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-center text-sm font-semibold text-[var(--brand-blue)]"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("Нэвтрэх", "Log in")}
-          </Link>
-          <Link
-            href="/register"
-            className="mt-2 block rounded-md bg-[var(--brand-red)] px-4 py-2 text-center text-sm font-semibold text-white"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("Бүртгүүлэх", "Register")}
-          </Link>
+          {loggedIn ? (
+            <Link
+              href="/dashboard"
+              className="mt-2 block rounded-md bg-[var(--brand-blue)] px-4 py-2 text-center text-sm font-semibold text-white"
+              onClick={() => setMobileOpen(false)}
+            >
+              ● {t("Миний булан", "My Account")}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="mt-2 block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-center text-sm font-semibold text-[var(--brand-blue)]"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("Нэвтрэх", "Log in")}
+              </Link>
+              <Link
+                href="/register"
+                className="mt-2 block rounded-md bg-[var(--brand-red)] px-4 py-2 text-center text-sm font-semibold text-white"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("Бүртгүүлэх", "Register")}
+              </Link>
+            </>
+          )}
         </div>
       )}
     </header>

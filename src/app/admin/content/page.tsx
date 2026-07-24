@@ -9,13 +9,14 @@ import { supabase } from "@/lib/supabase";
 import { pdfName } from "@/lib/news";
 import type { ContentItem } from "@/components/ContentSection";
 
-type Section = "axis" | "ehealth" | "english" | "legal";
+type Section = "axis" | "ehealth" | "english" | "legal" | "partnership";
 
 const SECTIONS: { value: Section; mn: string; en: string }[] = [
   { value: "axis", mn: "AXIS Карт сургалт", en: "AXIS Card training" },
   { value: "ehealth", mn: "e-Health сургалт", en: "e-Health training" },
   { value: "english", mn: "Англи хэлний курс", en: "English course" },
   { value: "legal", mn: "Хууль эрх зүй", en: "Legal acts" },
+  { value: "partnership", mn: "Түншлэл (Танилцуулга хуудас)", en: "Partnership (About page)" },
 ];
 
 export default function AdminContentPage() {

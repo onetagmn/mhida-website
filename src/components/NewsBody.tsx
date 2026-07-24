@@ -1,14 +1,21 @@
 import React from "react";
 
-const URL_RE = /(https?:\/\/[^\s<>"']+)/g;
+// Matches full URLs AND protocol-less YouTube links (people often paste
+// "youtube.com/watch?v=..." or "www.youtube.com/..." without https://).
+const URL_RE = /(https?:\/\/[^\s<>"']+|(?:www\.)?(?:m\.)?youtube\.com\/[^\s<>"']+|youtu\.be\/[^\s<>"']+)/g;
 
 function youtubeId(url: string): string | null {
   const m =
     url.match(/youtube\.com\/watch\?(?:.*&)?v=([\w-]{6,})/) ||
     url.match(/youtu\.be\/([\w-]{6,})/) ||
     url.match(/youtube\.com\/shorts\/([\w-]{6,})/) ||
+    url.match(/youtube\.com\/live\/([\w-]{6,})/) ||
     url.match(/youtube\.com\/embed\/([\w-]{6,})/);
   return m ? m[1] : null;
+}
+
+function fullHref(url: string): string {
+  return /^https?:\/\//.test(url) ? url : `https://${url}`;
 }
 
 /**
@@ -27,7 +34,7 @@ export default function NewsBody({ body }: { body: string }) {
       return (
         <a
           key={i}
-          href={part}
+          href={fullHref(part)}
           target="_blank"
           rel="noopener noreferrer"
           className="break-all font-medium text-[var(--brand-blue)] underline decoration-blue-200 underline-offset-2 hover:text-[var(--brand-red)]"

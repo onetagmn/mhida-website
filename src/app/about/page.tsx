@@ -16,6 +16,7 @@ type Leader = {
 };
 
 type Stats = { members: number; facilities: number; provinces: number };
+type PartnerItem = { id: string; title: string; body: string };
 
 const activities: { mn: string; en: string }[] = [
   {
@@ -84,16 +85,25 @@ export default function AboutPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [leaders, setLeaders] = useState<Leader[]>([]);
 
+  const [partnerItems, setPartnerItems] = useState<PartnerItem[]>([]);
+
   useEffect(() => {
     (async () => {
-      const [statsRes, leadersRes] = await Promise.all([
+      const [statsRes, leadersRes, partnerRes] = await Promise.all([
         supabase.rpc("facility_stats"),
         supabase
           .from("leadership")
           .select("id, name, title, photo_url, is_president, sort_order")
           .order("is_president", { ascending: false })
           .order("sort_order"),
+        supabase
+          .from("content_items")
+          .select("id, title, body")
+          .eq("section", "partnership")
+          .eq("published", true)
+          .order("sort_order"),
       ]);
+      setPartnerItems(partnerRes.data ?? []);
       const rows = (statsRes.data as { province: string | null; workplace: string; member_count: number }[]) ?? [];
       setStats({
         members: rows.reduce((a, r) => a + Number(r.member_count), 0),
@@ -234,20 +244,33 @@ export default function AboutPage() {
             )}
           </section>
 
-          {/* Partnership */}
+          {/* Partnership — editable from the admin Content panel */}
           <section>
-            <h2 className="mb-3 text-xl font-bold text-slate-900">
-              {t(
-                "Түншлэл: Тайванийн Олон Улсын Эрүүл Мэндийн Сургалтын Төв (TIHTC)",
-                "Partnership: Taiwan International Healthcare Training Center (TIHTC)"
-              )}
-            </h2>
-            <p className="leading-relaxed text-slate-700">
-              {t(
-                "TIHTC нь 2002 онд Тайваний Эрүүл мэнд, халамжийн яамнаас байгуулагдсан бөгөөд Тайбэйн эмнэлгээр удирдуулдаг. Сүүлийн 24 жилд 84 орны 2,300 гаруй эрүүл мэндийн мэргэжилтнийг сургасан. МДЭНХ нь TIHTC-тэй хамтран гишүүн эмч нартаа зориулсан мэргэжил дээшлүүлэх сургалтуудыг зохион байгуулж байна.",
-                "TIHTC was established in 2002 by Taiwan's Ministry of Health and Welfare and is administered by Taipei Hospital. Over the past 24 years it has trained more than 2,300 healthcare professionals from 84 countries. MHIDA partners with TIHTC to offer continuing professional development trainings to member doctors — see the Trainings page for current programs."
-              )}
-            </p>
+            {partnerItems.length > 0 ? (
+              <div className="space-y-8">
+                {partnerItems.map((item) => (
+                  <div key={item.id}>
+                    <h2 className="mb-3 text-xl font-bold text-slate-900">{item.title}</h2>
+                    <p className="whitespace-pre-wrap leading-relaxed text-slate-700">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <h2 className="mb-3 text-xl font-bold text-slate-900">
+                  {t(
+                    "Түншлэл: Тайванийн Олон Улсын Эрүүл Мэндийн Сургалтын Төв (TIHTC)",
+                    "Partnership: Taiwan International Healthcare Training Center (TIHTC)"
+                  )}
+                </h2>
+                <p className="leading-relaxed text-slate-700">
+                  {t(
+                    "TIHTC нь 2002 онд Тайваний Эрүүл мэнд, халамжийн яамнаас байгуулагдсан бөгөөд Тайбэйн эмнэлгээр удирдуулдаг. Сүүлийн 24 жилд 84 орны 2,300 гаруй эрүүл мэндийн мэргэжилтнийг сургасан. МДЭНХ нь TIHTC-тэй хамтран гишүүн эмч нартаа зориулсан мэргэжил дээшлүүлэх сургалтуудыг зохион байгуулж байна.",
+                    "TIHTC was established in 2002 by Taiwan's Ministry of Health and Welfare and is administered by Taipei Hospital. Over the past 24 years it has trained more than 2,300 healthcare professionals from 84 countries. MHIDA partners with TIHTC to offer continuing professional development trainings to member doctors — see the Trainings page for current programs."
+                  )}
+                </p>
+              </>
+            )}
           </section>
         </div>
 

@@ -5,6 +5,8 @@ import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { PROVINCES } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
+import { PAYMENT } from "@/lib/payment";
+import PaymentInfo from "@/components/PaymentInfo";
 
 type FormState = {
   lastName: string;
@@ -187,30 +189,13 @@ export default function RegisterPage() {
               <h3 className="text-lg font-bold text-slate-900">
                 {t("Мэргэжлийн гишүүнчлэлийн төлбөр", "Professional Membership Payment")}
               </h3>
-              <p className="mt-2 text-sm text-slate-700">
+              <p className="mb-4 mt-2 text-sm text-slate-700">
                 {t(
-                  "Жилийн татвар: 240,000₮. Доорх дансанд шилжүүлэг хийхдээ гүйлгээний утга дээр гишүүний дугаараа заавал бичнэ үү.",
-                  "Annual fee: 240,000₮. When transferring to the account below, please include your member ID in the transaction description."
+                  `Жилийн татвар: ${PAYMENT.feeMnt}. Доорх дансанд шилжүүлнэ үү.`,
+                  `Annual fee: ${PAYMENT.feeMnt}. Please transfer to the account below.`
                 )}
               </p>
-              <dl className="mt-4 space-y-1.5 rounded-xl bg-white p-4 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{t("Банк", "Bank")}</dt>
-                  <dd className="font-semibold text-slate-800">[Банкны нэр]</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{t("Дансны дугаар", "Account number")}</dt>
-                  <dd className="font-semibold text-slate-800">[Дансны дугаар]</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{t("Хүлээн авагч", "Account name")}</dt>
-                  <dd className="font-semibold text-slate-800">[МДЭНХ]</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500">{t("Гүйлгээний утга", "Description")}</dt>
-                  <dd className="font-bold text-[var(--brand-red)]">{memberId ?? "MD###"}</dd>
-                </div>
-              </dl>
+              <PaymentInfo memberId={memberId} />
               <p className="mt-3 text-xs text-slate-500">
                 {t(
                   "Төлбөр баталгаажсаны дараа таны гишүүнчлэл Мэргэжлийн болж идэвхжинэ.",
@@ -473,7 +458,8 @@ export default function RegisterPage() {
               </div>
             </fieldset>
 
-            {/* Terms & consent */}
+            {/* Terms & consent — required for the professional (paid) tier */}
+            {form.membershipType === "professional" && (
             <fieldset>
               <legend className="mb-3 text-lg font-bold text-slate-900">
                 {t("Нөхцөл, журам", "Terms & Conditions")}
@@ -519,6 +505,7 @@ export default function RegisterPage() {
                 </span>
               </label>
             </fieldset>
+            )}
 
             {serverError && (
               <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -528,9 +515,13 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={submitting || !consented}
+              disabled={submitting || (form.membershipType === "professional" && !consented)}
               className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto sm:px-10"
-              title={!consented ? t("Эхлээд нөхцөлийг зөвшөөрнө үү", "Accept the terms first") : undefined}
+              title={
+                form.membershipType === "professional" && !consented
+                  ? t("Эхлээд нөхцөлийг зөвшөөрнө үү", "Accept the terms first")
+                  : undefined
+              }
             >
               {submitting ? t("Илгээж байна...", "Submitting...") : t("Бүртгүүлэх", "Register")}
             </button>
