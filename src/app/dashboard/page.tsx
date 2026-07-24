@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
+import MemberCard from "@/components/MemberCard";
 
 type Member = {
   id: string;
@@ -172,6 +173,8 @@ export default function DashboardPage() {
         </div>
 
         <aside className="space-y-4">
+          {member && <MemberCard member={member} />}
+
           {member?.is_admin && (
             <Link
               href="/admin"

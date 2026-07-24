@@ -190,6 +190,12 @@ export default function AdminPage() {
           >
             {t("Удирдлага →", "Leadership →")}
           </Link>
+          <Link
+            href="/admin/links"
+            className="inline-block rounded-md border border-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-[var(--brand-blue)] transition-colors hover:bg-blue-50"
+          >
+            {t("Лого холбоос →", "Logo Links →")}
+          </Link>
         </div>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <input

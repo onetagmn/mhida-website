@@ -10,6 +10,7 @@ import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
 import { NewsPost, formatDate, firstYoutubeThumb, pdfHref, pdfName } from "@/lib/news";
 import { MAP_KEY_TO_MN, countColor } from "@/lib/map-provinces";
+import PartnerLogos from "@/components/PartnerLogos";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
 
@@ -181,26 +182,9 @@ export default function Home() {
 
       {/* Partnership / News */}
       <section className="container-page py-14">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--brand-red)]">
-              {t("Түншлэл ба мэдээ", "Partnership & News")}
-            </p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
-              {t(
-                "Тайванийн Олон Улсын Эрүүл Мэндийн Сургалтын Төв (TIHTC)",
-                "Taiwan International Healthcare Training Center (TIHTC)"
-              )}
-            </h2>
-          </div>
-        </div>
-
-        <p className="mb-6 max-w-3xl text-sm text-slate-600">
-          {t(
-            "MHIDA-TIHTC хамтын ажиллагааны хүрээнд гишүүн эмч нарт зориулсан 2026 оны сургалтын хөтөлбөрүүд. Дэлгэрэнгүй мэдээллийг PDF файлаас үзнэ үү.",
-            "2026 training programs for MHIDA member doctors, offered through the MHIDA–TIHTC partnership. See the PDF for full details."
-          )}
-        </p>
+        <h2 className="mb-8 text-2xl font-bold text-slate-900">
+          {t("Түншлэл ба мэдээ", "Partnership & News")}
+        </h2>
 
         <div className="grid gap-6 sm:grid-cols-2">
           {partner.map((item) => (
@@ -322,6 +306,9 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Partner / social logo links (admin-managed) */}
+      <PartnerLogos />
     </div>
   );
 }
