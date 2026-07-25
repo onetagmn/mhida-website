@@ -24,8 +24,22 @@ const quickActions: {
   live: boolean;
   noteMn?: string;
   noteEn?: string;
+  icon: string;
+  accent: string;
+  hoverText: string;
+  hoverBg: string;
 }[] = [
-  { kind: "internal", href: "/register", mn: "Бүртгүүлэх", en: "Register", live: true },
+  {
+    kind: "internal",
+    href: "/register",
+    mn: "Бүртгүүлэх",
+    en: "Register",
+    live: true,
+    icon: "📝",
+    accent: "border-t-4 border-t-[#015196]",
+    hoverText: "group-hover:text-[#015196]",
+    hoverBg: "hover:bg-[#015196]/5",
+  },
   {
     kind: "external",
     href: "https://m.me/j/AbYXmAkq96iY984q/",
@@ -34,6 +48,10 @@ const quickActions: {
     live: true,
     noteMn: "Facebook Messenger",
     noteEn: "Facebook Messenger",
+    icon: "💬",
+    accent: "border-t-4 border-t-[#7c3aed]",
+    hoverText: "group-hover:text-[#7c3aed]",
+    hoverBg: "hover:bg-[#7c3aed]/5",
   },
   {
     kind: "file",
@@ -43,6 +61,10 @@ const quickActions: {
     live: true,
     noteMn: "Загвар татах (PPTX)",
     noteEn: "Download template (PPTX)",
+    icon: "🪪",
+    accent: "border-t-4 border-t-[#d97706]",
+    hoverText: "group-hover:text-[#d97706]",
+    hoverBg: "hover:bg-[#d97706]/5",
   },
   {
     kind: "external",
@@ -52,6 +74,10 @@ const quickActions: {
     live: true,
     noteMn: "Jotform апп нээх / татах",
     noteEn: "Open / install Jotform app",
+    icon: "📱",
+    accent: "border-t-4 border-t-[#059669]",
+    hoverText: "group-hover:text-[#059669]",
+    hoverBg: "hover:bg-[#059669]/5",
   },
 ];
 
@@ -237,12 +263,21 @@ export default function Home() {
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {quickActions.map((action, idx) => {
-              const className = `relative rounded-lg border bg-white p-4 text-center text-sm font-semibold shadow-sm transition-shadow hover:shadow-md ${
-                action.live ? "border-slate-200 text-slate-800" : "border-dashed border-slate-300 text-slate-400"
+              const className = `group relative rounded-lg border bg-white p-4 text-center text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                action.live
+                  ? `border-slate-200 text-slate-800 ${action.accent} ${action.hoverBg}`
+                  : "border-dashed border-slate-300 text-slate-400"
               }`;
               const inner = (
                 <>
-                  {t(action.mn, action.en)}
+                  {action.live && (
+                    <span className="mb-1 block text-xl transition-transform duration-200 group-hover:scale-110">
+                      {action.icon}
+                    </span>
+                  )}
+                  <span className={action.live ? `transition-colors duration-200 ${action.hoverText}` : undefined}>
+                    {t(action.mn, action.en)}
+                  </span>
                   {(action.noteMn || !action.live) && (
                     <span className="mt-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">
                       {!action.live
