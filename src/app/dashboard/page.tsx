@@ -164,12 +164,20 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-            {t(
-              "Англи хэлний курс энд удахгүй нээгдэнэ.",
-              "The English course will appear here soon."
-            )}
-          </div>
+          <Link
+            href="/trainings/english"
+            className="block rounded-xl border border-slate-200 p-6 transition-shadow hover:shadow-md"
+          >
+            <p className="text-lg font-bold text-slate-900">
+              🎓 {t("Англи хэлний курс", "English Course")}
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              {t(
+                "Open Frequency English — 10 долоо хоногийн ярианы курс. Үргэлжлүүлэхийн тулд дарна уу.",
+                "Open Frequency English — the 10-week speaking course. Click to continue where you left off."
+              )}
+            </p>
+          </Link>
         </div>
 
         <aside className="space-y-4">
