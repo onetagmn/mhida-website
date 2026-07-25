@@ -90,7 +90,7 @@ function LessonVideo({ url }: { url: string }) {
     return (
       <div className="overflow-hidden rounded-xl">
         <iframe
-          src={`https://www.youtube.com/embed/${vid}?autoplay=1&rel=0&modestbranding=1`}
+          src={`https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`}
           title="Lesson video"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen

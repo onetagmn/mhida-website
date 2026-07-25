@@ -7,10 +7,34 @@ import { asset } from "@/lib/asset";
 const W = 1754;
 const H = 1240;
 
-/** Completion certificate for the English course — canvas-rendered, downloadable, printable. */
+export type CertificateCourseText = {
+  /** e.g. "«Frequency English» — Ярианы англи хэлний 30 долоо хоногийн курсыг" */
+  line1Mn: string;
+  /** e.g. "for successfully completing the 30-week spoken English course" */
+  line1En: string;
+  /** e.g. "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1–B1 түвшин)" */
+  line2Mn: string;
+  /** e.g. "“Frequency English” (CEFR Level A1–B1)" */
+  line2En: string;
+};
+
+const DEFAULT_COURSE: CertificateCourseText = {
+  line1Mn: "«Open Frequency English» — Ярианы англи хэлний 30 долоо хоногийн курсыг",
+  line1En: "for successfully completing the 30-week spoken English course",
+  line2Mn: "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1–B1 түвшин)",
+  line2En: "“Open Frequency English” (CEFR Level A1–B1)",
+};
+
+/**
+ * Completion certificate — canvas-rendered, downloadable, printable.
+ * Reusable across courses: pass `course` with that course's own wording;
+ * everything else (layout, signatures, stamp, watermark) stays identical
+ * so every MHIDA course certificate looks the same aside from the name
+ * and the two description lines.
+ */
 export default function CourseCertificate({
-  name, lang, compact = false,
-}: { name: string; lang: "mn" | "en"; compact?: boolean }) {
+  name, lang, compact = false, course = DEFAULT_COURSE,
+}: { name: string; lang: "mn" | "en"; compact?: boolean; course?: CertificateCourseText }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -83,18 +107,8 @@ export default function CourseCertificate({
 
     ctx.fillStyle = "#334155";
     ctx.font = "26px 'Noto Sans', Arial, sans-serif";
-    ctx.fillText(
-      lang === "mn"
-        ? "«Open Frequency English» — Ярианы англи хэлний 30 долоо хоногийн курсыг"
-        : "for successfully completing the 30-week spoken English course",
-      W / 2, 720
-    );
-    ctx.fillText(
-      lang === "mn"
-        ? "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1–B1 түвшин)"
-        : "“Open Frequency English” (CEFR Level A1–B1)",
-      W / 2, 762
-    );
+    ctx.fillText(lang === "mn" ? course.line1Mn : course.line1En, W / 2, 720);
+    ctx.fillText(lang === "mn" ? course.line2Mn : course.line2En, W / 2, 762);
 
     const today = new Date();
     const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
@@ -158,7 +172,7 @@ export default function CourseCertificate({
 
     ctx.textAlign = "left";
     setReady(true);
-  }, [name, lang]);
+  }, [name, lang, course]);
 
   useEffect(() => { void draw(); }, [draw]);
 
