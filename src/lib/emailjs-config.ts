@@ -7,7 +7,7 @@
 // supabase.ts) — EmailJS's Public Key is safe to ship in client code by
 // design, it's not a secret.
 export const EMAILJS_SERVICE_ID: string = "service_f4tklox";
-export const EMAILJS_TEMPLATE_ID: string = "template_1wntcmb";
+export const EMAILJS_TEMPLATE_ID: string = "template_4uw0h78";
 export const EMAILJS_PUBLIC_KEY: string = "pGg_PJqnEmv-sFjZ5";
 
 export const EMAILJS_CONFIGURED =
