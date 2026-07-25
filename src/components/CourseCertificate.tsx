@@ -68,8 +68,8 @@ export default function CourseCertificate({ name, lang }: { name: string; lang: 
     ctx.font = "26px 'Noto Sans', Arial, sans-serif";
     ctx.fillText(
       lang === "mn"
-        ? "«Open Frequency English» — Ярианы англи хэлний 10 долоо хоногийн курсыг"
-        : "for successfully completing the 10-week spoken English course",
+        ? "«Open Frequency English» — Ярианы англи хэлний 30 долоо хоногийн курсыг"
+        : "for successfully completing the 30-week spoken English course",
       W / 2, 720
     );
     ctx.fillText(

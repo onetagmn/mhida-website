@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import CourseCertificate from "@/components/CourseCertificate";
+
+const TOTAL_WEEKS = 30;
 
 type QuizQ = { q: string; options: string[]; answer: number };
 type LessonContent = {
@@ -15,6 +17,8 @@ type LessonContent = {
   grammar: { title: string; body: string; examples: string[] };
   speaking: string[];
   quiz: QuizQ[];
+  pronunciation?: { word: string; hint: string }[];
+  recordPrompt?: string;
 };
 type Lesson = {
   id: string;
@@ -26,8 +30,140 @@ type Lesson = {
 };
 type Progress = { lesson_id: string; completed: boolean; quiz_score: number | null; quiz_total: number | null };
 
+/* ---------- speech synthesis helper (shared across the lesson) ---------- */
+function useSpeech() {
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    function loadVoices() {
+      const vs = speechSynthesis.getVoices();
+      voiceRef.current =
+        vs.find((v) => /en-US/i.test(v.lang)) ||
+        vs.find((v) => /en-GB/i.test(v.lang)) ||
+        vs.find((v) => /^en/i.test(v.lang)) ||
+        null;
+    }
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
+  const say = useCallback((text: string, rate = 1, onEnd?: () => void) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = rate;
+    u.pitch = 1;
+    if (voiceRef.current) u.voice = voiceRef.current;
+    if (onEnd) {
+      u.onend = onEnd;
+      u.onerror = onEnd;
+    }
+    speechSynthesis.speak(u);
+  }, []);
+
+  const stop = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) speechSynthesis.cancel();
+  }, []);
+
+  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
+  return { say, stop, supported };
+}
+
+/* ---------- click-to-play YouTube facade ---------- */
+function youtubeId(url: string): string | null {
+  const m =
+    url.match(/youtube\.com\/watch\?(?:.*&)?v=([\w-]{6,})/) ||
+    url.match(/youtu\.be\/([\w-]{6,})/) ||
+    url.match(/youtube\.com\/embed\/([\w-]{6,})/);
+  return m ? m[1] : null;
+}
+
+function LessonVideo({ url }: { url: string }) {
+  const [playing, setPlaying] = useState(false);
+  const vid = youtubeId(url);
+  if (!vid) return null;
+
+  if (playing) {
+    return (
+      <div className="overflow-hidden rounded-xl">
+        <iframe
+          src={`https://www.youtube.com/embed/${vid}?autoplay=1`}
+          title="Lesson video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          className="aspect-video w-full"
+        />
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setPlaying(true)}
+      className="group relative block w-full overflow-hidden rounded-xl"
+      aria-label="Play lesson video"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`https://img.youtube.com/vi/${vid}/hqdefault.jpg`}
+        alt=""
+        className="aspect-video w-full object-cover"
+        loading="lazy"
+      />
+      <span className="absolute inset-0 flex items-center justify-center bg-black/25 transition-colors group-hover:bg-black/35">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-red)] pl-1 text-2xl text-white shadow-lg">
+          ▶
+        </span>
+      </span>
+    </button>
+  );
+}
+
+/* ---------- mic recorder for self-check pronunciation ---------- */
+function useRecorder() {
+  const [recording, setRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  const toggle = useCallback(async () => {
+    if (recording) {
+      mediaRef.current?.stop();
+      setRecording(false);
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !window.MediaRecorder) {
+      setHint("Recording needs microphone access (works on https or localhost).");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => chunksRef.current.push(e.data);
+      rec.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      rec.start();
+      mediaRef.current = rec;
+      setRecording(true);
+      setHint(null);
+    } catch {
+      setHint("Microphone blocked. Allow mic access in your browser to record.");
+    }
+  }, [recording]);
+
+  return { recording, audioUrl, hint, toggle };
+}
+
 export default function EnglishCoursePage() {
   const { t, lang } = useLanguage();
+  const { say, stop: stopSpeech, supported: ttsSupported } = useSpeech();
   const [authState, setAuthState] = useState<"loading" | "out" | "in">("loading");
   const [userId, setUserId] = useState<string | null>(null);
   const [memberName, setMemberName] = useState("");
@@ -39,6 +175,15 @@ export default function EnglishCoursePage() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [quizResult, setQuizResult] = useState<{ score: number; total: number } | null>(null);
   const [showMn, setShowMn] = useState(true);
+
+  // dialogue sequenced-playback state
+  const [dialogueLine, setDialogueLine] = useState<number | null>(null);
+  const dialogueStopRef = useRef(false);
+
+  // listening-practice (transcript hidden until revealed)
+  const [transcriptShown, setTranscriptShown] = useState(false);
+
+  const recorder = useRecorder();
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -61,16 +206,24 @@ export default function EnglishCoursePage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load(); }, [load]);
 
+  // stop any speech / recording when leaving a lesson
+  useEffect(() => {
+    if (!openLesson) { stopSpeech(); dialogueStopRef.current = true; }
+  }, [openLesson, stopSpeech]);
+
   const doneCount = useMemo(
     () => lessons.filter((l) => progress[l.id]?.completed).length,
     [lessons, progress]
   );
-  const allDone = lessons.length > 0 && doneCount === lessons.length;
+  const allDone = lessons.length > 0 && doneCount === TOTAL_WEEKS;
   const nextLesson = lessons.find((l) => !progress[l.id]?.completed) ?? null;
 
   function openWeek(l: Lesson) {
+    stopSpeech();
     setOpenLesson(l);
     setAnswers({});
+    setDialogueLine(null);
+    setTranscriptShown(false);
     const p = progress[l.id];
     setQuizResult(p?.quiz_score != null && p?.quiz_total != null ? { score: p.quiz_score, total: p.quiz_total } : null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -98,6 +251,29 @@ export default function EnglishCoursePage() {
     }));
   }
 
+  function playDialogue(rate: number) {
+    if (!openLesson) return;
+    stopSpeech();
+    dialogueStopRef.current = false;
+    const lines = openLesson.content.dialogue;
+    let i = 0;
+    const step = () => {
+      if (dialogueStopRef.current || i >= lines.length) { setDialogueLine(null); return; }
+      setDialogueLine(i);
+      const idx = i;
+      say(lines[idx].en, rate, () => {
+        i++;
+        setTimeout(step, 350);
+      });
+    };
+    step();
+  }
+  function stopDialogue() {
+    dialogueStopRef.current = true;
+    stopSpeech();
+    setDialogueLine(null);
+  }
+
   /* ---------- render states ---------- */
 
   if (authState === "loading") {
@@ -110,7 +286,7 @@ export default function EnglishCoursePage() {
         <PageHeader
           eyebrow={t("Сургалт", "Training")}
           title={t("Англи хэлний курс", "English Course")}
-          subtitle="Open Frequency English — 10-Week Speaking Course (CEFR A1)"
+          subtitle={`Open Frequency English — ${TOTAL_WEEKS}-Week Speaking Course (CEFR A1–B1)`}
         />
         <div className="container-page py-16">
           <div className="mx-auto max-w-md rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
@@ -143,10 +319,16 @@ export default function EnglishCoursePage() {
   if (openLesson) {
     const c = openLesson.content;
     const p = progress[openLesson.id];
+    const pronunciation = c.pronunciation && c.pronunciation.length > 0
+      ? c.pronunciation
+      : c.vocab.slice(0, 4).map((v) => ({ word: v.en, hint: t("Сонсоод, тодорхой давт.", "Listen, then repeat clearly.") }));
+    const recordPrompt = c.recordPrompt || c.speaking[0] || c.dialogue[0]?.en || "";
+    const fullDialogueText = c.dialogue.map((d) => `${d.speaker}: ${d.en}`).join("  ·  ");
+
     return (
       <div>
         <PageHeader
-          eyebrow={`${t("7 хоног", "Week")} ${openLesson.week} / 10`}
+          eyebrow={`${t("7 хоног", "Week")} ${openLesson.week} / ${TOTAL_WEEKS}`}
           title={openLesson.title}
           subtitle={openLesson.title_mn}
         />
@@ -164,6 +346,15 @@ export default function EnglishCoursePage() {
               </button>
             </div>
 
+            {!ttsSupported && (
+              <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                {t(
+                  "Таны хөтөч дуу тоглуулах функцийг дэмждэггүй. Chrome эсвэл Safari ашиглахыг зөвлөж байна.",
+                  "Your browser doesn't support audio playback. Try Chrome or Safari for the listen/repeat features."
+                )}
+              </p>
+            )}
+
             {/* Objectives */}
             <section className="rounded-2xl border border-blue-100 bg-blue-50/60 p-6">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--brand-blue)]">
@@ -176,28 +367,80 @@ export default function EnglishCoursePage() {
               </ul>
             </section>
 
-            {/* Video (optional) */}
+            {/* Video */}
             {openLesson.video_url && (
               <section>
                 <h2 className="mb-3 text-lg font-bold text-slate-900">{t("Видео хичээл", "Video Lesson")}</h2>
-                <div className="overflow-hidden rounded-xl">
-                  <iframe
-                    src={openLesson.video_url.replace("watch?v=", "embed/")}
-                    className="aspect-video w-full"
-                    allowFullScreen
-                    title="Lesson video"
-                  />
-                </div>
+                <LessonVideo url={openLesson.video_url} />
               </section>
             )}
 
+            {/* Vocabulary — Listen & Repeat */}
+            <section>
+              <h2 className="mb-1 text-lg font-bold text-slate-900">🔊 {t("Сонсож дагаж хэл", "Listen & Repeat — Vocabulary")}</h2>
+              <p className="mb-4 text-xs text-slate-500">
+                {t("Сонсоод чанга дагаж хэл. Хэдэн ч удаа давтаж болно.", "Tap Listen, then say it out loud. Repeat as many times as you like.")}
+              </p>
+              <div className="space-y-2">
+                {c.vocab.map((v, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-900">{v.en}</p>
+                      {showMn && <p className="text-xs text-slate-500">{v.mn}</p>}
+                      <p className="mt-0.5 text-xs italic text-slate-400">{v.example}</p>
+                    </div>
+                    <button
+                      onClick={() => say(v.en, 1)}
+                      disabled={!ttsSupported}
+                      className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40"
+                    >
+                      🔊 {t("Сонсох", "Listen")}
+                    </button>
+                    <button
+                      onClick={() => say(v.en, 0.6)}
+                      disabled={!ttsSupported}
+                      className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40"
+                    >
+                      🐢 {t("Удаан", "Slow")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
             {/* Dialogue */}
             <section>
-              <h2 className="mb-4 text-lg font-bold text-slate-900">{t("Яриа", "Dialogue")}</h2>
+              <h2 className="mb-1 text-lg font-bold text-slate-900">{t("Яриа", "Dialogue")}</h2>
+              <p className="mb-4 text-xs text-slate-500">
+                {t("Бүх ярианы хэсгийг тоглуулах эсвэл мөр бүрийг сонсоно уу.", "Play the whole conversation, or listen line by line.")}
+              </p>
+              <div className="mb-3 flex flex-wrap gap-2">
+                <button onClick={() => playDialogue(1)} disabled={!ttsSupported} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-40">
+                  ▶ {t("Яриа тоглуулах", "Play conversation")}
+                </button>
+                <button onClick={() => playDialogue(0.6)} disabled={!ttsSupported} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40">
+                  🐢 {t("Удаан тоглуулах", "Play slowly")}
+                </button>
+                <button onClick={stopDialogue} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-[var(--brand-red)] hover:text-[var(--brand-red)]">
+                  ■ {t("Зогсоох", "Stop")}
+                </button>
+              </div>
               <div className="space-y-3">
                 {c.dialogue.map((d, i) => (
-                  <div key={i} className={`max-w-[85%] rounded-2xl border p-4 ${i % 2 === 0 ? "border-blue-100 bg-blue-50/50" : "ml-auto border-slate-200 bg-slate-50"}`}>
-                    <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400">{d.speaker}</p>
+                  <div
+                    key={i}
+                    className={`max-w-[85%] rounded-2xl border p-4 transition-colors ${
+                      dialogueLine === i
+                        ? "border-amber-300 bg-amber-50"
+                        : i % 2 === 0 ? "border-blue-100 bg-blue-50/50" : "ml-auto border-slate-200 bg-slate-50"
+                    } ${i % 2 !== 0 ? "ml-auto" : ""}`}
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{d.speaker}</p>
+                      <button onClick={() => say(d.en, 1)} disabled={!ttsSupported} className="shrink-0 rounded-full border border-slate-300 bg-white px-2.5 py-0.5 text-xs text-slate-500 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40">
+                        🔊
+                      </button>
+                    </div>
                     <p className="font-medium text-slate-900">{d.en}</p>
                     {showMn && <p className="mt-1 text-sm text-slate-500">{d.mn}</p>}
                   </div>
@@ -205,25 +448,38 @@ export default function EnglishCoursePage() {
               </div>
             </section>
 
-            {/* Vocabulary */}
-            <section>
-              <h2 className="mb-4 text-lg font-bold text-slate-900">{t("Шинэ үгс", "Vocabulary")}</h2>
-              <div className="overflow-hidden rounded-xl border border-slate-200">
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-slate-100">
-                    {c.vocab.map((v, i) => (
-                      <tr key={i} className={i % 2 ? "bg-slate-50" : ""}>
-                        <td className="px-4 py-2.5 font-semibold text-slate-900">{v.en}</td>
-                        {showMn && <td className="px-4 py-2.5 text-slate-600">{v.mn}</td>}
-                        <td className="px-4 py-2.5 italic text-slate-500">{v.example}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Listening practice */}
+            <section className="rounded-2xl border border-slate-200 p-6">
+              <h2 className="mb-1 text-lg font-bold text-slate-900">🎧 {t("Сонсголын дадлага", "Listening Practice")}</h2>
+              <p className="mb-4 text-xs text-slate-500">
+                {t(
+                  "Текстийг харахгүйгээр яриаг сонс. Дараа нь бичвэрийг харж шалгаарай.",
+                  "Listen to the conversation without reading it. Reveal the transcript afterward to check yourself."
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => say(fullDialogueText, 1)} disabled={!ttsSupported} className="rounded-md bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-40">
+                  ▶ {t("Сонсох", "Play")}
+                </button>
+                <button onClick={() => say(fullDialogueText, 0.62)} disabled={!ttsSupported} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40">
+                  🐢 {t("Удаан", "Slow")}
+                </button>
+                <button onClick={stopSpeech} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-[var(--brand-red)] hover:text-[var(--brand-red)]">
+                  ■ {t("Зогсоох", "Stop")}
+                </button>
               </div>
+              <button
+                onClick={() => setTranscriptShown((v) => !v)}
+                className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-[var(--brand-blue)]"
+              >
+                {transcriptShown ? t("▲ Бичвэр нуух", "▲ Hide transcript") : t("▼ Бичвэр харах (эхлээд оролдоно уу)", "▼ Show transcript (try first)")}
+              </button>
+              {transcriptShown && (
+                <p className="mt-2 rounded-md bg-slate-50 p-3 text-sm text-slate-600">{fullDialogueText}</p>
+              )}
             </section>
 
-            {/* Grammar */}
+            {/* Vocabulary table (with grammar) */}
             <section className="rounded-2xl border border-slate-200 p-6">
               <h2 className="mb-2 text-lg font-bold text-slate-900">📘 {c.grammar.title}</h2>
               <p className="text-sm text-slate-600">{c.grammar.body}</p>
@@ -232,6 +488,30 @@ export default function EnglishCoursePage() {
                   <li key={i} className="rounded-md bg-slate-50 px-3 py-2 font-medium">{e}</li>
                 ))}
               </ul>
+            </section>
+
+            {/* Pronunciation focus */}
+            <section className="rounded-2xl border border-cyan-100 bg-cyan-50/40 p-6">
+              <h2 className="mb-1 text-lg font-bold text-slate-900">🗣 {t("Дуудлагад анхаарах", "Pronunciation Focus")}</h2>
+              <p className="mb-4 text-xs text-slate-500">
+                {t("Сонсоод яг адилхан дуудахыг хичээ.", "Listen and try to copy the sound exactly.")}
+              </p>
+              <div className="space-y-2">
+                {pronunciation.map((pr, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-900">{pr.word}</p>
+                      <p className="text-xs text-slate-500">{pr.hint}</p>
+                    </div>
+                    <button onClick={() => say(pr.word, 1)} disabled={!ttsSupported} className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40">
+                      🔊
+                    </button>
+                    <button onClick={() => say(pr.word, 0.55)} disabled={!ttsSupported} className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40">
+                      🐢
+                    </button>
+                  </div>
+                ))}
+              </div>
             </section>
 
             {/* Speaking practice */}
@@ -245,6 +525,39 @@ export default function EnglishCoursePage() {
                   </li>
                 ))}
               </ol>
+            </section>
+
+            {/* Record & self-check */}
+            <section className="rounded-2xl border border-slate-200 p-6">
+              <h2 className="mb-1 text-lg font-bold text-slate-900">🎙 {t("Ярьж бичиж сонс", "Speak & Record")}</h2>
+              <p className="mb-4 text-xs text-slate-500">
+                {t(
+                  "Дараах загвар өгүүлбэрийг ярь, бичиж аваад өөрийгөө сонсож шалга.",
+                  "Say the model sentence below out loud, then record yourself and listen back."
+                )}
+              </p>
+              <div className="rounded-lg bg-slate-50 p-4">
+                <p className="text-sm font-medium text-slate-800">&ldquo;{recordPrompt}&rdquo;</p>
+                <button onClick={() => say(recordPrompt, 1)} disabled={!ttsSupported} className="mt-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-40">
+                  🔊 {t("Загвар сонсох", "Hear a model")}
+                </button>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={recorder.toggle}
+                  className={`rounded-md px-5 py-2.5 text-sm font-bold text-white transition-colors ${
+                    recorder.recording ? "animate-pulse bg-[var(--brand-red)]" : "bg-slate-800 hover:opacity-90"
+                  }`}
+                >
+                  {recorder.recording ? `■ ${t("Зогсоох", "Stop")}` : `● ${t("Бичих", "Record")}`}
+                </button>
+                <span className="text-xs text-slate-500">
+                  {recorder.hint ?? t("Бичсэн дараа тоглуулж, өөрийгөө сонсоорой.", "After recording, press play to hear yourself.")}
+                </span>
+              </div>
+              {recorder.audioUrl && (
+                <audio controls src={recorder.audioUrl} className="mt-3 w-full" />
+              )}
             </section>
 
             {/* Quiz */}
@@ -324,14 +637,14 @@ export default function EnglishCoursePage() {
 
   /* ---------- course overview ---------- */
 
-  const pct = lessons.length ? Math.round((doneCount / lessons.length) * 100) : 0;
+  const pct = TOTAL_WEEKS ? Math.round((doneCount / TOTAL_WEEKS) * 100) : 0;
 
   return (
     <div>
       <PageHeader
         eyebrow={t("Сургалт", "Training")}
         title={t("Англи хэлний курс", "English Course")}
-        subtitle="Open Frequency English — 10-Week Speaking Course (CEFR A1)"
+        subtitle={`Open Frequency English — ${TOTAL_WEEKS}-Week Speaking Course (CEFR A1–B1)`}
       />
       <div className="container-page py-10">
         <div className="mx-auto max-w-3xl space-y-8">
@@ -339,7 +652,7 @@ export default function EnglishCoursePage() {
           <div className="rounded-2xl border border-slate-200 p-6">
             <div className="mb-2 flex items-end justify-between">
               <p className="text-sm font-semibold text-slate-700">
-                {t("Таны ахиц", "Your progress")}: {doneCount}/{lessons.length} {t("хичээл", "lessons")}
+                {t("Таны ахиц", "Your progress")}: {doneCount}/{TOTAL_WEEKS} {t("хичээл", "lessons")}
               </p>
               <p className="text-2xl font-extrabold text-[var(--brand-blue)]">{pct}%</p>
             </div>
@@ -380,6 +693,7 @@ export default function EnglishCoursePage() {
                     <span className="block font-bold text-slate-900">{l.title}</span>
                     <span className="block text-sm text-slate-500">{l.title_mn}</span>
                   </span>
+                  {l.video_url && <span className="shrink-0 text-lg">🎬</span>}
                   {p?.quiz_score != null && (
                     <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
                       {p.quiz_score}/{p.quiz_total}
