@@ -45,7 +45,7 @@ begin
     new.email,
     nullif(new.raw_user_meta_data ->> 'phone', ''),
     'regular',
-    (new.raw_user_meta_data ->> 'membership' = 'professional')
+    coalesce(new.raw_user_meta_data ->> 'membership', '') = 'professional'
   );
   return new;
 end;
