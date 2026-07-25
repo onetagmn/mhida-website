@@ -7,7 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import CourseCertificate from "@/components/CourseCertificate";
 
-const TOTAL_WEEKS = 30;
+const TOTAL_DAYS = 30;
 
 type QuizQ = { q: string; options: string[]; answer: number };
 type LessonContent = {
@@ -22,7 +22,7 @@ type LessonContent = {
 };
 type Lesson = {
   id: string;
-  week: number;
+  day: number;
   title: string;
   title_mn: string;
   video_url: string | null;
@@ -200,7 +200,7 @@ export default function EnglishCoursePage() {
     if (!session) { setAuthState("out"); return; }
     setUserId(session.user.id);
     const [lessonsRes, progressRes, meRes] = await Promise.all([
-      supabase.from("course_lessons").select("id, week, title, title_mn, video_url, content").order("week"),
+      supabase.from("course_lessons").select("id, day, title, title_mn, video_url, content").order("day"),
       supabase.from("course_progress").select("lesson_id, completed, quiz_score, quiz_total"),
       supabase.from("members").select("first_name, last_name").eq("id", session.user.id).single(),
     ]);
@@ -225,10 +225,10 @@ export default function EnglishCoursePage() {
     () => lessons.filter((l) => progress[l.id]?.completed).length,
     [lessons, progress]
   );
-  const allDone = lessons.length > 0 && doneCount === TOTAL_WEEKS;
+  const allDone = lessons.length > 0 && doneCount === TOTAL_DAYS;
   const nextLesson = lessons.find((l) => !progress[l.id]?.completed) ?? null;
 
-  function openWeek(l: Lesson) {
+  function openDay(l: Lesson) {
     stopSpeech();
     setOpenLesson(l);
     setAnswers({});
@@ -296,7 +296,7 @@ export default function EnglishCoursePage() {
         <PageHeader
           eyebrow={t("Сургалт", "Training")}
           title={t("Англи хэлний курс", "English Course")}
-          subtitle={`Open Frequency English — ${TOTAL_WEEKS}-Week Speaking Course (CEFR A1–B1)`}
+          subtitle={`Open Frequency English — ${TOTAL_DAYS}-Day Speaking Course (CEFR A1–B1)`}
         />
         <div className="container-page py-16">
           <div className="mx-auto max-w-md rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
@@ -334,13 +334,13 @@ export default function EnglishCoursePage() {
       : c.vocab.slice(0, 4).map((v) => ({ word: v.en, hint: t("Сонсоод, тодорхой давт.", "Listen, then repeat clearly.") }));
     const recordPrompt = c.recordPrompt || c.speaking[0] || c.dialogue[0]?.en || "";
     const fullDialogueText = c.dialogue.map((d) => `${d.speaker}: ${d.en}`).join("  ·  ");
-    const nextWeekLesson = lessons.find((l) => l.week === openLesson.week + 1) ?? null;
-    const prevWeekLesson = lessons.find((l) => l.week === openLesson.week - 1) ?? null;
+    const nextDayLesson = lessons.find((l) => l.day === openLesson.day + 1) ?? null;
+    const prevDayLesson = lessons.find((l) => l.day === openLesson.day - 1) ?? null;
 
     return (
       <div>
         <PageHeader
-          eyebrow={`${t("7 хоног", "Week")} ${openLesson.week} / ${TOTAL_WEEKS}`}
+          eyebrow={`${t("Өдөр", "Day")} ${openLesson.day} / ${TOTAL_DAYS}`}
           title={openLesson.title}
           subtitle={openLesson.title_mn}
         />
@@ -642,22 +642,22 @@ export default function EnglishCoursePage() {
               )}
             </section>
 
-            {/* Week navigation — jump straight to the next lesson without going back to the list */}
+            {/* Day navigation — jump straight to the next lesson without going back to the list */}
             <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-6">
-              {prevWeekLesson ? (
+              {prevDayLesson ? (
                 <button
-                  onClick={() => openWeek(prevWeekLesson)}
+                  onClick={() => openDay(prevDayLesson)}
                   className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]"
                 >
-                  {t(`← ${prevWeekLesson.week} дэх долоо хоног`, `← Week ${prevWeekLesson.week}`)}
+                  {t(`← ${prevDayLesson.day} дэх өдөр`, `← Day ${prevDayLesson.day}`)}
                 </button>
               ) : <span />}
-              {nextWeekLesson ? (
+              {nextDayLesson ? (
                 <button
-                  onClick={() => openWeek(nextWeekLesson)}
+                  onClick={() => openDay(nextDayLesson)}
                   className="rounded-md bg-[var(--brand-blue)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
                 >
-                  {t(`Дараагийн долоо хоног: ${nextWeekLesson.week} →`, `Next: Week ${nextWeekLesson.week} →`)}
+                  {t(`Дараагийн өдөр: ${nextDayLesson.day} →`, `Next: Day ${nextDayLesson.day} →`)}
                 </button>
               ) : (
                 <button
@@ -676,14 +676,14 @@ export default function EnglishCoursePage() {
 
   /* ---------- course overview ---------- */
 
-  const pct = TOTAL_WEEKS ? Math.round((doneCount / TOTAL_WEEKS) * 100) : 0;
+  const pct = TOTAL_DAYS ? Math.round((doneCount / TOTAL_DAYS) * 100) : 0;
 
   return (
     <div>
       <PageHeader
         eyebrow={t("Сургалт", "Training")}
         title={t("Англи хэлний курс", "English Course")}
-        subtitle={`Open Frequency English — ${TOTAL_WEEKS}-Week Speaking Course (CEFR A1–B1)`}
+        subtitle={`Open Frequency English — ${TOTAL_DAYS}-Day Speaking Course (CEFR A1–B1)`}
       />
       <div className="container-page py-10">
         <div className="mx-auto max-w-3xl space-y-8">
@@ -691,7 +691,7 @@ export default function EnglishCoursePage() {
           <div className="rounded-2xl border border-slate-200 p-6">
             <div className="mb-2 flex items-end justify-between">
               <p className="text-sm font-semibold text-slate-700">
-                {t("Таны ахиц", "Your progress")}: {doneCount}/{TOTAL_WEEKS} {t("хичээл", "lessons")}
+                {t("Таны ахиц", "Your progress")}: {doneCount}/{TOTAL_DAYS} {t("хичээл", "lessons")}
               </p>
               <p className="text-2xl font-extrabold text-[var(--brand-blue)]">{pct}%</p>
             </div>
@@ -700,12 +700,12 @@ export default function EnglishCoursePage() {
             </div>
             {nextLesson && (
               <button
-                onClick={() => openWeek(nextLesson)}
+                onClick={() => openDay(nextLesson)}
                 className="mt-4 rounded-md bg-[var(--brand-red)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               >
                 {doneCount === 0
                   ? t("Курс эхлэх →", "Start the course →")
-                  : `${t("Үргэлжлүүлэх", "Continue")}: ${t("7 хоног", "Week")} ${nextLesson.week} →`}
+                  : `${t("Үргэлжлүүлэх", "Continue")}: ${t("Өдөр", "Day")} ${nextLesson.day} →`}
               </button>
             )}
           </div>
@@ -720,13 +720,13 @@ export default function EnglishCoursePage() {
               return (
                 <button
                   key={l.id}
-                  onClick={() => openWeek(l)}
+                  onClick={() => openDay(l)}
                   className="flex w-full items-center gap-4 rounded-xl border border-slate-200 p-5 text-left transition-shadow hover:shadow-md"
                 >
                   <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
                     p?.completed ? "bg-green-100 text-green-700" : "bg-blue-50 text-[var(--brand-blue)]"
                   }`}>
-                    {p?.completed ? "✓" : l.week}
+                    {p?.completed ? "✓" : l.day}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-bold text-slate-900">{l.title}</span>

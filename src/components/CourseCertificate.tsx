@@ -8,9 +8,9 @@ const W = 1754;
 const H = 1240;
 
 export type CertificateCourseText = {
-  /** e.g. "«Frequency English» — Ярианы англи хэлний 30 долоо хоногийн курсыг" */
+  /** e.g. "«Frequency English» — Ярианы англи хэлний 30 өдрийн курсыг" */
   line1Mn: string;
-  /** e.g. "for successfully completing the 30-week spoken English course" */
+  /** e.g. "for successfully completing the 30-day spoken English course" */
   line1En: string;
   /** e.g. "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1–B1 түвшин)" */
   line2Mn: string;
@@ -19,8 +19,8 @@ export type CertificateCourseText = {
 };
 
 const DEFAULT_COURSE: CertificateCourseText = {
-  line1Mn: "«Open Frequency English» — Ярианы англи хэлний 30 долоо хоногийн курсыг",
-  line1En: "for successfully completing the 30-week spoken English course",
+  line1Mn: "«Open Frequency English» — Ярианы англи хэлний 30 өдрийн курсыг",
+  line1En: "for successfully completing the 30-day spoken English course",
   line2Mn: "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1–B1 түвшин)",
   line2En: "“Open Frequency English” (CEFR Level A1–B1)",
 };

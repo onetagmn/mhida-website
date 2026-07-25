@@ -158,8 +158,8 @@ export default function DashboardPage() {
             </p>
             <p className="mt-1 text-sm text-slate-600">
               {t(
-                "Open Frequency English — 30 долоо хоногийн видео, сонсох-давтах, ярианы курс. Үргэлжлүүлэхийн тулд дарна уу.",
-                "Open Frequency English — the 30-week video, listen-and-repeat speaking course. Click to continue where you left off."
+                "Open Frequency English — 30 өдрийн видео, сонсох-давтах, ярианы курс. Үргэлжлүүлэхийн тулд дарна уу.",
+                "Open Frequency English — the 30-day video, listen-and-repeat speaking course. Click to continue where you left off."
               )}
             </p>
           </Link>
