@@ -80,46 +80,22 @@ function youtubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+/** Direct YouTube embed — a single player, loaded once (see NewsBody.tsx for why we dropped the click-to-play facade). */
 function LessonVideo({ url }: { url: string }) {
-  const { t } = useLanguage();
-  const [playing, setPlaying] = useState(false);
   const vid = youtubeId(url);
   if (!vid) return null;
 
-  if (playing) {
-    return (
-      <div className="overflow-hidden rounded-xl">
-        <iframe
-          src={`https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`}
-          title="Lesson video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          className="aspect-video w-full"
-        />
-      </div>
-    );
-  }
   return (
-    <button
-      type="button"
-      onClick={() => setPlaying(true)}
-      className="group relative block w-full overflow-hidden rounded-xl"
-      aria-label="Play lesson video"
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`https://img.youtube.com/vi/${vid}/hqdefault.jpg`}
-        alt=""
-        className="aspect-video w-full object-cover"
+    <div className="overflow-hidden rounded-xl">
+      <iframe
+        src={`https://www.youtube.com/embed/${vid}?rel=0&modestbranding=1&playsinline=1`}
+        title="Lesson video"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
         loading="lazy"
+        className="aspect-video w-full"
       />
-      <span className="absolute inset-0 flex items-center justify-center bg-black/25 transition-colors group-hover:bg-black/35">
-        <span className="flex items-center gap-2 rounded-full bg-[var(--brand-blue)]/90 px-5 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur-sm">
-          <span className="inline-block h-0 w-0 border-y-[7px] border-l-[11px] border-y-transparent border-l-white" />
-          {t("Хичээл эхлүүлэх", "Start lesson")}
-        </span>
-      </span>
-    </button>
+    </div>
   );
 }
 
@@ -326,6 +302,8 @@ export default function EnglishCoursePage() {
       : c.vocab.slice(0, 4).map((v) => ({ word: v.en, hint: t("Сонсоод, тодорхой давт.", "Listen, then repeat clearly.") }));
     const recordPrompt = c.recordPrompt || c.speaking[0] || c.dialogue[0]?.en || "";
     const fullDialogueText = c.dialogue.map((d) => `${d.speaker}: ${d.en}`).join("  ·  ");
+    const nextWeekLesson = lessons.find((l) => l.week === openLesson.week + 1) ?? null;
+    const prevWeekLesson = lessons.find((l) => l.week === openLesson.week - 1) ?? null;
 
     return (
       <div>
@@ -631,6 +609,33 @@ export default function EnglishCoursePage() {
                 </div>
               )}
             </section>
+
+            {/* Week navigation — jump straight to the next lesson without going back to the list */}
+            <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-6">
+              {prevWeekLesson ? (
+                <button
+                  onClick={() => openWeek(prevWeekLesson)}
+                  className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]"
+                >
+                  {t(`← ${prevWeekLesson.week} дэх долоо хоног`, `← Week ${prevWeekLesson.week}`)}
+                </button>
+              ) : <span />}
+              {nextWeekLesson ? (
+                <button
+                  onClick={() => openWeek(nextWeekLesson)}
+                  className="rounded-md bg-[var(--brand-blue)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                >
+                  {t(`Дараагийн долоо хоног: ${nextWeekLesson.week} →`, `Next: Week ${nextWeekLesson.week} →`)}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setOpenLesson(null)}
+                  className="rounded-md bg-[var(--brand-red)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                >
+                  {t("Бүх хичээл рүү буцах →", "Back to all lessons →")}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
