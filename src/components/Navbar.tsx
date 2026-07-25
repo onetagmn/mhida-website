@@ -18,6 +18,7 @@ const trainingLinks = [
   { href: "/trainings/axis-card", mn: "AXIS Карт", en: "AXIS Card" },
   { href: "/trainings/e-health", mn: "e-Health", en: "e-Health" },
   { href: "/trainings/english", mn: "Англи хэлний курс", en: "English Course" },
+  { href: "/trainings/professional-courses", mn: "Мэргэжлийн сургалтууд", en: "Professional Courses" },
 ];
 
 export default function Navbar() {

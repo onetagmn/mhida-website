@@ -28,6 +28,15 @@ const systemTrainings = [
     badgeMn: "Гишүүдэд",
     badgeEn: "For members",
   },
+  {
+    href: "/trainings/professional-courses",
+    titleMn: "Мэргэжлийн сургалтууд",
+    titleEn: "Professional Courses",
+    descMn: "Johns Hopkins, Yale, Imperial College London, Duke, ДЭМБ зэрэг дэлхийн шилдэг сургуулиудын 10 үнэгүй видео курс.",
+    descEn: "10 free video courses from Johns Hopkins, Yale, Imperial College London, Duke, WHO and more.",
+    badgeMn: "Мэргэжлийн гишүүдэд",
+    badgeEn: "For professional members",
+  },
 ];
 
 export default function TrainingsPage() {

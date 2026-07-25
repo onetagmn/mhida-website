@@ -163,6 +163,21 @@ export default function DashboardPage() {
               )}
             </p>
           </Link>
+
+          <Link
+            href="/trainings/professional-courses"
+            className="block rounded-xl border border-slate-200 p-6 transition-shadow hover:shadow-md"
+          >
+            <p className="text-lg font-bold text-slate-900">
+              🌐 {t("Мэргэжлийн сургалтууд", "Professional Courses")}
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              {t(
+                "Johns Hopkins, Yale, Imperial College London зэрэг дэлхийн шилдэг сургуулиудын 10 үнэгүй видео курс.",
+                "10 free video courses from Johns Hopkins, Yale, Imperial College London, and other top universities."
+              )}
+            </p>
+          </Link>
         </div>
 
         <aside className="space-y-4">
