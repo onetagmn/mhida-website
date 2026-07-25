@@ -10,15 +10,20 @@ import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
 import MemberCard from "@/components/MemberCard";
 import CourseCertificate from "@/components/CourseCertificate";
+import EditProfileForm from "@/components/EditProfileForm";
 
 type Member = {
   id: string;
   member_id: string;
   first_name: string;
   last_name: string;
+  birth_date: string | null;
+  gender: string | null;
   membership: string;
   workplace: string | null;
   position: string | null;
+  years_worked: string | null;
+  facebook: string | null;
   province: string | null;
   email: string | null;
   phone: string | null;
@@ -44,7 +49,7 @@ export default function DashboardPage() {
     const [memberRes, totalRes, doneRes] = await Promise.all([
       supabase
         .from("members")
-        .select("id, member_id, first_name, last_name, membership, workplace, position, province, email, phone, is_admin, upgrade_requested")
+        .select("id, member_id, first_name, last_name, birth_date, gender, membership, workplace, position, years_worked, facebook, province, email, phone, is_admin, upgrade_requested")
         .eq("id", session.user.id)
         .single(),
       supabase.from("course_lessons").select("id", { count: "exact", head: true }),
@@ -101,43 +106,12 @@ export default function DashboardPage() {
 
       <div className="container-page grid gap-8 py-12 md:grid-cols-3">
         <div className="space-y-6 md:col-span-2">
-          <div className="rounded-xl border border-slate-200 p-6">
-            <h2 className="mb-4 text-lg font-bold text-slate-900">{t("Миний мэдээлэл", "My Profile")}</h2>
-            <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="font-semibold text-slate-500">{t("Гишүүнчлэл", "Membership")}</dt>
-                <dd className="mt-0.5">
-                  <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
-                    member?.membership === "professional"
-                      ? "bg-blue-100 text-[var(--brand-blue)]"
-                      : "bg-slate-100 text-slate-600"
-                  }`}>
-                    {member?.membership === "professional" ? t("Мэргэжлийн", "Professional") : t("Энгийн", "Regular")}
-                  </span>
-                </dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-500">{t("Ажлын газар", "Workplace")}</dt>
-                <dd className="mt-0.5 text-slate-800">{member?.workplace ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-500">{t("Албан тушаал", "Position")}</dt>
-                <dd className="mt-0.5 text-slate-800">{member?.position ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-500">{t("Аймаг/Хот", "Province")}</dt>
-                <dd className="mt-0.5 text-slate-800">{member?.province ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-500">{t("И-мэйл", "Email")}</dt>
-                <dd className="mt-0.5 text-slate-800">{member?.email ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-500">{t("Утас", "Phone")}</dt>
-                <dd className="mt-0.5 text-slate-800">{member?.phone ?? "—"}</dd>
-              </div>
-            </dl>
-          </div>
+          {member && (
+            <EditProfileForm
+              member={member}
+              onSaved={(updated) => setMember({ ...member, ...updated })}
+            />
+          )}
 
           {member?.membership === "regular" && (
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-6">
