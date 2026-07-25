@@ -53,6 +53,20 @@ function scoreVoice(v: SpeechSynthesisVoice): number {
   return score;
 }
 
+// Strips/replaces punctuation that voice engines otherwise read aloud
+// literally (e.g. "wife / husband" → "wife slash husband"). Vocab entries
+// across the course use "/" to show word alternatives, "·" to separate
+// dialogue turns, and "…" in questions — none of that should be spoken.
+function toSpeakableText(text: string): string {
+  return text
+    .replace(/\s*\/\s*/g, ", or ")   // "wife / husband" -> "wife, or husband"
+    .replace(/[·•]/g, ".")            // dialogue-join separators -> pause
+    .replace(/\.{2,}/g, "")           // "..." ellipsis (literal dots)
+    .replace(/…/g, "")                // "…" ellipsis (single character)
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function useSpeech() {
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
@@ -69,7 +83,7 @@ function useSpeech() {
   const say = useCallback((text: string, rate = 1, onEnd?: () => void) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(toSpeakableText(text));
     u.lang = voiceRef.current?.lang || "en-US";
     u.rate = rate;
     u.pitch = 1;
