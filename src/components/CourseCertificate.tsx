@@ -24,6 +24,21 @@ export default function CourseCertificate({
     // background + border
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
+
+    // faint grayscale logo watermark, centered behind everything
+    try {
+      const wm = new Image();
+      wm.src = asset("/logo-watermark.png");
+      await new Promise<void>((res, rej) => { wm.onload = () => res(); wm.onerror = () => rej(); });
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.filter = "grayscale(1)";
+      const wmSize = 820;
+      ctx.drawImage(wm, W / 2 - wmSize / 2, H / 2 - wmSize / 2, wmSize, wmSize);
+      ctx.restore();
+      ctx.filter = "none";
+    } catch { /* watermark optional */ }
+
     ctx.strokeStyle = "#015196";
     ctx.lineWidth = 10;
     ctx.strokeRect(40, 40, W - 80, H - 80);
@@ -93,9 +108,9 @@ export default function CourseCertificate({
       const sig = new Image();
       sig.src = asset("/cert-signature.png");
       await new Promise<void>((res, rej) => { sig.onload = () => res(); sig.onerror = () => rej(); });
-      const sh = 90;
+      const sh = 180;
       const sw = (sig.width / sig.height) * sh;
-      ctx.drawImage(sig, 460 - sw / 2, 985 - sh / 2, sw, sh);
+      ctx.drawImage(sig, 460 - sw / 2, 950 - sh / 2, sw, sh);
     } catch { /* signature optional */ }
 
     ctx.strokeStyle = "#94a3b8";
@@ -118,10 +133,10 @@ export default function CourseCertificate({
       const stamp = new Image();
       stamp.src = asset("/cert-stamp.png");
       await new Promise<void>((res, rej) => { stamp.onload = () => res(); stamp.onerror = () => rej(); });
-      const stampSize = 150;
+      const stampSize = 210;
       ctx.save();
       ctx.globalAlpha = 0.9;
-      ctx.translate(560, 980);
+      ctx.translate(565, 950);
       ctx.rotate((-8 * Math.PI) / 180);
       ctx.drawImage(stamp, -stampSize / 2, -stampSize / 2, stampSize, stampSize);
       ctx.restore();
