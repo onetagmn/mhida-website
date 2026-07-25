@@ -88,14 +88,44 @@ export default function CourseCertificate({
     ctx.fillText(`${lang === "mn" ? "Огноо" : "Date"}: ${dateStr}`, W / 2, 860);
 
     // signature blocks
+    // Handwritten signature, crossing the line above the President's name.
+    try {
+      const sig = new Image();
+      sig.src = asset("/cert-signature.png");
+      await new Promise<void>((res, rej) => { sig.onload = () => res(); sig.onerror = () => rej(); });
+      const sh = 90;
+      const sw = (sig.width / sig.height) * sh;
+      ctx.drawImage(sig, 460 - sw / 2, 985 - sh / 2, sw, sh);
+    } catch { /* signature optional */ }
+
     ctx.strokeStyle = "#94a3b8";
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(280, 1030); ctx.lineTo(660, 1030); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(W - 660, 1030); ctx.lineTo(W - 280, 1030); ctx.stroke();
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 26px 'Noto Sans', Arial, sans-serif";
+    ctx.fillText("Б. Очирбат", 470, 1063);
+    ctx.fillText("Л. Уянга", W - 470, 1063);
+
     ctx.fillStyle = "#64748b";
     ctx.font = "22px 'Noto Sans', Arial, sans-serif";
-    ctx.fillText(lang === "mn" ? "МДЭНХ-ийн Тэргүүн" : "President, MHIDA", 470, 1065);
-    ctx.fillText(lang === "mn" ? "Хөтөлбөрийн захирал" : "Program Director", W - 470, 1065);
+    ctx.fillText(lang === "mn" ? "МДЭНХ-ийн Тэргүүн" : "President, MHIDA", 470, 1093);
+    ctx.fillText(lang === "mn" ? "Хөтөлбөрийн захирал" : "Program Director", W - 470, 1093);
+
+    // Official stamp, overlapping the President's signature.
+    try {
+      const stamp = new Image();
+      stamp.src = asset("/cert-stamp.png");
+      await new Promise<void>((res, rej) => { stamp.onload = () => res(); stamp.onerror = () => rej(); });
+      const stampSize = 150;
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.translate(560, 980);
+      ctx.rotate((-8 * Math.PI) / 180);
+      ctx.drawImage(stamp, -stampSize / 2, -stampSize / 2, stampSize, stampSize);
+      ctx.restore();
+    } catch { /* stamp optional */ }
 
     ctx.fillStyle = "#94a3b8";
     ctx.font = "20px 'Noto Sans', Arial, sans-serif";
