@@ -301,6 +301,66 @@ export default function ProfessionalCoursesPage() {
             );
           })}
         </div>
+
+        {/* Financial-aid guide — intentionally English-only (not run through
+            t()), as extra reading practice alongside the English course. */}
+        <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-[var(--brand-blue)]/30 bg-blue-50/40 p-6 sm:p-8">
+          <p className="mb-4 text-xs font-semibold text-slate-500">
+            {t(
+              "Энэ зааврыг зориудаар англи хэлээр үлдээлээ — уншиж дадлага хийгээрэй!",
+              ""
+            )}
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900">🎓 How to Get Your Official Certificate for Free</h2>
+          <p className="mt-2 text-sm text-slate-700">
+            Watching the videos on these courses is always free. The official certificate usually
+            costs $49–$79 — but Coursera&apos;s <strong>Financial Aid</strong> program can bring
+            that down to <strong>$0</strong>. Here&apos;s how to apply.
+          </p>
+
+          <ol className="mt-5 space-y-4 text-sm text-slate-700">
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">1</span>
+              <span><strong>Enroll in the course first.</strong> Go to the course page and click <em>Enroll</em>. Financial aid is requested from inside the enrollment flow — not from a separate page.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">2</span>
+              <span><strong>Look for &quot;Financial aid available.&quot;</strong> It&apos;s a small link below the price — easy to miss. Click it, then <em>Learn more and apply</em>.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">3</span>
+              <span><strong>Fill out the form.</strong>{" "}You&apos;ll enter your employment status and annual income (don&apos;t forget to select your currency), then write two short essays — about 150–300 words each:
+                <ul className="ml-5 mt-2 list-disc space-y-1">
+                  <li><strong>Financial need</strong> — be specific about why the fee is difficult for you.</li>
+                  <li><strong>Career connection</strong> — explain how this course helps your work. For example: &quot;I review medical insurance claims and need to understand medical coding and necessity standards.&quot;</li>
+                </ul>
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">4</span>
+              <span><strong>Submit and wait.</strong> Coursera says it can take up to 15 business days, though most people hear back sooner. You can keep watching the course for free while you wait — just don&apos;t start a paid free trial, or your application will be cancelled.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">5</span>
+              <span><strong>If approved</strong>, you&apos;ll get an email with a discount code (often $0) and 180 days to finish the graded work and claim your certificate.</span>
+            </li>
+          </ol>
+
+          <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-600">
+            <strong>Good to know:</strong> for the multi-course programs on this page (Patient Safety,
+            Quality Improvement in Healthcare, Epidemiology), one approved financial aid application
+            can sometimes cover every course in the series — check that option before applying
+            separately to each course.
+          </div>
+
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-600">
+            <strong>New words:</strong> <em>audit</em> — to watch a course for free, without a
+            certificate. <em>enroll</em> — to officially sign up for a course. <em>essay</em> — a
+            short piece of writing that explains your reasons. <em>financial aid</em> — help paying
+            a cost, based on need.
+          </div>
+        </div>
       </div>
     </div>
   );
