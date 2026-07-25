@@ -68,6 +68,7 @@ export default function AdminTrainingApplicationsPage() {
   const [denied, setDenied] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [trainingFilter, setTrainingFilter] = useState<string>("all");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -145,6 +146,25 @@ export default function AdminTrainingApplicationsPage() {
     }
   }
 
+  async function deleteApplication(app: Application) {
+    const sure = window.confirm(
+      t(
+        `${app.first_name} ${app.last_name}-ийн "${app.training_title}" сургалтын өргөдлийг БҮРМӨСӨН устгах уу? Энэ үйлдлийг буцаах боломжгүй.`,
+        `PERMANENTLY delete ${app.first_name} ${app.last_name}'s application for "${app.training_title}"? This cannot be undone.`
+      )
+    );
+    if (!sure) return;
+    setDeletingId(app.id);
+    const { error } = await supabase.from("training_applications").delete().eq("id", app.id);
+    if (!error) {
+      setApps((prev) => prev.filter((a) => a.id !== app.id));
+      setOpenId((prev) => (prev === app.id ? null : prev));
+    } else {
+      alert(t("Алдаа: ", "Error: ") + error.message);
+    }
+    setDeletingId(null);
+  }
+
   if (loading) {
     return <div className="container-page flex h-64 items-center justify-center text-slate-400">{t("Ачааллаж байна...", "Loading...")}</div>;
   }
@@ -208,24 +228,39 @@ export default function AdminTrainingApplicationsPage() {
               const open = openId === a.id;
               return (
                 <div key={a.id} className="rounded-xl border border-slate-200">
-                  <button
-                    onClick={() => setOpenId(open ? null : a.id)}
-                    className="flex w-full items-center gap-4 p-4 text-left"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-900">
-                        {a.first_name} {a.last_name}
-                        <span className="ml-2 text-xs font-normal text-slate-400">{a.current_position} · {a.current_institution}</span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        {a.training_title} · {new Date(a.created_at).toLocaleDateString(lang === "mn" ? "mn-MN" : "en-GB")}
-                      </p>
-                    </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${STATUS_STYLES[a.status]}`}>
-                      {a.status}
-                    </span>
-                    <span className="shrink-0 text-slate-400">{open ? "▲" : "▼"}</span>
-                  </button>
+                  <div className="flex w-full items-center gap-4 p-4">
+                    <button
+                      onClick={() => setOpenId(open ? null : a.id)}
+                      className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-slate-900">
+                          {a.first_name} {a.last_name}
+                          <span className="ml-2 text-xs font-normal text-slate-400">{a.current_position} · {a.current_institution}</span>
+                        </p>
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {a.training_title} · {new Date(a.created_at).toLocaleDateString(lang === "mn" ? "mn-MN" : "en-GB")}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${STATUS_STYLES[a.status]}`}>
+                        {a.status}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => deleteApplication(a)}
+                      disabled={deletingId === a.id}
+                      title={t("Устгах", "Delete")}
+                      className="shrink-0 rounded-full px-2 py-1 text-sm font-bold text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                    >
+                      ✕
+                    </button>
+                    <button
+                      onClick={() => setOpenId(open ? null : a.id)}
+                      className="shrink-0 text-slate-400"
+                    >
+                      {open ? "▲" : "▼"}
+                    </button>
+                  </div>
 
                   {open && (
                     <div className="border-t border-slate-100 p-5 text-sm">
@@ -310,6 +345,12 @@ export default function AdminTrainingApplicationsPage() {
               );
             })}
           </div>
+        )}
+        {visible.length > 0 && (
+          <p className="mt-4 text-xs text-slate-400">
+            {t("✕ дарж өргөдлийг бүрмөсөн устгана — жишээ нь DECLINED өргөдлүүдийг цэвэрлэхэд ашиглана уу.",
+              "Click ✕ to permanently delete an application — use this to clear out old DECLINED ones so they don't pile up.")}
+          </p>
         )}
       </div>
     </div>
