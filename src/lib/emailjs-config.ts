@@ -15,7 +15,7 @@ export const EMAILJS_PUBLIC_KEY: string = "pGg_PJqnEmv-sFjZ5";
 // "accepted". Same EmailJS account/service as above, just a different
 // template. See docs/welcome-email/SETUP.md's "Training acceptance
 // email" section for how to create it and get this ID.
-export const EMAILJS_ACCEPTANCE_TEMPLATE_ID: string = "YOUR_ACCEPTANCE_TEMPLATE_ID";
+export const EMAILJS_ACCEPTANCE_TEMPLATE_ID: string = "template_k5fhzr2";
 
 export const EMAILJS_CONFIGURED =
   EMAILJS_SERVICE_ID !== "YOUR_SERVICE_ID" &&
