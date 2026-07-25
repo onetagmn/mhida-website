@@ -6,9 +6,9 @@
 // These are meant to be public (same idea as the Supabase anon key in
 // supabase.ts) — EmailJS's Public Key is safe to ship in client code by
 // design, it's not a secret.
-export const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
-export const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
-export const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";
+export const EMAILJS_SERVICE_ID: string = "service_f4tklox";
+export const EMAILJS_TEMPLATE_ID: string = "template_1wntcmb";
+export const EMAILJS_PUBLIC_KEY: string = "pGg_PJqnEmv-sFjZ5";
 
 export const EMAILJS_CONFIGURED =
   EMAILJS_SERVICE_ID !== "YOUR_SERVICE_ID" &&
