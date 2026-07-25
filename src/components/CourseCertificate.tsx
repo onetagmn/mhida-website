@@ -113,6 +113,16 @@ export default function CourseCertificate({
       ctx.drawImage(sig, 460 - sw / 2, 950 - sh / 2, sw, sh);
     } catch { /* signature optional */ }
 
+    // Handwritten signature for the Program Director.
+    try {
+      const sig2 = new Image();
+      sig2.src = asset("/cert-signature-2.png");
+      await new Promise<void>((res, rej) => { sig2.onload = () => res(); sig2.onerror = () => rej(); });
+      const sh2 = 110;
+      const sw2 = (sig2.width / sig2.height) * sh2;
+      ctx.drawImage(sig2, W - 470 - sw2 / 2, 975 - sh2 / 2, sw2, sh2);
+    } catch { /* signature optional */ }
+
     ctx.strokeStyle = "#94a3b8";
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(280, 1030); ctx.lineTo(660, 1030); ctx.stroke();
@@ -125,7 +135,7 @@ export default function CourseCertificate({
 
     ctx.fillStyle = "#64748b";
     ctx.font = "22px 'Noto Sans', Arial, sans-serif";
-    ctx.fillText(lang === "mn" ? "МДЭНХ-ийн Тэргүүн" : "President, MHIDA", 470, 1093);
+    ctx.fillText(lang === "mn" ? "МДЭНХ-ийн Ерөнхийлөгч" : "President, MHIDA", 470, 1093);
     ctx.fillText(lang === "mn" ? "Хөтөлбөрийн захирал" : "Program Director", W - 470, 1093);
 
     // Official stamp, overlapping the President's signature.
