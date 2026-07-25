@@ -8,7 +8,6 @@ import { PROVINCES } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
 import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
-import { drawMemberCard, CARD_WIDTH, CARD_HEIGHT } from "@/lib/memberCardCanvas";
 import { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_CONFIGURED } from "@/lib/emailjs-config";
 
 type FormState = {
@@ -63,37 +62,21 @@ export default function RegisterPage() {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     };
 
-  // Fires right after a successful signup. Generates the member's business
-  // card off-screen (same drawMemberCard() used on the dashboard) and
-  // sends the welcome email straight from the browser via EmailJS — no
-  // backend involved. Never throws: registration has already succeeded by
-  // the time this runs, so a failure here shouldn't block or scare the
-  // new member. See docs/welcome-email/SETUP.md for configuring the three
-  // EMAILJS_* values this depends on.
+  // Fires right after a successful signup. Sends the welcome email
+  // straight from the browser via EmailJS — no backend involved. The
+  // digital business card isn't attached (EmailJS attachments require a
+  // paid plan); the email instead points the member to their dashboard,
+  // where the same card can already be viewed/downloaded/printed. Never
+  // throws: registration has already succeeded by the time this runs,
+  // so a failure here shouldn't block or scare the new member. See
+  // docs/welcome-email/SETUP.md for configuring the three EMAILJS_*
+  // values this depends on.
   async function sendWelcomeEmail(memberId: string) {
     if (!EMAILJS_CONFIGURED) {
       console.info("Welcome email skipped: EmailJS is not configured yet (see docs/welcome-email/SETUP.md).");
       return;
     }
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = CARD_WIDTH;
-      canvas.height = CARD_HEIGHT;
-      await drawMemberCard(
-        canvas,
-        {
-          member_id: memberId,
-          first_name: form.firstName.trim(),
-          last_name: form.lastName.trim(),
-          workplace: form.workplace.trim() || null,
-          position: form.position.trim() || null,
-          email: form.email.trim(),
-          phone: form.phone.replace(/[\s-]/g, "") || null,
-        },
-        t("Утсаараа уншуулна уу", "Scan to save contact")
-      );
-      const cardDataUrl = canvas.toDataURL("image/png");
-
       const membershipNoteHtml =
         form.membershipType === "professional"
           ? `<p style="margin:0; font-size:13px; line-height:1.6; color:#334155;">Та <b>Мэргэжлийн гишүүн</b> тул бүх 10 сургалт танд нээлттэй байна.</p>
@@ -109,7 +92,6 @@ export default function RegisterPage() {
           first_name: form.firstName.trim(),
           member_id: memberId,
           membership_note_html: membershipNoteHtml,
-          content: cardDataUrl,
         },
         { publicKey: EMAILJS_PUBLIC_KEY }
       );

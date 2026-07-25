@@ -39,13 +39,16 @@ a concern.
    - **From Name**: `MHIDA`
    - **Reply To**: leave as your connected Gmail, or set to a contact
      address of your choice.
-5. Go to the **Attachments** tab on the same template and add one:
-   - Type: **Variable Attachment**
-   - Filename: `MHIDA-card.png` (or leave EmailJS's default)
-   - Content type: PNG
-   - Parameter name: `content`
-6. Save the template, then copy its **Template ID** (looks like
+5. Save the template, then copy its **Template ID** (looks like
    `template_xxxxxxx`).
+
+Note: the digital business card is **not** attached to this email —
+EmailJS attachments require a paid plan ($9/mo minimum). The email
+instead tells the member to view/download/print their card from their
+dashboard after logging in, where the same card is already available.
+If you'd rather attach it directly, upgrading to EmailJS's Personal
+plan and adding a Variable Attachment (parameter name `content`) would
+enable that — ask and we can wire it back in.
 
 ## 4. Get your Public Key
 
