@@ -15,7 +15,6 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2">
             <Image src={asset("/logo.png")} alt="MHIDA" width={32} height={32} className="h-8 w-auto" />
-            <span className="font-bold text-[var(--brand-blue)]">MHIDA</span>
           </div>
           <p className="mt-3 text-sm text-slate-600">
             {t(

@@ -7,8 +7,10 @@ import { asset } from "@/lib/asset";
 const W = 1754;
 const H = 1240;
 
-/** Completion certificate for the English course — canvas-rendered, downloadable. */
-export default function CourseCertificate({ name, lang }: { name: string; lang: "mn" | "en" }) {
+/** Completion certificate for the English course — canvas-rendered, downloadable, printable. */
+export default function CourseCertificate({
+  name, lang, compact = false,
+}: { name: string; lang: "mn" | "en"; compact?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -74,8 +76,8 @@ export default function CourseCertificate({ name, lang }: { name: string; lang: 
     );
     ctx.fillText(
       lang === "mn"
-        ? "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1 түвшин)"
-        : "“Open Frequency English” (CEFR Level A1)",
+        ? "амжилттай төгссөнийг гэрчилж олгов. (CEFR A1–B1 түвшин)"
+        : "“Open Frequency English” (CEFR Level A1–B1)",
       W / 2, 762
     );
 
@@ -119,6 +121,47 @@ export default function CourseCertificate({ name, lang }: { name: string; lang: 
     }, "image/png");
   }
 
+  function print() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL("image/png");
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(
+      `<html><head><title>MHIDA Certificate</title></head>` +
+      `<body style="margin:0;display:flex;justify-content:center;padding:24px;">` +
+      `<img src="${dataUrl}" style="width:11.7in;height:8.3in;" onload="window.print()"/></body></html>`
+    );
+    win.document.close();
+  }
+
+  if (compact) {
+    return (
+      <div className="rounded-xl border border-slate-200 p-5">
+        <h3 className="mb-3 text-sm font-bold text-slate-900">
+          🎓 {lang === "mn" ? "Миний гэрчилгээ" : "My Certificate"}
+        </h3>
+        <canvas ref={canvasRef} width={W} height={H} className="w-full rounded-lg border border-slate-100 shadow-sm" />
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={download}
+            disabled={!ready}
+            className="flex-1 rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {lang === "mn" ? "Татах (PNG)" : "Download (PNG)"}
+          </button>
+          <button
+            onClick={print}
+            disabled={!ready}
+            className="flex-1 rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-50"
+          >
+            {lang === "mn" ? "Хэвлэх" : "Print"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border-2 border-green-200 bg-green-50/50 p-6 text-center">
       <p className="text-3xl">🎓</p>
@@ -126,13 +169,22 @@ export default function CourseCertificate({ name, lang }: { name: string; lang: 
         {lang === "mn" ? "Баяр хүргэе — курс төгслөө!" : "Congratulations — course complete!"}
       </h2>
       <canvas ref={canvasRef} width={W} height={H} className="mx-auto mt-4 w-full max-w-xl rounded-lg border border-slate-200 shadow-sm" />
-      <button
-        onClick={download}
-        disabled={!ready}
-        className="mt-4 rounded-md bg-[var(--brand-blue)] px-8 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
-        {lang === "mn" ? "Гэрчилгээ татах (PNG)" : "Download Certificate (PNG)"}
-      </button>
+      <div className="mt-4 flex justify-center gap-3">
+        <button
+          onClick={download}
+          disabled={!ready}
+          className="rounded-md bg-[var(--brand-blue)] px-8 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {lang === "mn" ? "Гэрчилгээ татах (PNG)" : "Download Certificate (PNG)"}
+        </button>
+        <button
+          onClick={print}
+          disabled={!ready}
+          className="rounded-md border border-slate-300 px-8 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)] disabled:opacity-50"
+        >
+          {lang === "mn" ? "Хэвлэх" : "Print"}
+        </button>
+      </div>
     </div>
   );
 }

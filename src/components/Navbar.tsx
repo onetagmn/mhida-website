@@ -17,6 +17,7 @@ const navLinks = [
 const trainingLinks = [
   { href: "/trainings/axis-card", mn: "AXIS Карт", en: "AXIS Card" },
   { href: "/trainings/e-health", mn: "e-Health", en: "e-Health" },
+  { href: "/trainings/english", mn: "Англи хэлний курс", en: "English Course" },
 ];
 
 export default function Navbar() {
@@ -44,9 +45,6 @@ export default function Navbar() {
       <div className="container-page flex h-16 items-center justify-between">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image src={asset("/logo.png")} alt="MHIDA" width={40} height={40} className="h-10 w-auto" priority />
-          <span className="text-sm font-bold leading-tight text-[var(--brand-blue)] sm:text-base">
-            MHIDA
-          </span>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">

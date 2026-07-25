@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
 import MemberCard from "@/components/MemberCard";
+import CourseCertificate from "@/components/CourseCertificate";
 
 type Member = {
   id: string;
@@ -26,12 +27,13 @@ type Member = {
 };
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const router = useRouter();
   const [member, setMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [pwMsg, setPwMsg] = useState<string | null>(null);
+  const [courseDone, setCourseDone] = useState(false);
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -39,12 +41,21 @@ export default function DashboardPage() {
       router.replace("/login/");
       return;
     }
-    const { data } = await supabase
-      .from("members")
-      .select("id, member_id, first_name, last_name, membership, workplace, position, province, email, phone, is_admin, upgrade_requested")
-      .eq("id", session.user.id)
-      .single();
-    setMember(data);
+    const [memberRes, totalRes, doneRes] = await Promise.all([
+      supabase
+        .from("members")
+        .select("id, member_id, first_name, last_name, membership, workplace, position, province, email, phone, is_admin, upgrade_requested")
+        .eq("id", session.user.id)
+        .single(),
+      supabase.from("course_lessons").select("id", { count: "exact", head: true }),
+      supabase
+        .from("course_progress")
+        .select("lesson_id", { count: "exact", head: true })
+        .eq("member_id", session.user.id)
+        .eq("completed", true),
+    ]);
+    setMember(memberRes.data);
+    setCourseDone(!!totalRes.count && totalRes.count > 0 && doneRes.count === totalRes.count);
     setLoading(false);
   }, [router]);
 
@@ -182,6 +193,10 @@ export default function DashboardPage() {
 
         <aside className="space-y-4">
           {member && <MemberCard member={member} />}
+
+          {courseDone && member && (
+            <CourseCertificate name={`${member.first_name} ${member.last_name}`.trim()} lang={lang} compact />
+          )}
 
           {member?.is_admin && (
             <Link
