@@ -1,0 +1,40 @@
+# MHIDA — Монголын Даатгалын Эмч Нарын Холбоо
+# https://mhida.org
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Opt out of AI-training crawlers. This is a courtesy signal only —
+# well-behaved crawlers respect it, but it is not a security boundary.
+# Real protection for member data comes from Supabase Row Level
+# Security, not from this file.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+Sitemap: https://mhida.org/sitemap.xml

@@ -84,6 +84,12 @@ security definer
 set search_path = public
 as $$
 begin
+  -- NOTE: this is the original bootstrap version of this trigger, kept
+  -- here for historical reference. The live database redefines this
+  -- function via migration14_registration_payment_gate.sql, which stops
+  -- trusting the client-supplied "membership" value and routes
+  -- Professional signups through admin payment verification instead —
+  -- apply the migrations in order rather than running this file alone.
   insert into public.members (
     id, member_no, last_name, first_name, birth_date, gender, province,
     workplace, "position", years_worked, facebook, email, phone, membership
