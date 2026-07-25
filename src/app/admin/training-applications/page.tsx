@@ -3,14 +3,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import emailjs from "@emailjs/browser";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
+import {
+  EMAILJS_SERVICE_ID,
+  EMAILJS_ACCEPTANCE_TEMPLATE_ID,
+  EMAILJS_PUBLIC_KEY,
+  EMAILJS_ACCEPTANCE_CONFIGURED,
+} from "@/lib/emailjs-config";
 
 type Application = {
   id: string;
   training_title: string;
   status: "submitted" | "reviewed" | "accepted" | "declined";
+  acceptance_email_sent_at: string | null;
   created_at: string;
   first_name: string;
   middle_name: string | null;
@@ -79,9 +87,62 @@ export default function AdminTrainingApplicationsPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load(); }, [load]);
 
+  // Sends the "congratulations, you're accepted" email straight from the
+  // browser via EmailJS — same account/service as the welcome email, a
+  // separate template. Never throws: the status change itself should
+  // still succeed even if the email fails to send.
+  async function sendAcceptanceEmail(app: Application): Promise<boolean> {
+    if (!EMAILJS_ACCEPTANCE_CONFIGURED) {
+      console.info(
+        "Acceptance email skipped: EMAILJS_ACCEPTANCE_TEMPLATE_ID isn't configured yet (see docs/welcome-email/SETUP.md)."
+      );
+      return false;
+    }
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_ACCEPTANCE_TEMPLATE_ID,
+        {
+          to_email: app.email,
+          first_name: app.first_name,
+          training_title: app.training_title,
+        },
+        { publicKey: EMAILJS_PUBLIC_KEY }
+      );
+      return true;
+    } catch (err) {
+      console.error("Acceptance email failed to send:", err);
+      return false;
+    }
+  }
+
+  // Marking an application "accepted" for the first time auto-sends the
+  // congratulations email; re-clicking "accepted" (or any other status)
+  // does not re-send it. Use resendAcceptanceEmail() for that.
   async function setStatus(id: string, status: Application["status"]) {
-    const { error } = await supabase.from("training_applications").update({ status }).eq("id", id);
-    if (!error) setApps((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    const app = apps.find((a) => a.id === id);
+    const payload: { status: Application["status"]; acceptance_email_sent_at?: string } = { status };
+
+    if (status === "accepted" && app && !app.acceptance_email_sent_at) {
+      const sent = await sendAcceptanceEmail(app);
+      if (sent) payload.acceptance_email_sent_at = new Date().toISOString();
+    }
+
+    const { error } = await supabase.from("training_applications").update(payload).eq("id", id);
+    if (!error) setApps((prev) => prev.map((a) => (a.id === id ? { ...a, ...payload } : a)));
+  }
+
+  async function resendAcceptanceEmail(app: Application) {
+    const sent = await sendAcceptanceEmail(app);
+    if (!sent) return;
+    const acceptance_email_sent_at = new Date().toISOString();
+    const { error } = await supabase
+      .from("training_applications")
+      .update({ acceptance_email_sent_at })
+      .eq("id", app.id);
+    if (!error) {
+      setApps((prev) => prev.map((a) => (a.id === app.id ? { ...a, acceptance_email_sent_at } : a)));
+    }
   }
 
   if (loading) {
@@ -168,7 +229,7 @@ export default function AdminTrainingApplicationsPage() {
 
                   {open && (
                     <div className="border-t border-slate-100 p-5 text-sm">
-                      <div className="mb-4 flex flex-wrap gap-1.5">
+                      <div className="mb-3 flex flex-wrap gap-1.5">
                         {(["submitted", "reviewed", "accepted", "declined"] as const).map((s) => (
                           <button
                             key={s}
@@ -181,6 +242,28 @@ export default function AdminTrainingApplicationsPage() {
                           </button>
                         ))}
                       </div>
+
+                      {a.status === "accepted" && (
+                        <p className="mb-4 text-xs text-slate-500">
+                          {a.acceptance_email_sent_at ? (
+                            <>
+                              ✉️ {t("Баяр хүргэе имэйл илгээгдсэн:", "Congratulations email sent:")}{" "}
+                              {new Date(a.acceptance_email_sent_at).toLocaleString(lang === "mn" ? "mn-MN" : "en-GB")}
+                              {" · "}
+                              <button onClick={() => resendAcceptanceEmail(a)} className="font-semibold text-[var(--brand-blue)] hover:underline">
+                                {t("Дахин илгээх", "Resend")}
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              ⚠️ {t("Имэйл илгээгдээгүй байна.", "Email not sent yet.")}{" "}
+                              <button onClick={() => resendAcceptanceEmail(a)} className="font-semibold text-[var(--brand-blue)] hover:underline">
+                                {t("Одоо илгээх", "Send now")}
+                              </button>
+                            </>
+                          )}
+                        </p>
+                      )}
 
                       <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                         <Section title={t("Хувийн мэдээлэл", "Personal Information")}>

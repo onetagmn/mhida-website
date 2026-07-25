@@ -89,3 +89,30 @@ If it doesn't arrive:
 
 Paste me whatever shows up in either place and I'll help debug from
 there.
+
+## 7. Training acceptance email (optional second template)
+
+Same EmailJS account and Gmail service as above — just one more
+template. This one fires automatically from the admin Training
+Applications page when you mark a submission "accepted", congratulating
+the applicant and naming the training they were accepted into.
+
+1. Dashboard → **Email Templates** → **Create New Template** (pick any
+   starter, it doesn't matter — we'll replace the content).
+2. Switch to **Code Editor** and paste the full contents of
+   `TRAINING_ACCEPTANCE_TEMPLATE.html` (next to this file).
+3. Set the **Subject** field to:
+   `Баяр хүргэе! / Congratulations — {{training_title}}`
+4. **To Email**: `{{to_email}}` · **From Name**: `MHIDA` · **Reply To**:
+   your connected Gmail (same as before).
+5. Save, then copy this template's **Template ID** — it'll be a
+   *different* ID from the welcome-email template.
+6. Open `src/lib/emailjs-config.ts` and replace the placeholder:
+   ```ts
+   export const EMAILJS_ACCEPTANCE_TEMPLATE_ID: string = "template_xxxxxxx";
+   ```
+
+Until that value is filled in, marking an application "accepted" still
+works — it just skips sending the email (logged to the console) and
+you'll see a "⚠️ Email not sent yet — Send now" link on that application
+in the admin page, which you can click once the template is configured.
