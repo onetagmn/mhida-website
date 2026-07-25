@@ -305,11 +305,8 @@ export default function ProfessionalCoursesPage() {
         {/* Financial-aid guide — intentionally English-only (not run through
             t()), as extra reading practice alongside the English course. */}
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-[var(--brand-blue)]/30 bg-blue-50/40 p-6 sm:p-8">
-          <p className="mb-4 text-xs font-semibold text-slate-500">
-            {t(
-              "Энэ зааврыг зориудаар англи хэлээр үлдээлээ — уншиж дадлага хийгээрэй!",
-              ""
-            )}
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--brand-blue)]">
+            Topic: How to Get Your Free Certificate from Coursera
           </p>
 
           <h2 className="text-xl font-bold text-slate-900">🎓 How to Get Your Official Certificate for Free</h2>
