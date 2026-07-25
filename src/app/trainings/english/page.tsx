@@ -31,18 +31,36 @@ type Lesson = {
 type Progress = { lesson_id: string; completed: boolean; quiz_score: number | null; quiz_total: number | null };
 
 /* ---------- speech synthesis helper (shared across the lesson) ---------- */
+// Ranks available browser voices so we pick the most natural-sounding
+// English female voice available, instead of whatever the browser
+// defaults to (often a robotic offline engine). Web Speech API voice
+// quality is entirely up to the visitor's browser/OS — this can't make
+// a bad engine sound like a real person, but it reliably picks the best
+// one actually available (e.g. Chrome's cloud "Google US English",
+// Edge's "Online (Natural)" voices, or macOS/iOS's "Samantha").
+function scoreVoice(v: SpeechSynthesisVoice): number {
+  const name = v.name.toLowerCase();
+  let score = 0;
+  if (/neural|natural/.test(name)) score += 100;
+  if (/online/.test(name)) score += 20;
+  if (/google/.test(name)) score += 40;
+  if (/samantha|zira|aria|jenny|emma|ava|susan|karen|moira|tessa|salli|joanna|kendra|kimberly|female/.test(name)) score += 50;
+  if (/male/.test(name) && !/female/.test(name)) score -= 30;
+  if (!v.localService) score += 15;
+  if (/en-us/i.test(v.lang)) score += 10;
+  else if (/en-gb/i.test(v.lang)) score += 6;
+  else if (/^en/i.test(v.lang)) score += 3;
+  return score;
+}
+
 function useSpeech() {
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     function loadVoices() {
-      const vs = speechSynthesis.getVoices();
-      voiceRef.current =
-        vs.find((v) => /en-US/i.test(v.lang)) ||
-        vs.find((v) => /en-GB/i.test(v.lang)) ||
-        vs.find((v) => /^en/i.test(v.lang)) ||
-        null;
+      const vs = speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
+      voiceRef.current = vs.length ? [...vs].sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] : null;
     }
     loadVoices();
     speechSynthesis.onvoiceschanged = loadVoices;
@@ -52,7 +70,7 @@ function useSpeech() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US";
+    u.lang = voiceRef.current?.lang || "en-US";
     u.rate = rate;
     u.pitch = 1;
     if (voiceRef.current) u.voice = voiceRef.current;
