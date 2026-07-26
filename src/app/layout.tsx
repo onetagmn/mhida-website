@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "@fontsource/noto-sans/400.css";
 import "@fontsource/noto-sans/500.css";
 import "@fontsource/noto-sans/600.css";
@@ -35,6 +36,12 @@ export default function RootLayout({
   return (
     <html lang="mn" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
+        {/* GoatCounter — privacy-friendly visit counter, no cookies/consent banner needed. */}
+        <Script
+          data-goatcounter="https://hida.goatcounter.com/count"
+          src="https://gc.zgo.at/count.js"
+          strategy="afterInteractive"
+        />
         <LanguageProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
