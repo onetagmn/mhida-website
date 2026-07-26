@@ -1,0 +1,201 @@
+<!--
+  Paste this into EmailJS: Email Templates -> Create New Template ->
+  switch the editor to "Code Editor" (the "<>" icon) -> paste this whole
+  file as the content. Same account/Gmail service as the welcome and
+  training-acceptance templates (see SETUP.md).
+
+  Suggested Subject field:
+  МДЭНХ цахим системийг бүрэн ашиглацгаая! / Get the most out of the MHIDA platform
+
+  Variables used: {{first_name}}, {{to_email}}
+  (No {{member_id}} box this time — this goes to every existing member,
+  not just new registrants, so it skips the "here is your new ID" panel.)
+-->
+<!DOCTYPE html>
+<html lang="mn">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MHIDA — Платформын танилцуулга</title></head>
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family: 'Noto Sans', Arial, sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9; padding: 24px 0;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; max-width:600px; width:100%;">
+
+<tr><td style="background-color:#ffffff; padding: 28px 32px; text-align:center;">
+<img src="https://mhida.org/logo.png" alt="MHIDA" width="64" height="64" style="display:block; margin: 0 auto 12px auto;">
+<p style="margin:0; color:#015196; font-size:18px; font-weight:700; letter-spacing:0.3px;">МОНГОЛЫН ДААТГАЛЫН ЭМЧ НАРЫН ХОЛБОО</p>
+<p style="margin:4px 0 0 0; color:#5b8bb0; font-size:12px; letter-spacing:1px;">MONGOLIAN HEALTH INSURANCE DOCTORS ASSOCIATION</p>
+</td></tr>
+<tr><td style="height:4px; line-height:4px; font-size:0; padding:0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+<td width="70%" style="background-color:#015196; height:4px; line-height:4px; font-size:0;">&nbsp;</td>
+<td width="30%" style="background-color:#c42730; height:4px; line-height:4px; font-size:0;">&nbsp;</td>
+</tr></table>
+</td></tr>
+
+<tr><td style="padding: 32px 32px 8px 32px;">
+<p style="margin:0; font-size:22px; font-weight:700; color:#0f172a;">Сайн байна уу, {{first_name}}!</p>
+<p style="margin:6px 0 0 0; font-size:14px; color:#64748b;">Hello, {{first_name}}!</p>
+</td></tr>
+
+<tr><td style="padding: 12px 32px 0 32px;">
+<p style="margin:0; font-size:15px; line-height:1.7; color:#334155;">Бид <b>mhida.org</b> сайтаа шинэчилж, гишүүн бүрт зориулсан цахим үйлчилгээнүүдийг нэг дор нэгтгэлээ. Энэ и-мэйл нь сайт дээр юу хийж болох, хэрхэн ашиглахыг товч тайлбарлах гарын авлага юм — заримыг мэдэж байгаа ч, шинээр нэмэгдсэн зүйлс байж болзошгүй тул уншиж үзэхийг зөвлөж байна.</p>
+<p style="margin:8px 0 0 0; font-size:12px; line-height:1.6; color:#94a3b8; font-style:italic;">We've built out mhida.org into a single place for every member service. This email is a short guide to what's there and how to use it — even if some of it is familiar, a few things may be new.</p>
+</td></tr>
+
+<tr><td style="padding: 28px 32px 0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+
+<!-- How to log in -->
+<tr><td style="padding: 24px 32px 0 32px;">
+<p style="margin:0; font-size:17px; font-weight:700; color:#0f172a;">🔑 Хэрхэн нэвтрэх вэ?</p>
+<p style="margin:2px 0 14px 0; font-size:12px; color:#94a3b8; font-style:italic;">How to log in</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td width="28" valign="top" style="padding: 0 10px 14px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background-color:#015196; border-radius:50%; text-align:center; color:#ffffff; font-size:12px; font-weight:700; line-height:24px;">1</td></tr></table></td>
+<td style="padding: 0 0 14px 0; font-size:14px; line-height:1.55; color:#334155;">
+<b>mhida.org</b> сайт руу орж, баруун дээд буланд байрлах <b>«Нэвтрэх»</b> товч дээр дарна уу.<br>
+<span style="color:#94a3b8; font-size:12px; font-style:italic;">Go to mhida.org and click "Log in" in the top-right corner.</span>
+</td></tr>
+<tr>
+<td width="28" valign="top" style="padding: 0 10px 14px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background-color:#015196; border-radius:50%; text-align:center; color:#ffffff; font-size:12px; font-weight:700; line-height:24px;">2</td></tr></table></td>
+<td style="padding: 0 0 14px 0; font-size:14px; line-height:1.55; color:#334155;">
+Бүртгүүлсэн <b>и-мэйл хаягаа</b> оруулаад, "Нэг удаагийн код авах" сонголтыг дарна уу — 6 оронтой код и-мэйл хаяг руу тань очно. Нууц үгээ мартаагүй бол шууд нууц үгээрээ ч нэвтэрч болно.<br>
+<span style="color:#94a3b8; font-size:12px; font-style:italic;">Enter the email you registered with and choose "Get a login code" — a 6-digit code is emailed to you. If you remember your password, you can log in with that instead.</span>
+</td></tr>
+<tr>
+<td width="28" valign="top" style="padding: 0 10px 14px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background-color:#015196; border-radius:50%; text-align:center; color:#ffffff; font-size:12px; font-weight:700; line-height:24px;">3</td></tr></table></td>
+<td style="padding: 0 0 14px 0; font-size:14px; line-height:1.55; color:#334155;">
+Нэвтэрсний дараа профайл хуудаснаасаа <b>байнгын нууц үг</b> тохируулаарай — дараагийн удаа кодгүйгээр шууд нэвтэрнэ.<br>
+<span style="color:#94a3b8; font-size:12px; font-style:italic;">Once logged in, set a permanent password on your dashboard — next time you can log in directly, no code needed.</span>
+</td></tr>
+</table>
+<p style="margin:4px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; background-color:#f8fafc; border-radius:8px; padding:10px 14px;">
+💡 Таны <b>Гишүүний дугаар</b> нь албан ёсны таних дугаар — нэвтрэхэд ашиглагдахгүй. Нэвтрэхдээ и-мэйл хаягаа ашиглана.<br>
+<span style="font-style:italic;">Your Member ID is your official identifier — it is not used to log in. Logging in uses your email address.</span>
+</p>
+</td></tr>
+
+<tr><td style="padding: 20px 32px 0 32px; text-align:center;">
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+<tr><td style="background-color:#c42730; border-radius:8px;"><a href="https://mhida.org/login" style="display:inline-block; padding: 13px 32px; font-size:15px; font-weight:700; color:#ffffff; text-decoration:none;">Нэвтрэх → Log In</a></td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding: 28px 32px 0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+
+<!-- Member Area -->
+<tr><td style="padding: 24px 32px 0 32px;">
+<p style="margin:0; font-size:17px; font-weight:700; color:#0f172a;">🪪 Таны гишүүний булан</p>
+<p style="margin:2px 0 14px 0; font-size:12px; color:#94a3b8; font-style:italic;">Your member dashboard</p>
+<p style="margin:0; font-size:14px; line-height:1.65; color:#334155;">Нэвтэрсний дараа өөрийн буланд орж дараах зүйлсийг хийж болно:</p>
+<p style="margin:2px 0 10px 0; font-size:12px; color:#94a3b8; font-style:italic;">Once logged in, from your dashboard you can:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px; line-height:1.6; color:#334155;">
+<tr><td style="padding:0 0 8px 0;">✅ Хувийн мэдээллээ (ажлын газар, албан тушаал, утас гэх мэт) шинэчлэх</td></tr>
+<tr><td style="padding:0 0 8px 0; font-size:12px; color:#94a3b8; font-style:italic;">Update your profile (workplace, position, phone, etc.)</td></tr>
+<tr><td style="padding:0 0 8px 0;">✅ Цахим нэрийн хуудсаа (гишүүний карт) үзэх, татах, хэвлэх</td></tr>
+<tr><td style="padding:0 0 8px 0; font-size:12px; color:#94a3b8; font-style:italic;">View, download, and print your digital member card</td></tr>
+<tr><td style="padding:0 0 8px 0;">✅ Нууц үгээ өөрчлөх</td></tr>
+<tr><td style="padding:0 0 8px 0; font-size:12px; color:#94a3b8; font-style:italic;">Change your password</td></tr>
+<tr><td style="padding:0 0 0 0;">✅ Мэргэжлийн гишүүнчлэлд шилжих хүсэлт илгээх (доороос дэлгэрэнгүй)</td></tr>
+<tr><td style="padding:0 0 0 0; font-size:12px; color:#94a3b8; font-style:italic;">Request an upgrade to Professional membership (details below)</td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding: 28px 32px 0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+
+<!-- Membership types -->
+<tr><td style="padding: 24px 32px 0 32px;">
+<p style="margin:0; font-size:17px; font-weight:700; color:#0f172a;">🎫 Гишүүнчлэлийн төрлүүд</p>
+<p style="margin:2px 0 14px 0; font-size:12px; color:#94a3b8; font-style:italic;">Membership types</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc; border-radius:10px; margin-bottom:10px;">
+<tr><td style="padding: 16px 18px;">
+<p style="margin:0; font-size:14px; font-weight:700; color:#015196;">Энгийн гишүүн — Үнэгүй</p>
+<p style="margin:6px 0 0 0; font-size:13px; line-height:1.55; color:#334155;">Гишүүний карт, мэдээ мэдээлэл, газрын зураг, AXIS/e-Health сургалтууд, Англи хэлний 30 өдрийн курс, мөн ДЭМБ-ын нэг мэргэжлийн курс үнэ төлбөргүй нээлттэй.</p>
+<p style="margin:6px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">Member card, news, member map, AXIS/e-Health trainings, the 30-day English course, and one WHO professional course — all free.</p>
+</td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:10px;">
+<tr><td style="padding: 16px 18px;">
+<p style="margin:0; font-size:14px; font-weight:700; color:#015196;">Мэргэжлийн гишүүн — 240,000₮ / жил</p>
+<p style="margin:6px 0 0 0; font-size:13px; line-height:1.55; color:#334155;">Дээрх бүгдээс гадна Johns Hopkins, Yale, Imperial College London, Duke зэрэг дэлхийн шилдэг их сургуулиудын нийт <b>10 мэргэжлийн видео курс</b> бүрэн нээлттэй болно.</p>
+<p style="margin:6px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">Everything above, plus all 10 professional video courses from Johns Hopkins, Yale, Imperial College London, Duke, and more.</p>
+<p style="margin:10px 0 0 0; font-size:13px; line-height:1.6; color:#334155;"><b>Хэрхэн шилжих вэ:</b> Гишүүний буландаа "Мэргэжлийн гишүүн болох" хэсгээс данс руу шилжүүлэг хийгээд "Төлбөр шилжүүлснээ мэдэгдэх" товчийг дарна. Баталгаажсаны дараа Мэргэжлийн гишүүнчлэл идэвхжинэ.</p>
+<p style="margin:4px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">To upgrade: from your dashboard's "Upgrade to Professional" section, transfer the fee to the account shown, then press "Notify payment sent". Your Professional membership activates once confirmed.</p>
+</td></tr></table>
+</td></tr>
+
+<tr><td style="padding: 28px 32px 0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+
+<!-- Trainings -->
+<tr><td style="padding: 24px 32px 0 32px;">
+<p style="margin:0; font-size:17px; font-weight:700; color:#0f172a;">🎓 Сургалтууд — хэрхэн эхлэх вэ?</p>
+<p style="margin:2px 0 14px 0; font-size:12px; color:#94a3b8; font-style:italic;">Trainings — how to get started</p>
+<p style="margin:0 0 14px 0; font-size:13px; line-height:1.6; color:#334155;">Нэвтэрсний дараа дээд цэснээс <b>«Сургалтууд»</b> хэсэгт орж, доорх дөрвөн сургалтын аль нэгийг сонгоод шууд эхэлж болно.</p>
+<p style="margin:-10px 0 14px 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">After logging in, open "Trainings" in the top menu and pick any of the four below to start right away.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc; border-radius:10px; margin-bottom:10px;">
+<tr><td style="padding: 16px 18px;">
+<p style="margin:0; font-size:14px; font-weight:700; color:#015196;">Open Frequency English — 30 өдрийн ярианы курс</p>
+<p style="margin:6px 0 0 0; font-size:13px; line-height:1.55; color:#334155;">Видео хичээл тус бүрийг үзэж, сонсож-давтах болон ярианы дасгал хийнэ. Явц автоматаар хадгалагдаж, 30 өдрийг бүгдийг дуусгахад албан ёсны гэрчилгээ (сертификат) олгоно.</p>
+<p style="margin:8px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">Watch each day's video, do the listen-and-repeat and speaking practice. Progress saves automatically, and you earn an official certificate after completing all 30 days.</p>
+</td></tr></table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc; border-radius:10px; margin-bottom:10px;">
+<tr><td style="padding: 16px 18px;">
+<p style="margin:0; font-size:14px; font-weight:700; color:#015196;">Мэргэжлийн сургалтууд</p>
+<p style="margin:6px 0 0 0; font-size:13px; line-height:1.55; color:#334155;">Эмнэлгийн код, өвчтөний аюулгүй байдал, эрүүл мэндийн эдийн засаг, тархвар судлал зэрэг сэдвээр 10 видео курс. Жагсаалтаас сонгоод шууд үзнэ — бүртгэл, хугацааны хязгаарлалт байхгүй.</p>
+<p style="margin:8px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">10 video courses on medical coding, patient safety, health economics, epidemiology, and more. Pick one from the list and watch — no separate signup, no deadline.</p>
+</td></tr></table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc; border-radius:10px; margin-bottom:10px;">
+<tr><td style="padding: 16px 18px;">
+<p style="margin:0; font-size:14px; font-weight:700; color:#015196;">AXIS Карт</p>
+<p style="margin:6px 0 0 0; font-size:13px; line-height:1.55; color:#334155;">Даатгал, эмнэлгийн тооцооны AXIS системийг ашиглах видео заавар, баримт бичгүүд.</p>
+<p style="margin:8px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">Video tutorials and documents for using the AXIS insurance and hospital billing system.</p>
+</td></tr></table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc; border-radius:10px;">
+<tr><td style="padding: 16px 18px;">
+<p style="margin:0; font-size:14px; font-weight:700; color:#015196;">e-Health</p>
+<p style="margin:6px 0 0 0; font-size:13px; line-height:1.55; color:#334155;">Иргэний бүртгэл, эмийн бүртгэл, жорын мэдээллийн e-Health системийн сургалт.</p>
+<p style="margin:8px 0 0 0; font-size:12px; line-height:1.5; color:#94a3b8; font-style:italic;">Training for the e-Health system covering civil registration, drug records, and prescriptions.</p>
+</td></tr></table>
+</td></tr>
+
+<tr><td style="padding: 28px 32px 0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+
+<!-- Other features -->
+<tr><td style="padding: 24px 32px 0 32px;">
+<p style="margin:0; font-size:17px; font-weight:700; color:#0f172a;">🧭 Бусад боломжууд</p>
+<p style="margin:2px 0 14px 0; font-size:12px; color:#94a3b8; font-style:italic;">Also on the site</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6; color:#334155;">
+<tr><td style="padding:0 0 4px 0;"><b>🗺️ Гишүүдийн газрын зураг</b> — Монгол даяар гишүүн эмч нар болон тэдний ажилладаг эмнэлэг, байгууллагыг аймаг/хотоор хайж үзэх.</td></tr>
+<tr><td style="padding:0 0 12px 0; font-size:12px; color:#94a3b8; font-style:italic;">Member Map — browse member doctors and their facilities by province.</td></tr>
+<tr><td style="padding:0 0 4px 0;"><b>📰 Мэдээ мэдээлэл</b> — Холбооны зарлал, сургалтын шинэ боломжууд, ажлын байрны мэдээлэл энд байнга шинэчлэгдэнэ.</td></tr>
+<tr><td style="padding:0 0 12px 0; font-size:12px; color:#94a3b8; font-style:italic;">News — announcements, new training opportunities, and updates are posted here regularly.</td></tr>
+<tr><td style="padding:0 0 4px 0;"><b>⚖️ Хууль, эрх зүйн акт</b> — Даатгалын эмчийн ажилтай холбоотой хууль, тогтоол, журмуудыг PDF хэлбэрээр татаж авах.</td></tr>
+<tr><td style="padding:0 0 12px 0; font-size:12px; color:#94a3b8; font-style:italic;">Legal Acts — laws, resolutions, and procedures relevant to insurance doctors, downloadable as PDF.</td></tr>
+<tr><td style="padding:0 0 4px 0;"><b>📝 Сургалтад бүртгүүлэх</b> — Гадаад, дотоод хамтрагч байгууллагуудын зарладаг тусгай сургалт, аяллын хөтөлбөрт өргөдөл гаргах.</td></tr>
+<tr><td style="padding:0 0 0 0; font-size:12px; color:#94a3b8; font-style:italic;">Training Application — apply for special trainings and programs announced by our partner organizations.</td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding: 28px 32px 0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0;">&nbsp;</td></tr></table></td></tr>
+
+<tr><td style="padding: 24px 32px 0 32px; text-align:center;">
+<p style="margin:0; font-size:14px; line-height:1.6; color:#334155;">Асуух зүйл байвал бидэнтэй чөлөөтэй холбогдоорой.</p>
+<p style="margin:2px 0 16px 0; font-size:12px; color:#94a3b8; font-style:italic;">Questions? Feel free to reach out anytime.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+<tr><td style="background-color:#c42730; border-radius:8px;"><a href="https://mhida.org/login" style="display:inline-block; padding: 13px 32px; font-size:15px; font-weight:700; color:#ffffff; text-decoration:none;">Нэвтрэх → Log In</a></td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding: 32px 32px 32px 32px; text-align:center;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e2e8f0; font-size:0; line-height:0; padding-bottom:20px;">&nbsp;</td></tr></table>
+<p style="margin:0; font-size:12px; color:#94a3b8;">Монголын Даатгалын Эмч Нарын Холбоо · MHIDA</p>
+<p style="margin:6px 0 0 0; font-size:12px; color:#94a3b8;">☏ 9997 8179 · 9985 4040 &nbsp;·&nbsp; <a href="https://mhida.org" style="color:#015196; text-decoration:none;">mhida.org</a></p>
+<p style="margin:14px 0 0 0; font-size:11px; color:#cbd5e1;">Та энэ и-мэйлийг МДЭНХ-д бүртгүүлсэн тул хүлээн авч байна.</p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
