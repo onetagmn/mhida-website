@@ -54,11 +54,33 @@ export default function NewsBody({ body }: { body: string }) {
     return <React.Fragment key={i}>{part}</React.Fragment>;
   });
 
+  const hasText = parts.some((part, i) => i % 2 === 0 && part.trim().length > 0);
+  const textBlock = (
+    <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{rendered}</div>
+  );
+
+  // When a post has both real text and a video, give each its own clear
+  // panel — side by side once there's room, stacked (video first, since
+  // it's usually the point of the post) on narrow screens. A post that's
+  // just a pasted link with no caption skips the split entirely.
+  if (hasText && videoIds.length > 0) {
+    return (
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="order-2 sm:order-1 sm:flex-1">{textBlock}</div>
+        <div className="order-1 space-y-3 sm:order-2 sm:w-72 sm:shrink-0 md:w-80">
+          {videoIds.map((vid) => (
+            <VideoEmbed key={vid} vid={vid} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{rendered}</div>
+      {hasText && textBlock}
       {videoIds.map((vid) => (
-        <VideoEmbed key={vid} vid={vid} />
+        <VideoEmbed key={vid} vid={vid} className={hasText ? "mt-4" : ""} />
       ))}
     </div>
   );
@@ -70,9 +92,9 @@ export default function NewsBody({ body }: { body: string }) {
  * "two play buttons" feel: our button, then YouTube's own paused state
  * again. A plain embed has exactly one play button — YouTube's.)
  */
-function VideoEmbed({ vid }: { vid: string }) {
+function VideoEmbed({ vid, className = "" }: { vid: string; className?: string }) {
   return (
-    <div className="mt-4 overflow-hidden rounded-xl">
+    <div className={`overflow-hidden rounded-xl border border-slate-200 ${className}`}>
       <iframe
         src={`https://www.youtube.com/embed/${vid}?rel=0&modestbranding=1&playsinline=1`}
         title="Video"
