@@ -61,10 +61,12 @@ export default function AdminNewsPage() {
     if (!files.length) return;
     setUploading(true); setMsg(null);
     for (const file of files) {
-      // \w is ASCII-only, so Cyrillic/Mongolian file names used to get
-      // stripped down to nothing, leaving just the upload timestamp as the
-      // displayed name. \p{L}/\p{N} keep letters and digits in any script.
-      const safe = file.name.replace(/[^\p{L}\p{N}.\-]+/gu, "_");
+      // Supabase Storage keys must be ASCII, so Cyrillic/Mongolian file
+      // names can't go in the path as literal characters (that's the
+      // "Invalid key" error). encodeURIComponent keeps the ASCII-only key
+      // Storage requires while preserving the original name losslessly —
+      // pdfName() decodes it straight back for display.
+      const safe = encodeURIComponent(file.name);
       const path = `pdf/${Date.now()}-${safe}`;
       const { error } = await supabase.storage.from("news-photos").upload(path, file, {
         cacheControl: "31536000",
