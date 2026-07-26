@@ -73,17 +73,21 @@ export default function AdminPage() {
     setSaving(null);
   }
 
-  // Approving a member lets them see the member directory (facility_members
+  // Only "active" members can see the member directory (facility_members
   // lookup on the Map page) — enforced server-side too, this is just the
   // admin control for it. See migration15_directory_approval_gate.sql.
-  async function approveMember(row: Row) {
+  // Freely shiftable both ways: click any of the three pills to set that
+  // member's status directly (e.g. re-open access after suspending someone,
+  // or pull it back if you approved by mistake).
+  async function setMemberStatus(row: Row, status: Row["status"]) {
+    if (row.status === status) return;
     setSaving(row.id);
     const { error } = await supabase
       .from("members")
-      .update({ status: "active" })
+      .update({ status })
       .eq("id", row.id);
     if (!error) {
-      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, status: "active" } : r)));
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, status } : r)));
     } else {
       alert(t("Алдаа: ", "Error: ") + error.message);
     }
@@ -281,7 +285,7 @@ export default function AdminPage() {
         )}
 
         <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full min-w-[1080px] text-sm">
+          <table className="w-full min-w-[1180px] text-sm">
             <thead>
               <tr className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">ID</th>
@@ -317,35 +321,38 @@ export default function AdminPage() {
                     </button>
                     {r.upgrade_requested && (
                       <span
-                        className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                        className="ml-1.5 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700"
                         title={t("Төлбөр шилжүүлснээ мэдэгдсэн — банкаа шалгаад баталгаажуулна уу", "Reported payment sent — verify in your bank, then toggle")}
                       >
-                        💰 {t("Төлсөн гэв", "Paid?")}
+                        💰 {t("Төлсөн", "Paid")}
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
-                    {r.status === "pending" ? (
-                      <button
-                        onClick={() => approveMember(r)}
-                        disabled={saving === r.id}
-                        title={t(
-                          "Баталгаажуулснаар энэ гишүүн Газрын зураг хуудсан дээрх бусад гишүүдийн мэдээллийг харах боломжтой болно",
-                          "Approving lets this member see other members' details on the Map page"
-                        )}
-                        className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700 transition-opacity hover:opacity-80 disabled:opacity-40"
-                      >
-                        ⏳ {t("Батлах", "Approve")}
-                      </button>
-                    ) : r.status === "suspended" ? (
-                      <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-                        {t("Түдгэлзсэн", "Suspended")}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                        ✓ {t("Идэвхтэй", "Active")}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {(
+                        [
+                          ["pending", "⏳", t("Хүлээгдэж буй", "Pending"), "bg-amber-100 text-amber-700"],
+                          ["active", "✓", t("Идэвхтэй", "Active"), "bg-green-100 text-green-700"],
+                          ["suspended", "✕", t("Түдгэлзсэн", "Suspended"), "bg-red-100 text-red-700"],
+                        ] as const
+                      ).map(([s, icon, label, activeClass]) => (
+                        <button
+                          key={s}
+                          onClick={() => setMemberStatus(r, s)}
+                          disabled={saving === r.id}
+                          title={t(
+                            "Зөвхөн Идэвхтэй төлөвтэй гишүүн Газрын зураг хуудсан дээрх бусад гишүүдийн мэдээллийг харах боломжтой",
+                            "Only Active members can see other members' details on the Map page"
+                          )}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-opacity hover:opacity-80 disabled:opacity-40 ${
+                            r.status === s ? activeClass : "bg-slate-50 text-slate-400"
+                          }`}
+                        >
+                          {icon} {label}
+                        </button>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <button
