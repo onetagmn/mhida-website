@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
-import { NewsPost, formatDate, pdfHref, pdfName } from "@/lib/news";
+import { NewsPost, formatDate } from "@/lib/news";
 import NewsBody from "@/components/NewsBody";
+import PdfAttachments from "@/components/PdfAttachments";
 
 export default function NewsPage() {
   const { t, lang } = useLanguage();
@@ -67,21 +68,7 @@ export default function NewsPage() {
                 <div className="mt-3">
                   <NewsBody body={p.body} />
                 </div>
-                {(p.pdf_urls ?? []).length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {p.pdf_urls.map((url, i) => (
-                      <a
-                        key={i}
-                        href={pdfHref(url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--brand-red)] px-3 py-1.5 text-xs font-semibold text-[var(--brand-red)] transition-colors hover:bg-red-50"
-                      >
-                        📄 {pdfName(url)} — {t("PDF татах", "Download PDF")}
-                      </a>
-                    ))}
-                  </div>
-                )}
+                <PdfAttachments urls={p.pdf_urls} />
               </div>
             </article>
           ))}
