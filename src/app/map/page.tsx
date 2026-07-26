@@ -29,6 +29,7 @@ export default function MapPage() {
   const [stats, setStats] = useState<FacilityStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [directoryUnlocked, setDirectoryUnlocked] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -49,6 +50,19 @@ export default function MapPage() {
       ]);
       setStats((data as FacilityStat[]) ?? []);
       setLoggedIn(!!session);
+      // The directory (facility_members) only opens up once an admin has
+      // approved the account (status = 'active') — see
+      // migration15_directory_approval_gate.sql. New signups start
+      // 'pending' and see a waiting message instead, on both this page
+      // and (enforced for real) in the RPC itself.
+      if (session) {
+        const { data: me } = await supabase
+          .from("members")
+          .select("status, is_admin")
+          .eq("id", session.user.id)
+          .single();
+        setDirectoryUnlocked(!!me && (me.status === "active" || me.is_admin));
+      }
       setLoading(false);
     })();
     const update = () => setMapSize(Math.min(760, window.innerWidth - 48));
@@ -106,7 +120,7 @@ export default function MapPage() {
   async function toggleFacility(workplace: string) {
     if (expanded === workplace) { setExpanded(null); return; }
     setExpanded(workplace);
-    if (!loggedIn || members[workplace]) return;
+    if (!directoryUnlocked || members[workplace]) return;
     const { data } = await supabase.rpc("facility_members", { p_workplace: workplace });
     setMembers((m) => ({ ...m, [workplace]: (data as FacilityMember[]) ?? [] }));
   }
@@ -254,6 +268,13 @@ export default function MapPage() {
                           {t("нэвтэрнэ үү", "log in")}
                         </Link>
                         .
+                      </p>
+                    ) : !directoryUnlocked ? (
+                      <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        ⏳ {t(
+                          "Таны бүртгэл админ баталгаажуулахыг хүлээж байна. Баталгаажсны дараа гишүүдийн мэдээллийг эндээс харах боломжтой болно.",
+                          "Your account is waiting for admin approval. Once approved, you'll be able to see member details here."
+                        )}
                       </p>
                     ) : !members[f.workplace] ? (
                       <p className="text-xs text-slate-400">{t("Ачааллаж байна...", "Loading...")}</p>

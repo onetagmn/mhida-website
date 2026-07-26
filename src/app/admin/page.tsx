@@ -21,9 +21,11 @@ type Row = {
   gender: string | null;
   position: string | null;
   upgrade_requested: boolean;
+  status: "active" | "pending" | "suspended";
 };
 
 type TierFilter = "all" | "regular" | "professional";
+type StatusFilter = "all" | "pending" | "active" | "suspended";
 
 export default function AdminPage() {
   const { t } = useLanguage();
@@ -33,6 +35,7 @@ export default function AdminPage() {
   const [denied, setDenied] = useState(false);
   const [search, setSearch] = useState("");
   const [tier, setTier] = useState<TierFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [saving, setSaving] = useState<string | null>(null);
   const [toolMsg, setToolMsg] = useState<string | null>(null);
 
@@ -44,7 +47,7 @@ export default function AdminPage() {
     if (!me?.is_admin) { setDenied(true); setLoading(false); return; }
     const { data } = await supabase
       .from("members")
-      .select("id, member_id, first_name, last_name, membership, workplace, province, phone, email, birth_date, gender, position, upgrade_requested")
+      .select("id, member_id, first_name, last_name, membership, workplace, province, phone, email, birth_date, gender, position, upgrade_requested, status")
       .order("member_id");
     setRows(data ?? []);
     setLoading(false);
@@ -64,6 +67,23 @@ export default function AdminPage() {
       .eq("id", row.id);
     if (!error) {
       setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, membership: next, upgrade_requested: false } : r)));
+    } else {
+      alert(t("Алдаа: ", "Error: ") + error.message);
+    }
+    setSaving(null);
+  }
+
+  // Approving a member lets them see the member directory (facility_members
+  // lookup on the Map page) — enforced server-side too, this is just the
+  // admin control for it. See migration15_directory_approval_gate.sql.
+  async function approveMember(row: Row) {
+    setSaving(row.id);
+    const { error } = await supabase
+      .from("members")
+      .update({ status: "active" })
+      .eq("id", row.id);
+    if (!error) {
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, status: "active" } : r)));
     } else {
       alert(t("Алдаа: ", "Error: ") + error.message);
     }
@@ -90,6 +110,7 @@ export default function AdminPage() {
 
   const filtered = rows.filter((r) => {
     if (tier !== "all" && r.membership !== tier) return false;
+    if (statusFilter !== "all" && r.status !== statusFilter) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return [r.member_id, r.first_name, r.last_name, r.workplace, r.phone, r.email]
@@ -161,13 +182,14 @@ export default function AdminPage() {
   }
 
   const nPro = rows.filter((r) => r.membership === "professional").length;
+  const nPending = rows.filter((r) => r.status === "pending").length;
 
   return (
     <div>
       <PageHeader
         eyebrow={t("Админ", "Admin")}
         title={t("Гишүүдийн удирдлага", "Member Management")}
-        subtitle={`${rows.length} ${t("гишүүн", "members")} · ${nPro} ${t("мэргэжлийн", "professional")} · ${rows.length - nPro} ${t("энгийн", "regular")}`}
+        subtitle={`${rows.length} ${t("гишүүн", "members")} · ${nPro} ${t("мэргэжлийн", "professional")} · ${rows.length - nPro} ${t("энгийн", "regular")}${nPending > 0 ? ` · ${nPending} ${t("баталгаажаагүй ⏳", "awaiting approval ⏳")}` : ""}`}
       />
 
       <div className="container-page py-10">
@@ -219,6 +241,16 @@ export default function AdminPage() {
             <option value="regular">{t("Зөвхөн Энгийн", "Regular only")}</option>
             <option value="professional">{t("Зөвхөн Мэргэжлийн", "Professional only")}</option>
           </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="rounded-md border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-[var(--brand-blue)]"
+          >
+            <option value="all">{t("Бүх төлөв", "All statuses")}</option>
+            <option value="pending">{t("Баталгаажаагүй ⏳", "Awaiting approval ⏳")}</option>
+            <option value="active">{t("Идэвхтэй", "Active")}</option>
+            <option value="suspended">{t("Түдгэлзсэн", "Suspended")}</option>
+          </select>
           <span className="text-sm text-slate-500">
             {filtered.length} {t("харагдаж байна", "shown")}
           </span>
@@ -249,7 +281,7 @@ export default function AdminPage() {
         )}
 
         <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full min-w-[960px] text-sm">
+          <table className="w-full min-w-[1080px] text-sm">
             <thead>
               <tr className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">ID</th>
@@ -258,6 +290,7 @@ export default function AdminPage() {
                 <th className="px-4 py-3">{t("Ажлын газар", "Workplace")}</th>
                 <th className="px-4 py-3">{t("Утас", "Phone")}</th>
                 <th className="px-4 py-3">{t("Гишүүнчлэл", "Membership")}</th>
+                <th className="px-4 py-3">{t("Каталогийн эрх", "Directory access")}</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -291,6 +324,29 @@ export default function AdminPage() {
                       </span>
                     )}
                   </td>
+                  <td className="px-4 py-2.5">
+                    {r.status === "pending" ? (
+                      <button
+                        onClick={() => approveMember(r)}
+                        disabled={saving === r.id}
+                        title={t(
+                          "Баталгаажуулснаар энэ гишүүн Газрын зураг хуудсан дээрх бусад гишүүдийн мэдээллийг харах боломжтой болно",
+                          "Approving lets this member see other members' details on the Map page"
+                        )}
+                        className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700 transition-opacity hover:opacity-80 disabled:opacity-40"
+                      >
+                        ⏳ {t("Батлах", "Approve")}
+                      </button>
+                    ) : r.status === "suspended" ? (
+                      <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                        {t("Түдгэлзсэн", "Suspended")}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                        ✓ {t("Идэвхтэй", "Active")}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-2.5 text-right">
                     <button
                       onClick={() => deleteMember(r)}
@@ -308,8 +364,8 @@ export default function AdminPage() {
         </div>
         <p className="mt-3 text-xs text-slate-400">
           {t(
-            "Гишүүнчлэл дээр дарж солино · ✕ дарж гишүүнийг бүрмөсөн устгана · Татах/хуулах товчнууд зөвхөн шүүгдсэн гишүүдэд үйлчилнэ.",
-            "Click a membership badge to toggle · ✕ permanently deletes a member · Export/copy buttons act on the filtered list only."
+            "Гишүүнчлэл дээр дарж солино · ⏳ Батлах товч дарснаар Газрын зургийн каталогийг харах эрх нээгдэнэ · ✕ дарж гишүүнийг бүрмөсөн устгана · Татах/хуулах товчнууд зөвхөн шүүгдсэн гишүүдэд үйлчилнэ.",
+            "Click a membership badge to toggle · ⏳ Approve unlocks the Map page directory for that member · ✕ permanently deletes a member · Export/copy buttons act on the filtered list only."
           )}
         </p>
       </div>
