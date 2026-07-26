@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
-import { pdfName } from "@/lib/news";
+import { pdfName, storagePath } from "@/lib/news";
 import type { ContentItem } from "@/components/ContentSection";
 
 type Section = "axis" | "ehealth" | "english" | "legal" | "partnership";
@@ -72,13 +72,7 @@ export default function AdminContentPage() {
     if (!files.length) return;
     setUploading(true); setMsg(null);
     for (const file of files) {
-      // Supabase Storage keys must be ASCII, so Cyrillic/Mongolian file
-      // names can't go in the path as literal characters (that's the
-      // "Invalid key" error). encodeURIComponent keeps the ASCII-only key
-      // Storage requires while preserving the original name losslessly —
-      // pdfName() decodes it straight back for display.
-      const safe = encodeURIComponent(file.name);
-      const path = `content/${Date.now()}-${safe}`;
+      const path = storagePath("content", file.name);
       const { error } = await supabase.storage.from("news-photos").upload(path, file, {
         cacheControl: "31536000",
         contentType: "application/pdf",

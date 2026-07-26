@@ -17,9 +17,50 @@ export function pdfHref(url: string): string {
   return /^https?:\/\//.test(url) ? url : asset("/" + url.replace(/^\//, ""));
 }
 
+// Supabase Storage keys only accept a narrow ASCII set (roughly
+// [\w!\-.*'()&$@=;:+,? /]) — raw Cyrillic/Mongolian file names AND
+// encodeURIComponent's "%" sequences both get rejected with
+// "Invalid key". Base64url output only uses letters, digits, "-" and
+// "_", which Storage always accepts, so we slug the name through that
+// instead and decode it back for display.
+function toSlug(name: string): string {
+  const bytes = new TextEncoder().encode(name);
+  let binary = "";
+  bytes.forEach((b) => { binary += String.fromCharCode(b); });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function fromSlug(slug: string): string | null {
+  try {
+    const b64 = slug.replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4));
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return null;
+  }
+}
+
+/** Builds a unique, Storage-safe upload path for any file name/language:
+ *  "<folder>/<timestamp>-<base64url-slug-of-original-name>". */
+export function storagePath(folder: string, fileName: string): string {
+  return `${folder}/${Date.now()}-${toSlug(fileName)}`;
+}
+
 export function pdfName(url: string): string {
   const raw = url.split("/").pop() ?? "PDF";
-  return decodeURIComponent(raw).replace(/[_-]+/g, " ").replace(/\.pdf$/i, "");
+  const dash = raw.indexOf("-");
+  if (dash > -1 && /^\d+$/.test(raw.slice(0, dash))) {
+    const decoded = fromSlug(raw.slice(dash + 1));
+    if (decoded) return decoded.replace(/\.pdf$/i, "").trim() || "PDF";
+  }
+  // Fallback for PDFs uploaded before this scheme (plain sanitized or
+  // percent-encoded names already sitting in Storage).
+  try {
+    return decodeURIComponent(raw).replace(/[_-]+/g, " ").replace(/\.pdf$/i, "").trim() || "PDF";
+  } catch {
+    return raw.replace(/[_-]+/g, " ").replace(/\.pdf$/i, "").trim() || "PDF";
+  }
 }
 
 export function firstYoutubeThumb(body: string): string | null {

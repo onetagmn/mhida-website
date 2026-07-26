@@ -215,6 +215,7 @@ export default function Home() {
                     <a
                       key={i}
                       href={pdfHref(url)}
+                      download={`${pdfName(url)}.pdf`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-1 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:opacity-80"

@@ -45,6 +45,7 @@ export default function PdfAttachments({ urls }: { urls: string[] | null | undef
             <a
               key={i}
               href={pdfHref(url)}
+              download={`${pdfName(url)}.pdf`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--brand-red)] px-3 py-1.5 text-xs font-semibold text-[var(--brand-red)] transition-colors hover:bg-red-50"
