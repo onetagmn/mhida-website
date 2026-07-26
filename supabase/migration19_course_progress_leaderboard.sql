@@ -17,7 +17,9 @@
 --    not gated on approval status (unlike facility_members) since
 --    course progress isn't the kind of personal contact info that
 --    prompted the directory approval gate — any logged-in member can
---    see it, matching what was asked for.
+--    see it, matching what was asked for. Only members who have
+--    actually started the course (completed >= 1 day) are returned —
+--    not the full member list.
 -- ============================================================
 
 create or replace function public.course_progress_stats()
@@ -67,19 +69,19 @@ as $$
     m.member_id as member_code,
     m.first_name,
     m.last_name,
-    coalesce(cp.cnt, 0) as completed_count,
+    cp.cnt as completed_count,
     (select count(*) from public.course_lessons) as total_lessons,
     cp.last_at as last_completed_at
   from public.members m
-  left join (
+  join (
     select member_id as uid,
            count(*) filter (where completed) as cnt,
            max(completed_at) as last_at
     from public.course_progress
     group by member_id
   ) cp on cp.uid = m.id
-  where m.status <> 'suspended'
-  order by completed_count desc nulls last, m.member_id
+  where m.status <> 'suspended' and cp.cnt > 0
+  order by completed_count desc, m.member_id
 $$;
 
 grant execute on function public.course_progress_table() to authenticated;

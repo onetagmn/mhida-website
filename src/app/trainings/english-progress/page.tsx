@@ -53,8 +53,8 @@ export default function EnglishProgressPage() {
         eyebrow={t("Сургалт", "Training")}
         title={t("Англи хэлний курсын явц", "English Course Progress")}
         subtitle={t(
-          "Бүх гишүүдийн 30 өдрийн курсын явц, бодит цагийн жагсаалт.",
-          "Real-time progress of every member through the 30-day course."
+          "Курс эхэлсэн гишүүдийн 30 өдрийн явц, бодит цагийн жагсаалт.",
+          "Real-time progress of members who have started the 30-day course."
         )}
       />
 
@@ -126,7 +126,9 @@ export default function EnglishProgressPage() {
                   {filtered.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                        {t("Илэрц олдсонгүй.", "No results.")}
+                        {rows.length === 0
+                          ? t("Хараахан хэн ч курс эхлээгүй байна.", "No one has started the course yet.")
+                          : t("Илэрц олдсонгүй.", "No results.")}
                       </td>
                     </tr>
                   )}
