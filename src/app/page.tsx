@@ -56,6 +56,12 @@ const quickActions: {
 ];
 
 type FacilityStat = { province: string | null; workplace: string; member_count: number };
+type CourseStats = {
+  total_lessons: number;
+  enrolled_members: number;
+  completed_members: number;
+  avg_completed: number;
+};
 
 export default function Home() {
   const { t, lang } = useLanguage();
@@ -63,12 +69,13 @@ export default function Home() {
   const [latest, setLatest] = useState<NewsPost[]>([]);
   const [partner, setPartner] = useState<NewsPost[]>([]);
   const [mapStats, setMapStats] = useState<FacilityStat[]>([]);
+  const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
   const [mapSize, setMapSize] = useState(640);
 
-  // Fetch latest news, partner posts, and map stats.
+  // Fetch latest news, partner posts, map stats, and course progress.
   useEffect(() => {
     (async () => {
-      const [newsRes, partnerRes, statsRes] = await Promise.all([
+      const [newsRes, partnerRes, statsRes, courseRes] = await Promise.all([
         supabase
           .from("news")
           .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
@@ -82,10 +89,12 @@ export default function Home() {
           .order("created_at", { ascending: false })
           .limit(4),
         supabase.rpc("facility_stats"),
+        supabase.rpc("course_progress_stats").maybeSingle(),
       ]);
       setLatest(newsRes.data ?? []);
       setPartner(partnerRes.data ?? []);
       setMapStats((statsRes.data as FacilityStat[]) ?? []);
+      setCourseStats((courseRes.data as CourseStats) ?? null);
     })();
     const update = () => setMapSize(Math.min(680, window.innerWidth - 48));
     update();
@@ -133,7 +142,7 @@ export default function Home() {
       </section>
 
       {/* Latest news (from the live database) */}
-      {latest.length > 0 && (
+      {(latest.length > 0 || courseStats) && (
         <section className="border-b border-slate-200 bg-white">
           <div className="container-page py-14">
             <div className="mb-6 flex items-end justify-between">
@@ -142,7 +151,49 @@ export default function Home() {
                 {t("Бүх мэдээ →", "All news →")}
               </Link>
             </div>
-            <div className="grid gap-6 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {courseStats && (
+                <Link
+                  href="/trainings/english-progress"
+                  className="group flex flex-col justify-between overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--brand-blue)]">
+                      🎓 {t("Англи хэлний курс", "English Course")}
+                    </p>
+                    <h3 className="font-bold text-slate-900 group-hover:text-[var(--brand-red)]">
+                      {t("Гишүүдийн явц бодит цагаар", "Live member progress")}
+                    </h3>
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-blue-100">
+                      <div
+                        className="h-full rounded-full bg-[var(--brand-blue)]"
+                        style={{
+                          width: `${courseStats.total_lessons > 0 ? Math.min(100, Math.round((courseStats.avg_completed / courseStats.total_lessons) * 100)) : 0}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="mt-3 grid grid-cols-3 gap-2 text-center">
+                      <span>
+                        <span className="block text-lg font-extrabold text-slate-900">{courseStats.enrolled_members}</span>
+                        <span className="block text-[10px] text-slate-500">{t("гишүүн", "members")}</span>
+                      </span>
+                      <span>
+                        <span className="block text-lg font-extrabold text-slate-900">
+                          {courseStats.avg_completed}/{courseStats.total_lessons}
+                        </span>
+                        <span className="block text-[10px] text-slate-500">{t("дундаж өдөр", "avg. day")}</span>
+                      </span>
+                      <span>
+                        <span className="block text-lg font-extrabold text-slate-900">{courseStats.completed_members}</span>
+                        <span className="block text-[10px] text-slate-500">{t("төгссөн", "finished")}</span>
+                      </span>
+                    </p>
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-[var(--brand-red)]">
+                    {t("Дэлгэрэнгүй хүснэгт →", "Full table →")}
+                  </p>
+                </Link>
+              )}
               {latest.map((p) => {
                 const thumb = p.image_urls[0] ?? firstYoutubeThumb(p.body);
                 const isVideo = !p.image_urls[0] && !!thumb;
