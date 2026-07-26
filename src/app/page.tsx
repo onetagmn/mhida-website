@@ -10,6 +10,7 @@ import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
 import { NewsPost, formatDate, firstYoutubeThumb, pdfHref, pdfName } from "@/lib/news";
 import { MAP_KEY_TO_MN, countColor } from "@/lib/map-provinces";
+import { PROVINCES } from "@/lib/provinces";
 import PartnerLogos from "@/components/PartnerLogos";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
@@ -69,6 +70,7 @@ export default function Home() {
   const [latest, setLatest] = useState<NewsPost[]>([]);
   const [partner, setPartner] = useState<NewsPost[]>([]);
   const [mapStats, setMapStats] = useState<FacilityStat[]>([]);
+  const [mapStatsLoaded, setMapStatsLoaded] = useState(false);
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
   const [mapSize, setMapSize] = useState(640);
 
@@ -94,6 +96,7 @@ export default function Home() {
       setLatest(newsRes.data ?? []);
       setPartner(partnerRes.data ?? []);
       setMapStats((statsRes.data as FacilityStat[]) ?? []);
+      setMapStatsLoaded(true);
       setCourseStats((courseRes.data as CourseStats) ?? null);
     })();
     const update = () => setMapSize(Math.min(680, window.innerWidth - 48));
@@ -113,6 +116,13 @@ export default function Home() {
       colors[mapKey] = countColor(counts.get(mn) ?? 0);
     }
     return colors;
+  }, [mapStats]);
+
+  const memberSummary = useMemo(() => {
+    const totalMembers = mapStats.reduce((a, s) => a + Number(s.member_count), 0);
+    const totalFacilities = mapStats.length;
+    const provincesCovered = new Set(mapStats.filter((s) => s.province).map((s) => s.province)).size;
+    return { totalMembers, totalFacilities, provincesCovered, totalProvinces: PROVINCES.length };
   }, [mapStats]);
 
   return (
@@ -140,6 +150,57 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Live member map summary — prominent social-proof banner, links to the full map. */}
+      {mapStatsLoaded && (() => {
+        const r = 36;
+        const c = 2 * Math.PI * r;
+        const pct = memberSummary.totalProvinces > 0
+          ? Math.min(100, Math.round((memberSummary.provincesCovered / memberSummary.totalProvinces) * 100))
+          : 0;
+        return (
+          <section className="border-b border-slate-200 bg-white">
+            <div className="container-page py-8">
+              <Link
+                href="/map"
+                className="group flex flex-col items-center gap-6 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:justify-between"
+              >
+                <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+                  <div className="relative h-[84px] w-[84px] shrink-0">
+                    <svg width="84" height="84" viewBox="0 0 84 84" className="-rotate-90">
+                      <circle cx="42" cy="42" r={r} fill="none" stroke="#dbe9f5" strokeWidth="8" />
+                      <circle
+                        cx="42" cy="42" r={r} fill="none" stroke="var(--brand-blue)" strokeWidth="8"
+                        strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <b className="text-base leading-none text-slate-900">{memberSummary.provincesCovered}</b>
+                      <span className="text-[8px] font-bold uppercase text-slate-500">
+                        /{memberSummary.totalProvinces} {t("аймаг", "regions")}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-1 flex items-center justify-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)] sm:justify-start">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
+                      🗺️ {t("Гишүүдийн тархалт бодит цагаар", "Live member map")}
+                    </p>
+                    <h2 className="text-xl font-extrabold text-slate-900 group-hover:text-[var(--brand-red)] sm:text-2xl">
+                      {memberSummary.totalMembers} {t("гишүүн", "members")} · {memberSummary.totalFacilities}{" "}
+                      {t("байгууллага", "facilities")} · {memberSummary.provincesCovered} {t("аймаг/хот", "regions")}
+                    </h2>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">
+                  <span>{t("Газрын зураг харах", "View the map")}</span>
+                  <span>→</span>
+                </div>
+              </Link>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Latest news (from the live database) */}
       {(latest.length > 0 || courseStats) && (

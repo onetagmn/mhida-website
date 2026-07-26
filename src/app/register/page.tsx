@@ -8,6 +8,7 @@ import { PROVINCES } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
 import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
+import Faq from "@/components/Faq";
 import { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_CONFIGURED } from "@/lib/emailjs-config";
 
 type FormState = {
@@ -569,6 +570,10 @@ export default function RegisterPage() {
               {submitting ? t("Илгээж байна...", "Submitting...") : t("Бүртгүүлэх", "Register")}
             </button>
           </form>
+
+          <div className="mt-12 border-t border-slate-200 pt-8">
+            <Faq />
+          </div>
         </div>
       </div>
     </div>
