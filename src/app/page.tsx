@@ -151,59 +151,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Live member map summary — prominent social-proof banner, links to the full map. */}
-      {mapStatsLoaded && (() => {
-        const r = 36;
-        const c = 2 * Math.PI * r;
-        const pct = memberSummary.totalProvinces > 0
-          ? Math.min(100, Math.round((memberSummary.provincesCovered / memberSummary.totalProvinces) * 100))
-          : 0;
-        return (
-          <section className="border-b border-slate-200 bg-white">
-            <div className="container-page py-8">
-              <Link
-                href="/map"
-                className="group flex flex-col items-center gap-6 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:justify-between"
-              >
-                <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-                  <div className="relative h-[84px] w-[84px] shrink-0">
-                    <svg width="84" height="84" viewBox="0 0 84 84" className="-rotate-90">
-                      <circle cx="42" cy="42" r={r} fill="none" stroke="#dbe9f5" strokeWidth="8" />
-                      <circle
-                        cx="42" cy="42" r={r} fill="none" stroke="var(--brand-blue)" strokeWidth="8"
-                        strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <b className="text-base leading-none text-slate-900">{memberSummary.provincesCovered}</b>
-                      <span className="text-[8px] font-bold uppercase text-slate-500">
-                        /{memberSummary.totalProvinces} {t("аймаг", "regions")}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-1 flex items-center justify-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)] sm:justify-start">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
-                      🗺️ {t("Гишүүдийн тархалт бодит цагаар", "Live member map")}
-                    </p>
-                    <h2 className="text-xl font-extrabold text-slate-900 group-hover:text-[var(--brand-red)] sm:text-2xl">
-                      {memberSummary.totalMembers} {t("гишүүн", "members")} · {memberSummary.totalFacilities}{" "}
-                      {t("байгууллага", "facilities")} · {memberSummary.provincesCovered} {t("аймаг/хот", "regions")}
-                    </h2>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand-blue)] px-5 py-3 text-sm font-bold text-white">
-                  <span>{t("Газрын зураг харах", "View the map")}</span>
-                  <span>→</span>
-                </div>
-              </Link>
-            </div>
-          </section>
-        );
-      })()}
-
       {/* Latest news (from the live database) */}
-      {(latest.length > 0 || courseStats) && (
+      {(latest.length > 0 || courseStats || mapStatsLoaded) && (
         <section className="border-b border-slate-200 bg-white">
           <div className="container-page py-14">
             <div className="mb-6 flex items-end justify-between">
@@ -213,6 +162,72 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {mapStatsLoaded && (
+                <Link
+                  href="/map"
+                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div>
+                    <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
+                      🗺️ {t("Гишүүдийн тархалт", "Member Map")}
+                    </p>
+                    <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
+                      {t("Бүх орон даяар өргөжиж байна", "Growing across the country")}
+                    </h3>
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] bg-blue-100 text-[var(--brand-blue)]">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                          </svg>
+                        </span>
+                        <span>
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900">{memberSummary.totalMembers}</span>
+                          <span className="text-[10.5px] font-semibold text-slate-500">{t("Гишүүн", "Members")}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] bg-blue-100 text-[var(--brand-blue)]">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="1" />
+                            <line x1="9" y1="7" x2="9" y2="7.01" />
+                            <line x1="15" y1="7" x2="15" y2="7.01" />
+                            <line x1="9" y1="12" x2="9" y2="12.01" />
+                            <line x1="15" y1="12" x2="15" y2="12.01" />
+                            <line x1="9" y1="17" x2="15" y2="17" />
+                          </svg>
+                        </span>
+                        <span>
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900">{memberSummary.totalFacilities}</span>
+                          <span className="text-[10.5px] font-semibold text-slate-500">{t("Эмнэлэг, байгууллага", "Facilities")}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] bg-blue-100 text-[var(--brand-blue)]">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                        </span>
+                        <span>
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900">
+                            {memberSummary.provincesCovered} /{memberSummary.totalProvinces}
+                          </span>
+                          <span className="text-[10.5px] font-semibold text-slate-500">{t("Аймаг, хот", "Regions")}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
+                    <span>{t("Газрын зураг харах", "View the map")}</span>
+                    <span>→</span>
+                  </div>
+                </Link>
+              )}
               {courseStats && (() => {
                 const pct = courseStats.total_lessons > 0
                   ? Math.min(100, Math.round((courseStats.avg_completed / courseStats.total_lessons) * 100))
