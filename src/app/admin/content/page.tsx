@@ -88,7 +88,6 @@ export default function AdminContentPage() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) { setMsg(t("Гарчиг оруулна уу.", "Please enter a title.")); return; }
     setSaving(true); setMsg(null);
     const payload = {
       section,
@@ -163,7 +162,7 @@ export default function AdminContentPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Гарчиг", "Title")} *</label>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Гарчиг", "Title")}</label>
             <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-blue)]" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div>
