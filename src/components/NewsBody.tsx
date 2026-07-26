@@ -32,7 +32,13 @@ export default function NewsBody({ body }: { body: string }) {
     if (i % 2 === 1) {
       // odd indexes are URLs (capture group)
       const vid = youtubeId(part);
-      if (vid && !videoIds.includes(vid)) videoIds.push(vid);
+      if (vid) {
+        // A YouTube link gets a full video player embedded below instead —
+        // showing the raw URL as text too was redundant clutter (and
+        // looked broken, like a leftover unformatted paste).
+        if (!videoIds.includes(vid)) videoIds.push(vid);
+        return null;
+      }
       return (
         <a
           key={i}
