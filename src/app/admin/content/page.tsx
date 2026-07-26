@@ -72,7 +72,10 @@ export default function AdminContentPage() {
     if (!files.length) return;
     setUploading(true); setMsg(null);
     for (const file of files) {
-      const safe = file.name.replace(/[^\w.\-]+/g, "_");
+      // \w is ASCII-only, so Cyrillic/Mongolian file names used to get
+      // stripped down to nothing, leaving just the upload timestamp as the
+      // displayed name. \p{L}/\p{N} keep letters and digits in any script.
+      const safe = file.name.replace(/[^\p{L}\p{N}.\-]+/gu, "_");
       const path = `content/${Date.now()}-${safe}`;
       const { error } = await supabase.storage.from("news-photos").upload(path, file, {
         cacheControl: "31536000",
