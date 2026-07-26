@@ -64,7 +64,7 @@ export default function ContentSection({
               <NewsBody body={item.body} />
             </div>
           )}
-          <PdfAttachments urls={item.pdf_urls} />
+          <PdfAttachments urls={item.pdf_urls} preview={section !== "legal"} />
         </article>
       ))}
     </div>
