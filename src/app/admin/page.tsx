@@ -307,26 +307,28 @@ export default function AdminPage() {
                   <td className="max-w-[260px] truncate px-4 py-2.5 text-slate-600">{r.workplace}</td>
                   <td className="px-4 py-2.5 text-slate-600">{r.phone}</td>
                   <td className="px-4 py-2.5">
-                    <button
-                      onClick={() => toggleMembership(r)}
-                      disabled={saving === r.id}
-                      title={t("Дарж солино", "Click to toggle")}
-                      className={`rounded-full px-3 py-1 text-xs font-bold transition-opacity hover:opacity-80 disabled:opacity-40 ${
-                        r.membership === "professional"
-                          ? "bg-blue-100 text-[var(--brand-blue)]"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {r.membership === "professional" ? t("Мэргэжлийн", "Professional") : t("Энгийн", "Regular")}
-                    </button>
-                    {r.upgrade_requested && (
-                      <span
-                        className="ml-1.5 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700"
-                        title={t("Төлбөр шилжүүлснээ мэдэгдсэн — банкаа шалгаад баталгаажуулна уу", "Reported payment sent — verify in your bank, then toggle")}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        onClick={() => toggleMembership(r)}
+                        disabled={saving === r.id}
+                        title={t("Дарж солино", "Click to toggle")}
+                        className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold transition-opacity hover:opacity-80 disabled:opacity-40 ${
+                          r.membership === "professional"
+                            ? "bg-blue-100 text-[var(--brand-blue)]"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
                       >
-                        💰 {t("Төлсөн", "Paid")}
-                      </span>
-                    )}
+                        {r.membership === "professional" ? t("Мэргэжлийн", "Professional") : t("Энгийн", "Regular")}
+                      </button>
+                      {r.upgrade_requested && (
+                        <span
+                          className="shrink-0 whitespace-nowrap rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700"
+                          title={t("Төлбөр шилжүүлснээ мэдэгдсэн — банкаа шалгаад баталгаажуулна уу", "Reported payment sent — verify in your bank, then toggle")}
+                        >
+                          💰 {t("Төлсөн", "Paid")}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
