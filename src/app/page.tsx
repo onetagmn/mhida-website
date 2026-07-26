@@ -152,48 +152,65 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {courseStats && (
-                <Link
-                  href="/trainings/english-progress"
-                  className="group flex flex-col justify-between overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--brand-blue)]">
-                      🎓 {t("Англи хэлний курс", "English Course")}
-                    </p>
-                    <h3 className="font-bold text-slate-900 group-hover:text-[var(--brand-red)]">
-                      {t("Гишүүдийн явц бодит цагаар", "Live member progress")}
-                    </h3>
-                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-blue-100">
-                      <div
-                        className="h-full rounded-full bg-[var(--brand-blue)]"
-                        style={{
-                          width: `${courseStats.total_lessons > 0 ? Math.min(100, Math.round((courseStats.avg_completed / courseStats.total_lessons) * 100)) : 0}%`,
-                        }}
-                      />
+              {courseStats && (() => {
+                const pct = courseStats.total_lessons > 0
+                  ? Math.min(100, Math.round((courseStats.avg_completed / courseStats.total_lessons) * 100))
+                  : 0;
+                const r = 32;
+                const c = 2 * Math.PI * r;
+                return (
+                  <Link
+                    href="/trainings/english-progress"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(1,81,150,0.10),transparent_70%)]" />
+                    <div>
+                      <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
+                        🎓 {t("Англи хэлний курс", "English Course")}
+                      </p>
+                      <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
+                        {t("Гишүүдийн явц бодит цагаар", "Live member progress")}
+                      </h3>
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-[76px] w-[76px] shrink-0">
+                          <svg width="76" height="76" viewBox="0 0 76 76" className="-rotate-90">
+                            <circle cx="38" cy="38" r={r} fill="none" stroke="#dbe9f5" strokeWidth="8" />
+                            <circle
+                              cx="38" cy="38" r={r} fill="none" stroke="var(--brand-blue)" strokeWidth="8"
+                              strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)}
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <b className="text-[15px] leading-none text-slate-900">{pct}%</b>
+                            <span className="text-[8.5px] font-bold text-slate-500">{t("ДУНДАЖ", "AVG")}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-1 flex-col gap-1.5 text-[12.5px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">👥 {t("Элссэн гишүүд", "Enrolled")}</span>
+                            <span className="font-extrabold text-slate-900">{courseStats.enrolled_members}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">📈 {t("Дундаж өдөр", "Avg. day")}</span>
+                            <span className="font-extrabold text-slate-900">
+                              {courseStats.avg_completed}/{courseStats.total_lessons}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">🏆 {t("Төгссөн", "Finished")}</span>
+                            <span className="font-extrabold text-slate-900">{courseStats.completed_members}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="mt-3 grid grid-cols-3 gap-2 text-center">
-                      <span>
-                        <span className="block text-lg font-extrabold text-slate-900">{courseStats.enrolled_members}</span>
-                        <span className="block text-[10px] text-slate-500">{t("гишүүн", "members")}</span>
-                      </span>
-                      <span>
-                        <span className="block text-lg font-extrabold text-slate-900">
-                          {courseStats.avg_completed}/{courseStats.total_lessons}
-                        </span>
-                        <span className="block text-[10px] text-slate-500">{t("дундаж өдөр", "avg. day")}</span>
-                      </span>
-                      <span>
-                        <span className="block text-lg font-extrabold text-slate-900">{courseStats.completed_members}</span>
-                        <span className="block text-[10px] text-slate-500">{t("төгссөн", "finished")}</span>
-                      </span>
-                    </p>
-                  </div>
-                  <p className="mt-4 text-sm font-semibold text-[var(--brand-red)]">
-                    {t("Дэлгэрэнгүй хүснэгт →", "Full table →")}
-                  </p>
-                </Link>
-              )}
+                    <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
+                      <span>{t("Дэлгэрэнгүй хүснэгт харах", "Full table")}</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                );
+              })()}
               {latest.map((p) => {
                 const thumb = p.image_urls[0] ?? firstYoutubeThumb(p.body);
                 const isVideo = !p.image_urls[0] && !!thumb;

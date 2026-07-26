@@ -15,11 +15,26 @@ type Row = {
   last_completed_at: string | null;
 };
 
+type CourseStats = {
+  total_lessons: number;
+  enrolled_members: number;
+  completed_members: number;
+  avg_completed: number;
+};
+
+const AVATAR_COLORS = ["#015196", "#c42730", "#0f766e", "#7c3aed", "#ea580c", "#0369a1", "#65a30d", "#b45309"];
+const MEDALS = ["🥇", "🥈", "🥉"];
+
+function initials(first: string, last: string) {
+  return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
+}
+
 export default function EnglishProgressPage() {
   const { t, lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
+  const [stats, setStats] = useState<CourseStats | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -27,8 +42,12 @@ export default function EnglishProgressPage() {
       const { data: { session } } = await supabase.auth.getSession();
       setLoggedIn(!!session);
       if (session) {
-        const { data } = await supabase.rpc("course_progress_table");
-        setRows((data as Row[]) ?? []);
+        const [tableRes, statsRes] = await Promise.all([
+          supabase.rpc("course_progress_table"),
+          supabase.rpc("course_progress_stats").maybeSingle(),
+        ]);
+        setRows((tableRes.data as Row[]) ?? []);
+        setStats((statsRes.data as CourseStats) ?? null);
       }
       setLoading(false);
     })();
@@ -45,7 +64,7 @@ export default function EnglishProgressPage() {
     );
   }, [rows, search]);
 
-  const totalLessons = rows[0]?.total_lessons ?? 30;
+  const totalLessons = stats?.total_lessons ?? rows[0]?.total_lessons ?? 30;
 
   return (
     <div>
@@ -71,6 +90,34 @@ export default function EnglishProgressPage() {
           </div>
         ) : (
           <>
+            {stats && (
+              <div className="mb-6 grid gap-4 sm:grid-cols-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl">👥</span>
+                  <div>
+                    <b className="block text-xl font-extrabold text-slate-900">{stats.enrolled_members}</b>
+                    <span className="text-[11.5px] font-semibold text-slate-500">{t("Элссэн гишүүд", "Enrolled")}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl">📈</span>
+                  <div>
+                    <b className="block text-xl font-extrabold text-slate-900">
+                      {stats.avg_completed}/{stats.total_lessons}
+                    </b>
+                    <span className="text-[11.5px] font-semibold text-slate-500">{t("Дундаж өдөр", "Avg. day")}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-xl">🏆</span>
+                  <div>
+                    <b className="block text-xl font-extrabold text-slate-900">{stats.completed_members}</b>
+                    <span className="text-[11.5px] font-semibold text-slate-500">{t("Курс төгссөн", "Finished")}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <input
               placeholder={t("MD дугаар эсвэл нэрээр хайх...", "Search by MD number or name...")}
               className="mb-4 w-full max-w-sm rounded-md border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-[var(--brand-blue)] sm:w-auto"
@@ -78,8 +125,8 @@ export default function EnglishProgressPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <table className="w-full min-w-[760px] text-sm">
+                <thead className="bg-slate-50 text-left text-[10.5px] font-extrabold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-4 py-3">{t("№", "#")}</th>
                     <th className="px-4 py-3">MD</th>
@@ -92,20 +139,34 @@ export default function EnglishProgressPage() {
                 <tbody className="divide-y divide-slate-100">
                   {filtered.map((r, i) => {
                     const pct = r.total_lessons > 0 ? Math.round((r.completed_count / r.total_lessons) * 100) : 0;
+                    const done = pct === 100;
+                    const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
                     return (
                       <tr key={r.member_code} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 text-slate-400">{i + 1}</td>
+                        <td className="px-4 py-3 font-extrabold text-slate-400">
+                          {i < 3 ? <span className="text-base">{MEDALS[i]}</span> : i + 1}
+                        </td>
                         <td className="px-4 py-3 font-mono text-xs font-semibold text-[var(--brand-blue)]">
                           {r.member_code}
                         </td>
-                        <td className="px-4 py-3 font-medium text-slate-800">
-                          {r.first_name} {r.last_name}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+                              style={{ background: color }}
+                            >
+                              {initials(r.first_name, r.last_name)}
+                            </span>
+                            <span className="font-medium text-slate-800">
+                              {r.first_name} {r.last_name}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="h-2 w-32 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-[7px] w-32 overflow-hidden rounded-full bg-slate-100">
                               <div
-                                className={`h-full rounded-full ${pct === 100 ? "bg-green-500" : "bg-[var(--brand-blue)]"}`}
+                                className={`h-full rounded-full ${done ? "bg-green-500" : "bg-[var(--brand-blue)]"}`}
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
@@ -114,6 +175,11 @@ export default function EnglishProgressPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                           {r.completed_count}/{r.total_lessons}
+                          {done && (
+                            <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-extrabold text-green-700">
+                              {t("Төгссөн", "Finished")}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-400">
                           {r.last_completed_at
