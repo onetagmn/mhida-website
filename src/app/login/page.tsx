@@ -1,34 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
+import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
 
-type Mode = "otp" | "password";
+type Mode = "link" | "password";
 
 export default function LoginPage() {
   const { t } = useLanguage();
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("otp");
+  const [mode, setMode] = useState<Mode>("link");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [linkSent, setLinkSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   const inputClass =
     "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--brand-blue)]";
 
-  async function sendOtp(e: React.FormEvent) {
+  // If this page was opened from the sign-in link in the email, Supabase's
+  // client picks up the session from the URL automatically — this just
+  // catches that moment and moves on to the dashboard.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        router.replace("/dashboard/");
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [router]);
+
+  async function sendLink(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true); setError(null); setInfo(null);
+    setBusy(true); setError(null);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: false },
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}${asset("/login/")}`,
+      },
     });
     setBusy(false);
     if (error) {
@@ -42,27 +56,7 @@ export default function LoginPage() {
       }
       return;
     }
-    setOtpSent(true);
-    setInfo(t(
-      "Таны и-мэйл рүү 6 оронтой код илгээлээ. Ирсэн кодыг доор оруулна уу.",
-      "A 6-digit code was sent to your email. Enter it below."
-    ));
-  }
-
-  async function verifyOtp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true); setError(null);
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: otpCode.trim(),
-      type: "email",
-    });
-    setBusy(false);
-    if (error) {
-      setError(t("Код буруу эсвэл хугацаа дууссан байна.", "Invalid or expired code."));
-      return;
-    }
-    router.push("/dashboard/");
+    setLinkSent(true);
   }
 
   async function loginPassword(e: React.FormEvent) {
@@ -89,8 +83,8 @@ export default function LoginPage() {
         eyebrow={t("Гишүүд", "Members")}
         title={t("Нэвтрэх", "Log In")}
         subtitle={t(
-          "Анх удаа нэвтэрч байгаа бол и-мэйл код ашиглана уу — нууц үг шаардлагагүй.",
-          "First time logging in? Use the email code option — no password needed."
+          "Анх удаа нэвтэрч байгаа бол и-мэйл холбоос ашиглана уу — нууц үг шаардлагагүй.",
+          "First time logging in? Use the email link option — no password needed."
         )}
       />
 
@@ -98,10 +92,10 @@ export default function LoginPage() {
         <div className="mx-auto max-w-md">
           <div className="mb-6 grid grid-cols-2 rounded-lg border border-slate-200 p-1 text-sm font-semibold">
             <button
-              onClick={() => { setMode("otp"); setError(null); }}
-              className={`rounded-md px-3 py-2 transition-colors ${mode === "otp" ? "bg-[var(--brand-blue)] text-white" : "text-slate-600"}`}
+              onClick={() => { setMode("link"); setError(null); }}
+              className={`rounded-md px-3 py-2 transition-colors ${mode === "link" ? "bg-[var(--brand-blue)] text-white" : "text-slate-600"}`}
             >
-              {t("И-мэйл код", "Email code")}
+              {t("И-мэйл холбоос", "Email link")}
             </button>
             <button
               onClick={() => { setMode("password"); setError(null); }}
@@ -111,8 +105,8 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {mode === "otp" && !otpSent && (
-            <form onSubmit={sendOtp} className="space-y-4">
+          {mode === "link" && !linkSent && (
+            <form onSubmit={sendLink} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700" htmlFor="email">
                   {t("И-мэйл", "Email")}
@@ -124,43 +118,27 @@ export default function LoginPage() {
                 disabled={busy}
                 className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {busy ? t("Илгээж байна...", "Sending...") : t("Код илгээх", "Send code")}
+                {busy ? t("Илгээж байна...", "Sending...") : t("Холбоос илгээх", "Send sign-in link")}
               </button>
             </form>
           )}
 
-          {mode === "otp" && otpSent && (
-            <form onSubmit={verifyOtp} className="space-y-4">
-              {info && <p className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-slate-700">{info}</p>}
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700" htmlFor="otp">
-                  {t("6 оронтой код", "6-digit code")}
-                </label>
-                <input
-                  id="otp"
-                  inputMode="numeric"
-                  maxLength={6}
-                  required
-                  className={`${inputClass} text-center text-xl tracking-[0.5em]`}
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, ""))}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={busy || otpCode.length !== 6}
-                className="w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                {busy ? t("Шалгаж байна...", "Verifying...") : t("Нэвтрэх", "Log in")}
-              </button>
+          {mode === "link" && linkSent && (
+            <div className="space-y-4">
+              <p className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-slate-700">
+                {t(
+                  "Таны и-мэйл рүү нэвтрэх холбоос илгээлээ. И-мэйлээ нээгээд \"Sign in\" холбоос дээр дарна уу.",
+                  "A sign-in link was sent to your email. Open your email and click \"Sign in\"."
+                )}
+              </p>
               <button
                 type="button"
-                onClick={() => { setOtpSent(false); setOtpCode(""); setInfo(null); }}
+                onClick={() => { setLinkSent(false); setError(null); }}
                 className="w-full text-center text-sm text-slate-500 hover:text-[var(--brand-blue)]"
               >
                 {t("← Өөр и-мэйл ашиглах", "← Use a different email")}
               </button>
-            </form>
+            </div>
           )}
 
           {mode === "password" && (
