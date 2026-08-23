@@ -420,7 +420,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className={label} htmlFor="facebookId">
-                  {t("Facebook хаяг (заавал биш)", "Facebook ID (optional)")}
+                  {t("Facebook хаяг", "Facebook ID")}
                 </label>
                 <input id="facebookId" className={inputClass("facebookId")} value={form.facebookId} onChange={set("facebookId")} />
               </div>
