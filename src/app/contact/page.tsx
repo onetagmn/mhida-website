@@ -52,20 +52,7 @@ export default function ContactPage() {
             </span>
           </p>
         </section>
-
-        {/* Address */}
-        <section className="rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {t("Хаяг", "Address")}
-          </h2>
-          <address className="mt-3 not-italic text-base leading-relaxed text-gray-800">
-            {t(
-              "Монгол Улс, Улаанбаатар хот, Баянзүрх дүүрэг, 15-р хороо, 13-р хороолол, 70-7 тоот, 13370",
-              "70-7, 13th khoroolol, 15th khoroo, Bayanzurkh District, Ulaanbaatar 13370, Mongolia"
-            )}
-          </address>
-        </section>
-
+      
         {/* Email */}
         <section className="rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900">
