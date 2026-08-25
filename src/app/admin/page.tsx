@@ -38,6 +38,8 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [saving, setSaving] = useState<string | null>(null);
   const [toolMsg, setToolMsg] = useState<string | null>(null);
+  const [editingEmail, setEditingEmail] = useState<string | null>(null);
+  const [emailDraft, setEmailDraft] = useState("");
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -88,6 +90,29 @@ export default function AdminPage() {
       .eq("id", row.id);
     if (!error) {
       setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, status } : r)));
+    } else {
+      alert(t("Алдаа: ", "Error: ") + error.message);
+    }
+    setSaving(null);
+  }
+
+  // Edits the members.email profile field only. It does NOT change the
+  // member's Supabase Auth login address — that needs a service-role call.
+  async function saveEmail(row: Row) {
+    const next = emailDraft.trim();
+    if (next === (row.email ?? "")) { setEditingEmail(null); return; }
+    if (next && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) {
+      alert(t("И-мэйл хаяг буруу байна.", "That email address isn't valid."));
+      return;
+    }
+    setSaving(row.id);
+    const { error } = await supabase
+      .from("members")
+      .update({ email: next || null })
+      .eq("id", row.id);
+    if (!error) {
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, email: next || null } : r)));
+      setEditingEmail(null);
     } else {
       alert(t("Алдаа: ", "Error: ") + error.message);
     }
@@ -285,7 +310,7 @@ export default function AdminPage() {
         )}
 
         <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full min-w-[1180px] text-sm">
+          <table className="w-full min-w-[1400px] text-sm">
             <thead>
               <tr className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">ID</th>
@@ -293,6 +318,7 @@ export default function AdminPage() {
                 <th className="px-4 py-3">{t("Нэр", "First name")}</th>
                 <th className="px-4 py-3">{t("Ажлын газар", "Workplace")}</th>
                 <th className="px-4 py-3">{t("Утас", "Phone")}</th>
+                <th className="px-4 py-3">{t("И-мэйл", "Email")}</th>
                 <th className="px-4 py-3">{t("Гишүүнчлэл", "Membership")}</th>
                 <th className="px-4 py-3">{t("Каталогийн эрх", "Directory access")}</th>
                 <th className="px-4 py-3"></th>
@@ -306,6 +332,31 @@ export default function AdminPage() {
                   <td className="px-4 py-2.5">{r.first_name}</td>
                   <td className="max-w-[260px] truncate px-4 py-2.5 text-slate-600">{r.workplace}</td>
                   <td className="px-4 py-2.5 text-slate-600">{r.phone}</td>
+                  <td className="px-4 py-2.5">
+                    {editingEmail === r.id ? (
+                      <input
+                        type="email"
+                        autoFocus
+                        value={emailDraft}
+                        disabled={saving === r.id}
+                        onChange={(e) => setEmailDraft(e.target.value)}
+                        onBlur={() => void saveEmail(r)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.currentTarget.blur(); }
+                          if (e.key === "Escape") { setEditingEmail(null); }
+                        }}
+                        className="w-[220px] rounded-md border border-[var(--brand-blue)] px-2 py-1 text-sm outline-none disabled:opacity-40"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => { setEditingEmail(r.id); setEmailDraft(r.email ?? ""); }}
+                        title={t("Дарж засах", "Click to edit")}
+                        className="max-w-[220px] truncate rounded-md px-2 py-1 text-left text-slate-600 transition-colors hover:bg-blue-50 hover:text-[var(--brand-blue)]"
+                      >
+                        {r.email || <span className="text-slate-300">— {t("нэмэх", "add")}</span>}
+                      </button>
+                    )}
+                  </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <button
@@ -373,8 +424,8 @@ export default function AdminPage() {
         </div>
         <p className="mt-3 text-xs text-slate-400">
           {t(
-            "Гишүүнчлэл дээр дарж солино · ⏳ Батлах товч дарснаар Газрын зургийн каталогийг харах эрх нээгдэнэ · ✕ дарж гишүүнийг бүрмөсөн устгана · Татах/хуулах товчнууд зөвхөн шүүгдсэн гишүүдэд үйлчилнэ.",
-            "Click a membership badge to toggle · ⏳ Approve unlocks the Map page directory for that member · ✕ permanently deletes a member · Export/copy buttons act on the filtered list only."
+            "И-мэйл дээр дарж засна (Enter — хадгалах, Esc — болих) · Гишүүнчлэл дээр дарж солино · ⏳ Батлах товч дарснаар Газрын зургийн каталогийг харах эрх нээгдэнэ · ✕ дарж гишүүнийг бүрмөсөн устгана · Татах/хуулах товчнууд зөвхөн шүүгдсэн гишүүдэд үйлчилнэ.",
+            "Click an email to edit it (Enter saves, Esc cancels) · Click a membership badge to toggle · ⏳ Approve unlocks the Map page directory for that member · ✕ permanently deletes a member · Export/copy buttons act on the filtered list only."
           )}
         </p>
       </div>
