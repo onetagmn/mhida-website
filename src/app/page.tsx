@@ -83,7 +83,7 @@ export default function Home() {
           .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
           .eq("category", "news")
           .order("created_at", { ascending: false })
-          .limit(3),
+          .limit(8),
         supabase
           .from("news")
           .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
@@ -124,6 +124,14 @@ export default function Home() {
     const provincesCovered = new Set(mapStats.filter((s) => s.province).map((s) => s.province)).size;
     return { totalMembers, totalFacilities, provincesCovered, totalProvinces: PROVINCES.length };
   }, [mapStats]);
+
+  // The Latest News grid is 4 across. Keep it to exactly two full rows (8 tiles),
+  // counting the Map and English Course cards that share the grid.
+  const NEWS_GRID_TILES = 8;
+  const newsTiles = latest.slice(
+    0,
+    NEWS_GRID_TILES - (mapStatsLoaded ? 1 : 0) - (courseStats ? 1 : 0)
+  );
 
   return (
     <div>
@@ -287,7 +295,7 @@ export default function Home() {
                   </Link>
                 );
               })()}
-              {latest.map((p) => {
+              {newsTiles.map((p) => {
                 const thumb = p.image_urls[0] ?? firstYoutubeThumb(p.body);
                 const isVideo = !p.image_urls[0] && !!thumb;
                 return (
