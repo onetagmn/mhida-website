@@ -139,12 +139,32 @@ export default function Home() {
       <section className="border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
         <div className="container-page grid items-center gap-10 py-16 sm:py-20 md:grid-cols-2">
           <div>
-            <h1 className="text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
+            <h1 className="hero-rise text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
               {t(
                 "Монголын Даатгалын Эмч Нарын Холбоо",
                 "Mongolian Health Insurance Doctors Association"
               )}
             </h1>
+            <p className="hero-rise hero-delay-1 mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+              {t(
+                "Даатгалын эмч нарын мэргэжлийн холбоо — сургалт, эрх зүйн мэдээлэл, туршлага солилцоо нэг дороос.",
+                "The professional association for health insurance doctors — training, legal resources, and shared expertise in one place."
+              )}
+            </p>
+            <div className="hero-rise hero-delay-3 mt-7 flex flex-wrap items-center gap-4">
+              <Link
+                href="/register"
+                className="rounded-lg bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--brand-red-dark)]"
+              >
+                {t("Бүртгүүлэх", "Register")}
+              </Link>
+              <Link
+                href="/about"
+                className="text-sm font-semibold text-[var(--brand-blue)] transition-opacity hover:opacity-70"
+              >
+                {t("Танилцуулга →", "About us →")}
+              </Link>
+            </div>
           </div>
           <div className="flex justify-center md:justify-end">
             <Image
@@ -152,7 +172,7 @@ export default function Home() {
               alt="MHIDA logo"
               width={320}
               height={330}
-              className="h-56 w-auto sm:h-72"
+              className="hero-rise hero-delay-2 h-56 w-auto sm:h-72"
               priority
             />
           </div>
