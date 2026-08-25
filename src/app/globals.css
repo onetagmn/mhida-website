@@ -45,3 +45,33 @@ body {
   border-radius: 9999px;
   padding: 0.15rem 0.6rem;
 }
+
+/* Hero entrance: a single fade-and-rise on load, staggered so the headline,
+   logo, subtitle and buttons arrive in sequence. Runs once, never loops. */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-rise {
+  opacity: 0;
+  animation: hero-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-delay-1 { animation-delay: 0.09s; }
+.hero-delay-2 { animation-delay: 0.12s; }
+.hero-delay-3 { animation-delay: 0.18s; }
+
+/* Respect the OS "reduce motion" setting: show everything immediately. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise {
+    opacity: 1;
+    animation: none;
+  }
+}
