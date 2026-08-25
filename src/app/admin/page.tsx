@@ -399,7 +399,7 @@ export default function AdminPage() {
                             "Only Active members can see other members' details on the Map page"
                           )}
                           className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-opacity hover:opacity-80 disabled:opacity-40 ${
-                            r.status === s ? activeClass : "bg-slate-50 text-slate-400"
+                            r.status === s? activeClass: "bg-slate-50 text-slate-400"
                           }`}
                         >
                           {icon} {label}
