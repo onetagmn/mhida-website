@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Онгоцны тийзний сугалаа — МДЭНХ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hull:#0B1826;
+  --board:#132A3F;
+  --board-cell:#0A1A28;
+  --amber:#F0B23C;
+  --amber-dim:#8A6520;
+  --card:#E9E4D8;
+  --card-edge:#CFC8B6;
+  --stamp:#C1122E;
+  --ok:#4FB39A;
+  --muted:#7D93A8;
+  --line:rgba(240,178,60,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--hull);
+  color:#DCE6EF;
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:26px}
+.mast-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+.org{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+h1{
+  font-family:'Oswald',sans-serif;font-weight:600;
+  font-size:clamp(30px,7vw,58px);line-height:1;margin:14px 0 6px;
+  letter-spacing:.01em;color:#fff;text-transform:uppercase;
+}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.1em;color:var(--muted)}
+
+/* ---------- departure board ---------- */
+.board{
+  background:var(--board);
+  border:1px solid rgba(240,178,60,.22);
+  border-radius:4px;
+  padding:18px 16px 20px;
+  margin:26px 0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 18px 40px -24px #000;
+}
+.board-head{
+  display:grid;grid-template-columns:52px 1fr 96px;gap:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;
+  color:var(--amber-dim);text-transform:uppercase;
+  padding:0 4px 10px;border-bottom:1px solid rgba(240,178,60,.15);
+}
+.row{
+  display:grid;grid-template-columns:52px 1fr 96px;gap:12px;align-items:center;
+  padding:11px 4px;border-bottom:1px solid rgba(240,178,60,.08);
+}
+.row:last-child{border-bottom:none}
+.gate{font-family:'Oswald',sans-serif;font-size:20px;color:var(--amber-dim);font-weight:500}
+.flap{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;
+  font-size:clamp(15px,3.4vw,21px);letter-spacing:.06em;
+  color:var(--amber);background:var(--board-cell);
+  padding:9px 11px;border-radius:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:inset 0 -1px 0 rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.flap.spin{color:var(--amber-dim)}
+.flap.lock{animation:flip .32s ease-out}
+@keyframes flip{0%{transform:perspective(300px) rotateX(-82deg);opacity:.2}100%{transform:none;opacity:1}}
+.status{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;
+  text-align:right;text-transform:uppercase;color:var(--muted);
+}
+.status.on{color:var(--ok)}
+
+/* ---------- panel ---------- */
+.panel{
+  display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;
+  border:1px solid var(--line);border-radius:4px;padding:16px 18px;margin:24px 0;
+}
+.clock{font-family:'Oswald',sans-serif;font-size:clamp(26px,6vw,40px);color:#fff;line-height:1;letter-spacing:.02em}
+.clock-lab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.round-id{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--amber);word-break:break-all}
+button{
+  font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--amber);color:#0B1826;border:none;border-radius:3px;
+  padding:13px 26px;cursor:pointer;font-weight:600;
+}
+button:hover{background:#FFC75A}
+button:disabled{background:#2A3F53;color:#5E7488;cursor:not-allowed}
+button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* ---------- boarding passes ---------- */
+.passes{display:grid;gap:16px;margin:30px 0}
+@media(min-width:700px){.passes{grid-template-columns:1fr 1fr}}
+.pass{
+  display:grid;grid-template-columns:58px 1fr;
+  background:var(--card);color:#1B2733;border-radius:5px;overflow:hidden;
+  box-shadow:0 14px 30px -18px #000;
+  opacity:0;transform:translateY(14px);
+  animation:board-in .5s ease-out forwards;
+}
+@keyframes board-in{to{opacity:1;transform:none}}
+.stub{
+  background:#1B2733;color:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.24em;
+  writing-mode:vertical-rl;transform:rotate(180deg);padding:14px 0;
+}
+.pass-body{padding:16px 18px;border-left:2px dashed var(--card-edge)}
+.pass-lab{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.18em;color:#7A8794;text-transform:uppercase}
+.pass-name{font-family:'Oswald',sans-serif;font-size:20px;line-height:1.15;margin:3px 0 10px;text-transform:uppercase}
+.pass-org{font-size:13.5px;color:#4A5764;margin-bottom:12px}
+.pass-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.pass-id{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:17px;letter-spacing:.05em}
+.barcode{display:flex;gap:2px;align-items:flex-end;height:26px}
+.barcode i{display:block;width:2px;background:#1B2733}
+
+/* ---------- roster ---------- */
+h2{font-family:'Oswald',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.06em;
+   font-size:15px;color:var(--amber);margin:38px 0 4px}
+.h2-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+   color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:400}
+td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+tr.won td{background:rgba(240,178,60,.09)}
+tr.won td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+.num{font-family:'IBM Plex Mono',monospace;color:var(--muted);width:34px}
+.mid{font-family:'IBM Plex Mono',monospace;color:var(--amber);white-space:nowrap}
+.org-cell{color:var(--muted);font-size:13px}
+
+/* ---------- verify ---------- */
+.verify{border:1px solid var(--line);border-radius:4px;padding:18px;margin-top:16px;font-size:13.5px}
+.hex{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);
+     word-break:break-all;background:var(--board-cell);padding:10px 12px;border-radius:3px;margin:10px 0}
+.steps{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:2}
+.steps b{color:var(--amber);font-weight:600}
+a{color:var(--amber)}
+.note{color:var(--muted);font-size:12.5px;margin-top:10px}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+       font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.06em}
+.hide{display:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="mast-top">
+      <span class="org">Монголын Даатгалын Эмч Нарын Холбоо</span>
+      <span class="org">MHIDA · 2026</span>
+    </div>
+    <h1>Онгоцны тийзний сугалаа</h1>
+    <p class="sub">18 БАТАЛГААЖСАН ГИШҮҮН · 4 ЭЗЭН · DRAND ROUND #<span id="rnum"></span></p>
+  </header>
+
+  <!-- departure board -->
+  <section class="board" aria-label="Сугалааны самбар">
+    <div class="board-head"><span>Хаалга</span><span>Гишүүн</span><span>Төлөв</span></div>
+    <div id="rows"></div>
+  </section>
+
+  <!-- control panel -->
+  <div class="panel">
+    <div>
+      <div class="clock-lab" id="clocklab">Сугалаа эхлэх хүртэл</div>
+      <div class="clock" id="clock">—</div>
+    </div>
+    <div>
+      <div class="clock-lab">Тохирсон санамсаргүй тоо</div>
+      <div class="round-id" id="rmeta">—</div>
+    </div>
+    <button id="go" disabled>Сугалаа татах</button>
+  </div>
+
+  <!-- boarding passes -->
+  <div class="passes hide" id="passes"></div>
+
+  <!-- roster -->
+  <h2>Оролцогчдын жагсаалт</h2>
+  <p class="h2-sub">Гишүүний дугаараар эрэмбэлсэн. Дараалал сугалаанаас өмнө нийтлэгдсэн.</p>
+  <table>
+    <thead><tr><th>№</th><th>ID</th><th>Нэр</th><th>Байгууллага</th></tr></thead>
+    <tbody id="roster"></tbody>
+  </table>
+
+  <!-- verification -->
+  <h2>Хэрхэн шалгах вэ</h2>
+  <p class="h2-sub">Энэ сугалаа МДЭНХ-ны серверээс биш, олон улсын нээлттэй санамсаргүй тооны сүлжээ (drand / League of Entropy) -ээс тоогоо авдаг.</p>
+  <div class="verify">
+    <p style="margin-top:0">Сугалааны өдөр, товлосон минутад <b>round #<span class="rnum2"></span></b> үүснэ. Түүнээс өмнө энэ тоог хэн ч мэдэх боломжгүй — МДЭНХ ч мөн адил. Дараах холбоосоор ороод өөрөө шалгана уу:</p>
+    <div class="hex" id="apilink">—</div>
+    <div id="vout" class="hide">
+      <p style="margin-bottom:2px">Гарсан санамсаргүй тоо (randomness):</p>
+      <div class="hex" id="hex"></div>
+      <p style="margin-bottom:2px">Тооцоолол:</p>
+      <div class="steps" id="steps"></div>
+    </div>
+    <p class="note">Дүрэм: randomness тоог эхнээс нь 8 оронтой хэсэгт хуваана. Хэсэг бүрийг 16-тын системээс 10-тын систем рүү хөрвүүлж, үлдсэн оролцогчдын тоонд хуваасны үлдэгдэл нь тухайн ялагчийн байр суурь болно. Ялсан хүн жагсаалтаас хасагдаж, дараагийн хэсэг рүү шилжинэ.</p>
+  </div>
+
+  <footer>
+    МДЭНХ · MHIDA.ORG · Санамсаргүй тооны эх сурвалж: drand quicknet, League of Entropy
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   ТОХИРГОО — сугалааны өмнө зөвхөн энэ хэсгийг өөрчилнө
+   ============================================================ */
+const CONFIG = {
+  round: 31756612,          // 2026-08-30, 15:00 Улаанбаатарын цаг
+  winners: 4,
+  chain: "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971"
+};
+
+const ROSTER = [
+  ["MD001","ЛУВСАНБАТЫН УЯНГА","СЭМҮТ"],
+  ["MD004","ДОРЖПАЛАМ ДАШМАА","Төв аймгийн нэгдсэн эмнэлэг"],
+  ["MD005","АЛТАН НЯМСҮРЭН","Аддиктологийн төв"],
+  ["MD011","ТОРГООШ МӨНХТУУЛ","ЭХЭМҮТ"],
+  ["MD013","СОЁЛМАА АЗЗАЯА","Улаанбаатар Мед эмнэлэг"],
+  ["MD020","МӨНХТӨР ТҮВШИНЖАРГАЛ","Архангай аймгийн нэгдсэн эмнэлэг"],
+  ["MD046","ДҮГЭР ДУЛМАА","Хавдар судлалын үндэсний төв"],
+  ["MD047","СЭР-ОД ЦЭЦЭГЭЭ","Улаанбаатар Мед эмнэлэг"],
+  ["MD048","САНЖАА ОТГОНБҮРЭН","Завхан аймгийн нэгдсэн эмнэлэг"],
+  ["MD059","СҮХБААТАР НОРОВЧИМЭГ","СЭМҮТ"],
+  ["MD082","ШИНЭХҮҮ НАНДИНЦЭЦЭГ","Ховд аймгийн Булган сумын нэгдсэн эмнэлэг"],
+  ["MD087","НЭРГҮЙ НОМИНСОНДОР","Баянзүрх дүүргийн нэгдсэн эмнэлэг"],
+  ["MD097","ТӨМӨР ГАНЧИМЭГ","Энэрэл эмнэлэг"],
+  ["MD121","ХАЛТАР ОДОНГЭРЭЛ","ЭМЖЖ эмнэлэг"],
+  ["MD163","ЭРДЭНЭБААТАР САРАНЧИМЭГ","Улаанбаатар Сонгдо эмнэлэг"],
+  ["MD207","ERDENEBAT NYAMDOLGOR","Амгалан амаржих газар"],
+  ["MD219","БЭЛЭГБАДРАХ ЭНХЖАРГАЛ","УАУТХ"],
+  ["MD261","ДУМБАА ЭРДЭНЭЧИМЭГ","АШУҮИС-ийн Монгол-Япон эмнэлэг"]
+];
+/* ========================================================== */
+
+const DEMO = new URLSearchParams(location.search).has("demo");
+const GENESIS = Date.UTC(2023,7,23,15,9,27); // drand quicknet genesis
+const PERIOD  = 3000;
+const roundTime = r => GENESIS + (r-1)*PERIOD;
+const timeRound = t => Math.floor((t-GENESIS)/PERIOD)+1;
+
+const $ = s => document.querySelector(s);
+const activeRound = () => DEMO ? timeRound(Date.now()) - 4 : CONFIG.round;
+
+/* ---- render static parts ---- */
+document.getElementById("rnum").textContent = activeRound();
+document.querySelectorAll(".rnum2").forEach(e=>e.textContent=activeRound());
+const API = r => `https://api.drand.sh/${CONFIG.chain}/public/${r}`;
+$("#apilink").innerHTML = `<a href="${API(activeRound())}" target="_blank" rel="noopener">${API(activeRound())}</a>`;
+
+const rosterBody = $("#roster");
+ROSTER.forEach((m,i)=>{
+  const tr = document.createElement("tr");
+  tr.id = "r-"+m[0];
+  tr.innerHTML = `<td class="num">${i+1}</td><td class="mid">${m[0]}</td><td>${m[1]}</td><td class="org-cell">${m[2]}</td>`;
+  rosterBody.appendChild(tr);
+});
+
+const rowsEl = $("#rows");
+for(let i=0;i<CONFIG.winners;i++){
+  const d = document.createElement("div");
+  d.className="row";
+  d.innerHTML = `<span class="gate">${i+1}</span>
+                 <span class="flap" id="f${i}">— — — — —</span>
+                 <span class="status" id="s${i}">Хүлээгдэж буй</span>`;
+  rowsEl.appendChild(d);
+}
+
+/* ---- countdown ---- */
+let timer = setInterval(tick,250); tick();
+function tick(){
+  const target = roundTime(activeRound());
+  const diff = target - Date.now();
+  if(DEMO || diff<=0){
+    clearInterval(timer);
+    $("#clocklab").textContent = DEMO ? "Туршилтын горим" : "Сугалаа татахад бэлэн";
+    $("#clock").textContent = DEMO ? "DEMO" : "Бэлэн";
+    $("#go").disabled = false;
+    $("#rmeta").textContent = "#"+activeRound();
+    return;
+  }
+  const s = Math.floor(diff/1000);
+  const d = Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60), ss=s%60;
+  $("#clock").textContent = `${d}ө ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
+  $("#rmeta").textContent = new Date(target).toLocaleString("mn-MN",{timeZone:"Asia/Ulaanbaatar"});
+}
+
+/* ---- drand fetch ---- */
+async function sha256hex(hex){
+  const b = new Uint8Array(hex.match(/../g).map(x=>parseInt(x,16)));
+  const h = await crypto.subtle.digest("SHA-256", b);
+  return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+async function getBeacon(r){
+  const hosts=["https://api.drand.sh","https://api2.drand.sh","https://api3.drand.sh","https://drand.cloudflare.com"];
+  for(const h of hosts){
+    try{
+      const res = await fetch(`${h}/${CONFIG.chain}/public/${r}`);
+      if(!res.ok) continue;
+      const j = await res.json();
+      if(j.randomness) return j.randomness;
+      if(j.signature)  return await sha256hex(j.signature);
+    }catch(e){}
+  }
+  return null;
+}
+
+/* ---- selection ---- */
+function pick(hex){
+  const pool = ROSTER.map((m,i)=>({n:i+1,id:m[0],name:m[1],org:m[2]}));
+  const out=[], steps=[];
+  for(let i=0;i<CONFIG.winners;i++){
+    const chunk = hex.slice(i*8,i*8+8);
+    const val = parseInt(chunk,16);
+    const idx = val % pool.length;
+    steps.push({chunk,val,mod:pool.length,pos:idx+1,who:pool[idx]});
+    out.push(pool[idx]);
+    pool.splice(idx,1);
+  }
+  return {out,steps};
+}
+
+/* ---- reveal ---- */
+$("#go").addEventListener("click", run);
+async function run(){
+  const btn=$("#go"); btn.disabled=true; btn.textContent="Татаж байна…";
+  const r = activeRound();
+  const hex = await getBeacon(r);
+  if(!hex){
+    $("#clocklab").textContent="Алдаа";
+    $("#clock").textContent="Дахин оролдоно уу";
+    btn.disabled=false; btn.textContent="Дахин татах";
+    return;
+  }
+  const {out,steps} = pick(hex);
+  btn.textContent="Татагдсан";
+
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  for(let i=0;i<out.length;i++){
+    await spin(i, out[i], reduced ? 0 : 900+i*450);
+  }
+  showPasses(out);
+  showVerify(hex, steps);
+}
+
+function spin(i, winner, dur){
+  return new Promise(res=>{
+    const el = $("#f"+i), st = $("#s"+i);
+    if(dur===0){ lock(); return res(); }
+    el.classList.add("spin"); st.textContent="Эргэж байна";
+    const t0=Date.now();
+    (function loop(){
+      const p=(Date.now()-t0)/dur;
+      if(p>=1){ lock(); return res(); }
+      const m=ROSTER[Math.floor(Math.random()*ROSTER.length)];
+      el.textContent = m[0]+" · "+m[1];
+      setTimeout(loop, 40+p*p*180);
+    })();
+    function lock(){
+      el.classList.remove("spin"); el.classList.add("lock");
+      el.textContent = winner.id+" · "+winner.name;
+      st.textContent="Ялсан"; st.classList.add("on");
+      document.getElementById("r-"+winner.id)?.classList.add("won");
+    }
+  });
+}
+
+function showPasses(out){
+  const box=$("#passes"); box.classList.remove("hide"); box.innerHTML="";
+  out.forEach((w,i)=>{
+    const bars=[...Array(34)].map(()=>`<i style="height:${10+Math.random()*16}px"></i>`).join("");
+    const el=document.createElement("div");
+    el.className="pass"; el.style.animationDelay=(i*90)+"ms";
+    el.innerHTML=`
+      <div class="stub">MHIDA</div>
+      <div class="pass-body">
+        <div class="pass-lab">Тийзний эзэн · Passenger</div>
+        <div class="pass-name">${w.name}</div>
+        <div class="pass-org">${w.org}</div>
+        <div class="pass-foot">
+          <div><div class="pass-lab">Гишүүний дугаар</div><div class="pass-id">${w.id}</div></div>
+          <div class="barcode">${bars}</div>
+        </div>
+      </div>`;
+    box.appendChild(el);
+  });
+}
+
+function showVerify(hex, steps){
+  $("#vout").classList.remove("hide");
+  $("#hex").textContent = hex;
+  $("#steps").innerHTML = steps.map((s,i)=>
+    `${i+1}. <b>${s.chunk}</b> = ${s.val.toLocaleString("en-US")} · mod ${s.mod} → ${s.pos}-р байр → <b>${s.who.id} ${s.who.name}</b>`
+  ).join("<br>");
+}
+</script>
+</body>
+</html>
