@@ -1,10 +1,10 @@
 "use client";
-
 import React from "react";
 
-// Matches full URLs AND protocol-less YouTube links (people often paste
-// "youtube.com/watch?v=..." or "www.youtube.com/..." without https://).
-const URL_RE = /(https?:\/\/[^\s<>"']+|(?:www\.)?(?:m\.)?youtube\.com\/[^\s<>"']+|youtu\.be\/[^\s<>"']+)/g;
+// Matches labelled links [text](url), full URLs, AND protocol-less YouTube
+// links (people often paste "youtube.com/watch?v=..." without https://).
+const URL_RE =
+  /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<>"']+|(?:www\.)?(?:m\.)?youtube\.com\/[^\s<>"']+|youtu\.be\/[^\s<>"']+)/g;
 
 function youtubeId(url: string): string | null {
   const m =
@@ -22,27 +22,49 @@ function fullHref(url: string): string {
 
 /**
  * Renders news body text: preserves line breaks, makes URLs clickable,
- * and embeds a YouTube player for every YouTube link found.
+ * turns [text](url) into a button, and embeds a YouTube player for every
+ * YouTube link found.
  */
 export default function NewsBody({ body }: { body: string }) {
   const videoIds: string[] = [];
   const parts = body.split(URL_RE);
-
   const rendered = parts.map((part, i) => {
     if (i % 2 === 1) {
-      // odd indexes are URLs (capture group)
-      const vid = youtubeId(part);
-      if (vid) {
-        // A YouTube link gets a full video player embedded below instead —
-        // showing the raw URL as text too was redundant clutter (and
-        // looked broken, like a leftover unformatted paste).
-        if (!videoIds.includes(vid)) videoIds.push(vid);
-        return null;
+      // odd indexes are links (capture group)
+      const md = part.match(/^\[([^\]]+)\]\((.+)\)$/);
+      const label = md ? md[1] : null;
+      const url = md ? md[2] : part;
+
+      // A labelled link is always a button — never a video embed.
+      if (!md) {
+        const vid = youtubeId(url);
+        if (vid) {
+          // A YouTube link gets a full video player embedded below instead —
+          // showing the raw URL as text too was redundant clutter (and
+          // looked broken, like a leftover unformatted paste).
+          if (!videoIds.includes(vid)) videoIds.push(vid);
+          return null;
+        }
       }
+
+      if (label) {
+        return (
+          <a
+            key={i}
+            href={fullHref(url)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="my-2 inline-block rounded-lg bg-[var(--brand-blue)] px-5 py-2.5 text-sm font-semibold text-white no-underline transition hover:bg-[var(--brand-red)]"
+          >
+            {label}
+          </a>
+        );
+      }
+
       return (
         <a
           key={i}
-          href={fullHref(part)}
+          href={fullHref(url)}
           target="_blank"
           rel="noopener noreferrer"
           className="break-all font-medium text-[var(--brand-blue)] underline decoration-blue-200 underline-offset-2 hover:text-[var(--brand-red)]"
