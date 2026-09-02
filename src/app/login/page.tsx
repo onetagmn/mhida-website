@@ -270,6 +270,14 @@ export default function LoginPage() {
                   : t("Нэвтрэх", "Log in")}
               </button>
               <p className="text-center text-sm text-slate-500">
+                <a
+                  href={asset("/forgot-password/")}
+                  className="font-semibold text-[var(--brand-blue)] hover:underline"
+                >
+                  {t("Нууц үгээ мартсан уу?", "Forgot your password?")}
+                </a>
+              </p>
+              <p className="text-center text-sm text-slate-500">
                 {t("Бүртгэлгүй юу?", "No account yet?")}{" "}
                 <a
                   href={asset("/register/")}
