@@ -76,8 +76,8 @@ body {
   }
 }
 
-/* Small "alive" touches on the home page (src/app/page.tsx): a heartbeat
-   pulse runs along a faint ECG line across the hero (HeartbeatLine),
+/* Small "alive" touches on the home page (src/app/page.tsx): a red
+   heartbeat pulse runs across the hero (HeartbeatLine),
    the logo floats gently, a soft shine crosses the Register button now
    and then, numbers count up and the course ring fills when they come
    into view, and headings and cards fade up as they scroll in (.reveal —
