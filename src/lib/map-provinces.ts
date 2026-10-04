@@ -29,6 +29,34 @@ export const MN_TO_MAP_KEY: Record<string, string> = Object.fromEntries(
   Object.entries(MAP_KEY_TO_MN).map(([k, v]) => [v, k])
 );
 
+// The map's region keys from west to east (by the centre of each
+// province's shape as the map draws it), so the home page map can fill
+// in as a sweep across the country.
+export const MAP_KEYS_WEST_TO_EAST = [
+  "Bayan-Ölgiy",
+  "Hovd",
+  "Uvs",
+  "Govĭ-Altay",
+  "Dzavhan",
+  "Bayanhongor",
+  "Hövsgöl",
+  "Arhangay",
+  "Ovörhangay",
+  "Bulgan",
+  "Omnögovĭ",
+  "Orhon",
+  "Dundgovĭ",
+  "Darhan uul",
+  "Selenge",
+  "Töv",
+  "Ulaanbaatar",
+  "Govĭ-Sümber",
+  "Dornogovĭ",
+  "Hentiy",
+  "Sühbaatar",
+  "Dornod",
+];
+
 // Sequential brand-blue scale by member count.
 export function countColor(n: number): string {
   if (n <= 0) return "#EDF1F6";
