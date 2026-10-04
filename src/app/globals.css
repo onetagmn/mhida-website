@@ -128,6 +128,12 @@ body {
   transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* The member map filling in, province by province (useMapFillIn in
+   page.tsx) — fades only while that runs, so hovering stays instant. */
+.map-filling path {
+  transition: fill 0.4s ease-out;
+}
+
 /* Each one fades in over its first 160px of scrolling into view. Fills
    "backwards" only, so once a card is in place no transform is
    left on it (its hover lift keeps working as before). */
@@ -154,7 +160,8 @@ body {
   .reveal {
     animation: none;
   }
-  .ring-fill {
+  .ring-fill,
+  .map-filling path {
     transition: none;
   }
 }

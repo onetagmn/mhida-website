@@ -9,7 +9,7 @@ import { useLanguage } from "@/lib/language-context";
 import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
 import { NewsPost, formatDate, firstYoutubeThumb, pdfHref, pdfName } from "@/lib/news";
-import { MAP_KEY_TO_MN, countColor } from "@/lib/map-provinces";
+import { MAP_KEY_TO_MN, MAP_KEYS_WEST_TO_EAST, countColor } from "@/lib/map-provinces";
 import { PROVINCES } from "@/lib/provinces";
 import PartnerLogos from "@/components/PartnerLogos";
 import HeartbeatLine from "@/components/HeartbeatLine";
@@ -119,6 +119,8 @@ export default function Home() {
     }
     return colors;
   }, [mapStats]);
+  const [mapRef, mapSeen] = useInView<HTMLDivElement>();
+  const mapFill = useMapFillIn(mapColors, mapSeen);
 
   const memberSummary = useMemo(() => {
     const totalMembers = mapStats.reduce((a, s) => a + Number(s.member_count), 0);
@@ -463,9 +465,14 @@ export default function Home() {
         <h2 className="reveal mb-6 text-2xl font-bold text-slate-900">
           {t("Гишүүдийн газрын зураг", "Member Map")}
         </h2>
+        {/* Provinces with members colour in one after another, west to
+            east, when the map scrolls into view (useMapFillIn). */}
         <div
+          ref={mapRef}
           onClick={() => router.push("/map")}
-          className="reveal flex cursor-pointer justify-center rounded-2xl border border-slate-200 p-4 transition-shadow hover:shadow-md"
+          className={`reveal flex cursor-pointer justify-center rounded-2xl border border-slate-200 p-4 transition-shadow hover:shadow-md ${
+            mapFill.filling ? "map-filling" : ""
+          }`}
           title={t("Дэлгэрэнгүй газрын зураг нээх", "Open the full map")}
         >
           <Mongolia
@@ -477,7 +484,7 @@ export default function Home() {
             hoverColor="#d98d92"
             selectColor="#c42730"
             hints={false}
-            cityColors={mapColors}
+            cityColors={mapFill.colors}
             onSelect={() => router.push("/map")}
           />
         </div>
@@ -548,4 +555,39 @@ function CourseRing({ pct, avgLabel }: { pct: number; avgLabel: string }) {
       </div>
     </div>
   );
+}
+
+// The home page map's fill-in: once the map is in view, the provinces
+// with members take their colour one after another from west to east,
+// each lighting up in the map's hover pink for a moment first. While it
+// runs the provinces fade between colours (.map-filling in globals.css);
+// afterwards hovering is instant again. With reduced motion the map
+// simply shows its colours once it's in view.
+const FILL_FLASH = "#d98d92";
+const FILL_TAIL_STEPS = 3; // let the last province finish fading
+
+function useMapFillIn(colors: Record<string, string>, seen: boolean) {
+  const order = useMemo(
+    () => MAP_KEYS_WEST_TO_EAST.filter((k) => colors[k] && colors[k] !== countColor(0)),
+    [colors]
+  );
+  const [step, setStep] = useState(0);
+  const total = order.length + FILL_TAIL_STEPS;
+  const done = step >= total;
+  useEffect(() => {
+    if (!seen || order.length === 0 || done) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const delay = reduce ? 0 : Math.max(120, Math.min(240, 2000 / order.length));
+    const timer = setTimeout(() => setStep(reduce ? total : step + 1), delay);
+    return () => clearTimeout(timer);
+  }, [seen, order.length, done, step, total]);
+  const shown = useMemo(() => {
+    if (done) return colors;
+    const partial: Record<string, string> = {};
+    order.slice(0, step).forEach((k, i) => {
+      partial[k] = i === step - 1 ? FILL_FLASH : colors[k];
+    });
+    return partial;
+  }, [colors, order, step, done]);
+  return { colors: shown, filling: seen && order.length > 0 && !done };
 }
