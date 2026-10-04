@@ -75,3 +75,86 @@ body {
     animation: none;
   }
 }
+
+/* Small "alive" touches on the home page (src/app/page.tsx): a heartbeat
+   pulse runs along a faint ECG line across the hero (HeartbeatLine),
+   the logo floats gently, a soft shine crosses the Register button now
+   and then, numbers count up and the course ring fills when they come
+   into view, and headings and cards fade up as they scroll in (.reveal —
+   pure CSS, in browsers with scroll-driven animations; elsewhere they
+   simply show). All of it is off for reduced motion. */
+
+/* ECG pulse: three dashes of the same path whose fronts move together
+   from the start of the line to past its end (pathLength = 1). */
+@keyframes ecg-trail { from { stroke-dashoffset: 0.25; } to { stroke-dashoffset: -1; } }
+@keyframes ecg-mid { from { stroke-dashoffset: 0.1; } to { stroke-dashoffset: -1.15; } }
+@keyframes ecg-head { from { stroke-dashoffset: 0.012; } to { stroke-dashoffset: -1.238; } }
+.ecg-trail { stroke-dasharray: 0.25 2; animation: ecg-trail 4.5s linear infinite; }
+.ecg-mid { stroke-dasharray: 0.1 2; animation: ecg-mid 4.5s linear infinite; }
+.ecg-head {
+  stroke-dasharray: 0.012 2;
+  animation: ecg-head 4.5s linear infinite;
+  filter: drop-shadow(0 0 4px var(--brand-red));
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.logo-float {
+  animation: logo-float 6s ease-in-out infinite;
+}
+
+@keyframes btn-shine {
+  0%, 72% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(260%) skewX(-20deg); }
+}
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  animation: btn-shine 6s ease-in-out 1.5s infinite;
+  pointer-events: none;
+}
+
+.ring-fill {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Each one fades in over its first 160px of scrolling into view. Fills
+   "backwards" only, so once a card is in place no transform is
+   left on it (its hover lift keeps working as before). */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-up linear backwards;
+    animation-timeline: view();
+    animation-range: cover 0px cover 160px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecg-trail,
+  .ecg-mid,
+  .ecg-head {
+    display: none;
+  }
+  .logo-float,
+  .btn-shine::after,
+  .reveal {
+    animation: none;
+  }
+  .ring-fill {
+    transition: none;
+  }
+}

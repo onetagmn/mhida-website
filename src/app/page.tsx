@@ -12,6 +12,8 @@ import { NewsPost, formatDate, firstYoutubeThumb, pdfHref, pdfName } from "@/lib
 import { MAP_KEY_TO_MN, countColor } from "@/lib/map-provinces";
 import { PROVINCES } from "@/lib/provinces";
 import PartnerLogos from "@/components/PartnerLogos";
+import HeartbeatLine from "@/components/HeartbeatLine";
+import { useInView } from "@/lib/use-in-view";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
 
@@ -135,9 +137,11 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
-        <div className="container-page grid items-center gap-10 py-16 sm:py-20 md:grid-cols-2">
+      {/* Hero — with a heartbeat pulse running along a faint ECG line
+          behind it (HeartbeatLine) and the logo floating gently. */}
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
+        <HeartbeatLine className="absolute inset-x-0 bottom-1 h-16 w-full sm:bottom-2 sm:h-20" />
+        <div className="container-page relative grid items-center gap-10 py-16 sm:py-20 md:grid-cols-2">
           <div>
             <h1 className="hero-rise text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
               {t(
@@ -154,7 +158,7 @@ export default function Home() {
             <div className="hero-rise hero-delay-3 mt-7 flex flex-wrap items-center gap-4">
               <Link
                 href="/register"
-                className="rounded-lg bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--brand-red-dark)]"
+                className="btn-shine rounded-lg bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--brand-red-dark)]"
               >
                 {t("Бүртгүүлэх", "Register")}
               </Link>
@@ -167,14 +171,16 @@ export default function Home() {
             </div>
           </div>
           <div className="flex justify-center md:justify-end">
-            <Image
-              src={asset("/logo.png")}
-              alt="MHIDA logo"
-              width={320}
-              height={330}
-              className="hero-rise hero-delay-2 h-56 w-auto sm:h-72"
-              priority
-            />
+            <div className="logo-float">
+              <Image
+                src={asset("/logo.png")}
+                alt="MHIDA logo"
+                width={320}
+                height={330}
+                className="hero-rise hero-delay-2 h-56 w-auto sm:h-72"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -183,7 +189,7 @@ export default function Home() {
       {(latest.length > 0 || courseStats || mapStatsLoaded) && (
         <section className="border-b border-slate-200 bg-white">
           <div className="container-page py-14">
-            <div className="mb-6 flex items-end justify-between">
+            <div className="reveal mb-6 flex items-end justify-between">
               <h2 className="text-2xl font-bold text-slate-900">{t("Сүүлийн мэдээ", "Latest News")}</h2>
               <Link href="/news" className="text-sm font-semibold text-[var(--brand-red)] hover:opacity-80">
                 {t("Бүх мэдээ →", "All news →")}
@@ -193,11 +199,11 @@ export default function Home() {
               {mapStatsLoaded && (
                 <Link
                   href="/map"
-                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                  className="reveal group flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <div>
                     <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
+                      <LiveDot />
                       🗺️ {t("Гишүүдийн тархалт", "Member Map")}
                     </p>
                     <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
@@ -214,7 +220,7 @@ export default function Home() {
                           </svg>
                         </span>
                         <span>
-                          <span className="block text-[15px] font-extrabold leading-none text-slate-900">{memberSummary.totalMembers}</span>
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900"><CountUp value={memberSummary.totalMembers} /></span>
                           <span className="text-[10.5px] font-semibold text-slate-500">{t("Гишүүн", "Members")}</span>
                         </span>
                       </div>
@@ -230,7 +236,7 @@ export default function Home() {
                           </svg>
                         </span>
                         <span>
-                          <span className="block text-[15px] font-extrabold leading-none text-slate-900">{memberSummary.totalFacilities}</span>
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900"><CountUp value={memberSummary.totalFacilities} /></span>
                           <span className="text-[10.5px] font-semibold text-slate-500">{t("Эмнэлэг, байгууллага", "Facilities")}</span>
                         </span>
                       </div>
@@ -243,7 +249,7 @@ export default function Home() {
                         </span>
                         <span>
                           <span className="block text-[15px] font-extrabold leading-none text-slate-900">
-                            {memberSummary.provincesCovered} /{memberSummary.totalProvinces}
+                            <CountUp value={memberSummary.provincesCovered} /> /{memberSummary.totalProvinces}
                           </span>
                           <span className="text-[10.5px] font-semibold text-slate-500">{t("Аймаг, хот", "Regions")}</span>
                         </span>
@@ -260,40 +266,26 @@ export default function Home() {
                 const pct = courseStats.total_lessons > 0
                   ? Math.min(100, Math.round((courseStats.avg_completed / courseStats.total_lessons) * 100))
                   : 0;
-                const r = 32;
-                const c = 2 * Math.PI * r;
                 return (
                   <Link
                     href="/trainings/english-progress"
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                    className="reveal group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
                   >
                     <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(1,81,150,0.10),transparent_70%)]" />
                     <div>
                       <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
+                        <LiveDot />
                         🎓 {t("Англи хэлний курс", "English Course")}
                       </p>
                       <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
                         {t("Гишүүдийн явц бодит цагаар", "Live member progress")}
                       </h3>
                       <div className="flex items-center gap-4">
-                        <div className="relative h-[76px] w-[76px] shrink-0">
-                          <svg width="76" height="76" viewBox="0 0 76 76" className="-rotate-90">
-                            <circle cx="38" cy="38" r={r} fill="none" stroke="#dbe9f5" strokeWidth="8" />
-                            <circle
-                              cx="38" cy="38" r={r} fill="none" stroke="var(--brand-blue)" strokeWidth="8"
-                              strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)}
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <b className="text-[15px] leading-none text-slate-900">{pct}%</b>
-                            <span className="text-[8.5px] font-bold text-slate-500">{t("ДУНДАЖ", "AVG")}</span>
-                          </div>
-                        </div>
+                        <CourseRing pct={pct} avgLabel={t("ДУНДАЖ", "AVG")} />
                         <div className="flex flex-1 flex-col gap-1.5 text-[12.5px]">
                           <div className="flex items-center justify-between">
                             <span className="text-slate-500">👥 {t("Элссэн гишүүд", "Enrolled")}</span>
-                            <span className="font-extrabold text-slate-900">{courseStats.enrolled_members}</span>
+                            <span className="font-extrabold text-slate-900"><CountUp value={courseStats.enrolled_members} /></span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-slate-500">📈 {t("Дундаж өдөр", "Avg. day")}</span>
@@ -303,7 +295,7 @@ export default function Home() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-slate-500">🏆 {t("Төгссөн", "Finished")}</span>
-                            <span className="font-extrabold text-slate-900">{courseStats.completed_members}</span>
+                            <span className="font-extrabold text-slate-900"><CountUp value={courseStats.completed_members} /></span>
                           </div>
                         </div>
                       </div>
@@ -322,7 +314,7 @@ export default function Home() {
                 <Link
                   key={p.id}
                   href="/news"
-                  className="group overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
+                  className="reveal group overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
                 >
                   {thumb && (
                     <div className="relative">
@@ -354,7 +346,7 @@ export default function Home() {
 
       {/* Partnership / News */}
       <section className="container-page py-14">
-        <h2 className="mb-8 text-2xl font-bold text-slate-900">
+        <h2 className="reveal mb-8 text-2xl font-bold text-slate-900">
           {t("Түншлэл ба мэдээ", "Partnership & News")}
         </h2>
 
@@ -362,7 +354,7 @@ export default function Home() {
           {partner.map((item) => (
             <div
               key={item.id}
-              className="overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
+              className="reveal overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
             >
               <Link href={`/trainings/apply?post=${item.id}`} className="group block">
                 {(item.image_urls ?? []).length > 0 && (
@@ -405,12 +397,12 @@ export default function Home() {
       {/* Quick actions */}
       <section className="border-y border-slate-200 bg-slate-50 py-14">
         <div className="container-page">
-          <h2 className="mb-6 text-2xl font-bold text-slate-900">
+          <h2 className="reveal mb-6 text-2xl font-bold text-slate-900">
             {t("Түргэн холбоос", "Quick Actions")}
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {quickActions.map((action, idx) => {
-              const className = `group relative rounded-lg p-4 text-center text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+              const className = `reveal group relative rounded-lg p-4 text-center text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
                 action.live
                   ? "bg-[var(--brand-blue)] text-white hover:bg-[#013f78]"
                   : "border border-dashed border-slate-300 bg-white text-slate-400"
@@ -468,12 +460,12 @@ export default function Home() {
 
       {/* Member map — live preview, click anywhere to open the full page */}
       <section className="container-page py-14">
-        <h2 className="mb-6 text-2xl font-bold text-slate-900">
+        <h2 className="reveal mb-6 text-2xl font-bold text-slate-900">
           {t("Гишүүдийн газрын зураг", "Member Map")}
         </h2>
         <div
           onClick={() => router.push("/map")}
-          className="flex cursor-pointer justify-center rounded-2xl border border-slate-200 p-4 transition-shadow hover:shadow-md"
+          className="reveal flex cursor-pointer justify-center rounded-2xl border border-slate-200 p-4 transition-shadow hover:shadow-md"
           title={t("Дэлгэрэнгүй газрын зураг нээх", "Open the full map")}
         >
           <Mongolia
@@ -501,6 +493,59 @@ export default function Home() {
 
       {/* Partner / social logo links (admin-managed) */}
       <PartnerLogos />
+    </div>
+  );
+}
+
+// The green "live" dot on the stat cards, with a soft pulse around it.
+function LiveDot() {
+  return (
+    <span className="relative flex h-1.5 w-1.5 shrink-0">
+      <span className="absolute inset-0 rounded-full bg-green-500 opacity-75 motion-safe:animate-ping" />
+      <span className="relative h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" />
+    </span>
+  );
+}
+
+// A number counting up from 0 when it scrolls into view; shown straight
+// away for visitors who ask for reduced motion.
+function CountUp({ value }: { value: number }) {
+  const [ref, seen] = useInView<HTMLSpanElement>();
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (!seen) return;
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1200;
+    const start = performance.now();
+    let frame = requestAnimationFrame(function step(now) {
+      const progress = duration ? Math.min(1, (now - start) / duration) : 1;
+      setShown(Math.round(value * (1 - (1 - progress) ** 3)));
+      if (progress < 1) frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [seen, value]);
+  return <span ref={ref}>{shown}</span>;
+}
+
+// The English course's average-progress ring; it fills from empty and
+// the percentage counts up when the card scrolls into view.
+function CourseRing({ pct, avgLabel }: { pct: number; avgLabel: string }) {
+  const [ref, seen] = useInView<HTMLDivElement>();
+  const r = 32;
+  const c = 2 * Math.PI * r;
+  return (
+    <div ref={ref} className="relative h-[76px] w-[76px] shrink-0">
+      <svg width="76" height="76" viewBox="0 0 76 76" className="-rotate-90">
+        <circle cx="38" cy="38" r={r} fill="none" stroke="#dbe9f5" strokeWidth="8" />
+        <circle
+          cx="38" cy="38" r={r} fill="none" stroke="var(--brand-blue)" strokeWidth="8"
+          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={seen ? c * (1 - pct / 100) : c}
+          className="ring-fill"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <b className="text-[15px] leading-none text-slate-900"><CountUp value={pct} />%</b>
+        <span className="text-[8.5px] font-bold text-slate-500">{avgLabel}</span>
+      </div>
     </div>
   );
 }
