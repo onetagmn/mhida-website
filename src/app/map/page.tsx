@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
@@ -36,6 +36,8 @@ export default function MapPage() {
   const [members, setMembers] = useState<Record<string, FacilityMember[]>>({});
   const [mapSize, setMapSize] = useState(760);
   const [tip, setTip] = useState<Tooltip | null>(null);
+  const mapBox = useRef<HTMLDivElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
 
   const provinceLabel = (mn: string) =>
     lang === "mn" ? mn : MN_TO_EN[mn] ?? mn;
@@ -65,10 +67,16 @@ export default function MapPage() {
       }
       setLoading(false);
     })();
-    const update = () => setMapSize(Math.min(760, window.innerWidth - 48));
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // The map fills its box's full width (the whole page column), so it
+  // never runs past the box's edge.
+  useEffect(() => {
+    const box = mapBox.current;
+    if (!box) return;
+    const observer = new ResizeObserver(([entry]) => setMapSize(Math.floor(entry.contentRect.width)));
+    observer.observe(box);
+    return () => observer.disconnect();
   }, []);
 
   const byProvince = useMemo(() => {
@@ -117,6 +125,23 @@ export default function MapPage() {
       ? byProvince.get(selectedProvince) ?? []
       : [];
 
+  // Picking a province shows its facilities under the map; if that list
+  // is out of sight, scroll it up into the lower half of the screen.
+  function selectProvince(mn: string | null) {
+    setSearch("");
+    setExpanded(null);
+    setSelectedProvince(mn);
+    if (!mn) return;
+    requestAnimationFrame(() => {
+      const top = infoRef.current?.getBoundingClientRect().top;
+      if (top === undefined || top < window.innerHeight * 0.7) return;
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollBy({ top: top - window.innerHeight * 0.45, behavior: smooth ? "smooth" : "auto" });
+    });
+  }
+
+  const provincesByCount = [...provinceCounts.entries()].sort((a, b) => b[1] - a[1]);
+
   async function toggleFacility(workplace: string) {
     if (expanded === workplace) { setExpanded(null); return; }
     setExpanded(workplace);
@@ -154,11 +179,12 @@ export default function MapPage() {
         subtitle={`${totalMembers} ${t("гишүүн", "members")} · ${totalFacilities} ${t("эмнэлэг, байгууллага", "facilities")} · ${provinceCounts.size} ${t("аймаг/хот", "provinces")}`}
       />
 
-      <div className="container-page grid gap-8 py-10 lg:grid-cols-5">
-        {/* Map */}
-        <div className="lg:col-span-3">
+      <div className="container-page py-10">
+        {/* Map — the full width of the page */}
+        <div>
           <div
-            className="overflow-x-auto rounded-2xl border border-slate-200 p-4"
+            ref={mapBox}
+            className="rounded-2xl border border-slate-200 p-2 sm:p-4"
             onMouseMove={handleMapMove}
             onMouseLeave={() => setTip(null)}
           >
@@ -177,11 +203,7 @@ export default function MapPage() {
                 selectColor="#c42730"
                 hints={false}
                 cityColors={cityColors}
-                onSelect={(state) => {
-                  setSearch("");
-                  setExpanded(null);
-                  setSelectedProvince(state ? MAP_KEY_TO_MN[state] ?? null : null);
-                }}
+                onSelect={(state) => selectProvince(state ? MAP_KEY_TO_MN[state] ?? null : null)}
               />
             )}
           </div>
@@ -207,42 +229,61 @@ export default function MapPage() {
           </div>
         </div>
 
-        {/* Side panel */}
-        <div className="lg:col-span-2">
-          <input
-            placeholder={t("Эмнэлэг, байгууллага хайх...", "Search facilities...")}
-            className="mb-4 w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-[var(--brand-blue)]"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setExpanded(null); }}
-          />
+        {/* Facilities and their members — under the map */}
+        <div ref={infoRef} className="mt-8 scroll-mt-24">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {selectedProvince && !search.trim() ? (
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-xl font-bold text-slate-900">
+                  {provinceLabel(selectedProvince)}
+                  <span className="ml-2 text-sm font-normal text-slate-500">
+                    {provinceCounts.get(selectedProvince) ?? 0} {t("гишүүн", "members")}
+                  </span>
+                </h2>
+                <button
+                  onClick={() => setSelectedProvince(null)}
+                  className="text-xs font-semibold text-slate-400 hover:text-[var(--brand-red)]"
+                >
+                  {t("Цэвэрлэх ✕", "Clear ✕")}
+                </button>
+              </div>
+            ) : (
+              <h2 className="text-xl font-bold text-slate-900">{t("Эмнэлэг, байгууллагууд", "Facilities")}</h2>
+            )}
+            <input
+              placeholder={t("Эмнэлэг, байгууллага хайх...", "Search facilities...")}
+              className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-[var(--brand-blue)] sm:w-80"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setExpanded(null); }}
+            />
+          </div>
 
           {!search.trim() && !selectedProvince && (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-              {t(
-                "Газрын зургаас аймаг/хот сонгох эсвэл дээрх талбараар хайна уу.",
-                "Click a province on the map, or search above."
+            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
+              <p className="text-sm text-slate-500">
+                {t(
+                  "Газрын зураг эсвэл доорх жагсаалтаас аймаг/хот сонгох, эсвэл байгууллагаар хайна уу.",
+                  "Pick a province on the map or from the list below, or search for a facility."
+                )}
+              </p>
+              {provincesByCount.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {provincesByCount.map(([mn, count]) => (
+                    <button
+                      key={mn}
+                      onClick={() => selectProvince(mn)}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]"
+                    >
+                      {provinceLabel(mn)}
+                      <span className="ml-1.5 text-xs font-bold text-[var(--brand-blue)]">{count}</span>
+                    </button>
+                  ))}
+                </div>
               )}
-            </p>
-          )}
-
-          {selectedProvince && !search.trim() && (
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900">
-                {provinceLabel(selectedProvince)}
-                <span className="ml-2 text-sm font-normal text-slate-500">
-                  {provinceCounts.get(selectedProvince) ?? 0} {t("гишүүн", "members")}
-                </span>
-              </h2>
-              <button
-                onClick={() => setSelectedProvince(null)}
-                className="text-xs font-semibold text-slate-400 hover:text-[var(--brand-red)]"
-              >
-                {t("Цэвэрлэх ✕", "Clear ✕")}
-              </button>
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="grid items-start gap-2 sm:grid-cols-2">
             {shownFacilities.map((f) => (
               <div key={f.workplace} className="rounded-xl border border-slate-200">
                 <button
@@ -321,7 +362,7 @@ export default function MapPage() {
               <summary className="cursor-pointer text-xs font-semibold text-slate-400">
                 {t("Аймаг тодорхойгүй байгууллагууд", "Facilities without a province")} ({unknownList.length})
               </summary>
-              <div className="mt-2 space-y-2">
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {unknownList.map((f) => (
                   <div key={f.workplace} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
                     <span className="truncate">{f.workplace}</span>
