@@ -1,0 +1,26 @@
+// Mongolia's 21 aimags + Ulaanbaatar, used by the registration form
+// and (later) the interactive member/facility map.
+export const PROVINCES: { code: string; mn: string; en: string }[] = [
+  { code: "ulaanbaatar", mn: "Улаанбаатар", en: "Ulaanbaatar" },
+  { code: "arkhangai", mn: "Архангай", en: "Arkhangai" },
+  { code: "bayan-olgii", mn: "Баян-Өлгий", en: "Bayan-Ölgii" },
+  { code: "bayankhongor", mn: "Баянхонгор", en: "Bayankhongor" },
+  { code: "bulgan", mn: "Булган", en: "Bulgan" },
+  { code: "govi-altai", mn: "Говь-Алтай", en: "Govi-Altai" },
+  { code: "govisumber", mn: "Говьсүмбэр", en: "Govisümber" },
+  { code: "darkhan-uul", mn: "Дархан-Уул", en: "Darkhan-Uul" },
+  { code: "dornogovi", mn: "Дорноговь", en: "Dornogovi" },
+  { code: "dornod", mn: "Дорнод", en: "Dornod" },
+  { code: "dundgovi", mn: "Дундговь", en: "Dundgovi" },
+  { code: "zavkhan", mn: "Завхан", en: "Zavkhan" },
+  { code: "orkhon", mn: "Орхон", en: "Orkhon" },
+  { code: "ovorkhangai", mn: "Өвөрхангай", en: "Övörkhangai" },
+  { code: "omnogovi", mn: "Өмнөговь", en: "Ömnögovi" },
+  { code: "sukhbaatar", mn: "Сүхбаатар", en: "Sükhbaatar" },
+  { code: "selenge", mn: "Сэлэнгэ", en: "Selenge" },
+  { code: "tov", mn: "Төв", en: "Töv" },
+  { code: "uvs", mn: "Увс", en: "Uvs" },
+  { code: "khovd", mn: "Ховд", en: "Khovd" },
+  { code: "khovsgol", mn: "Хөвсгөл", en: "Khövsgöl" },
+  { code: "khentii", mn: "Хэнтий", en: "Khentii" },
+];
