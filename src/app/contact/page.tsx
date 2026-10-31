@@ -30,7 +30,7 @@ export default function ContactPage() {
         {/* Organisation */}
         <section className="rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900">
-            {t("Байгууллага", "Organisation")}
+            {t("Байгууллага", "Organization")}
           </h2>
           <p className="mt-3 text-base text-gray-800">
             {t(
@@ -41,7 +41,7 @@ export default function ContactPage() {
           <p className="mt-1 text-sm text-gray-600">
             {t(
               "Төрийн бус байгууллага",
-              "Non-governmental organisation"
+              "Non-governmental organization"
             )}
           </p>
           <p className="mt-3 text-sm text-gray-600">

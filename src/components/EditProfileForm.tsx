@@ -273,7 +273,7 @@ export default function EditProfileForm({
           <input id="ep-years" inputMode="numeric" className={inputClass} value={form.years_worked} onChange={set("years_worked")} />
         </div>
         <div className="sm:col-span-2">
-          <label className={label} htmlFor="ep-facebook">{t("Facebook хаяг (заавал биш)", "Facebook ID (optional)")}</label>
+          <label className={label} htmlFor="ep-facebook">{t("Facebook хаяг (заавал биш)", "Facebook profile (optional)")}</label>
           <input id="ep-facebook" className={inputClass} value={form.facebook} onChange={set("facebook")} />
         </div>
       </div>

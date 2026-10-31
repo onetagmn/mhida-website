@@ -25,7 +25,7 @@ const activities: { mn: string; en: string }[] = [
   },
   {
     mn: "Эрүүл мэндийн даатгалын нэгжтэй бүхий л хуулийн этгээдийн үйл ажиллагааг тал бүрээр дэмжин ажиллах",
-    en: "Comprehensively support the work of all legal entities operating health insurance units",
+    en: "Support, in every way, the work of all organizations that have a health insurance unit",
   },
   {
     mn: "Эрүүл мэндийн даатгалын эмч болон бусад мэргэжилтнийг мэргэшүүлэх, мэргэжил дээшлүүлэх тасралтгүй сургалтын үйл ажиллагааг тал бүрээр дэмжих",
@@ -37,7 +37,7 @@ const activities: { mn: string; en: string }[] = [
   },
   {
     mn: "Даатгалын эмч нарын мэргэжлийн зэрэг хамгаалах, ахиулах үйл ажиллагааг холбогдох байгууллагуудтай хамтран дэмжих",
-    en: "Support professional degree attainment and advancement in cooperation with relevant organizations",
+    en: "Work with relevant organizations to protect and advance insurance doctors' professional qualifications",
   },
   {
     mn: "Эрүүл мэндийн даатгалын чиглэлээр сонин, сэтгүүл, ном, товхимол гаргах зэрэг хэвлэл нийтлэлийн үйл ажиллагаа явуулах",
@@ -72,11 +72,11 @@ const duties: { mn: string; en: string }[] = [
   },
   {
     mn: "Холбооны шийдвэрийг хэрэгжүүлэх",
-    en: "Implement the decisions of the Association",
+    en: "Carry out the Association's decisions",
   },
   {
     mn: "Холбоонд хандив, туслалцаа үзүүлэх",
-    en: "Provide donations and support to the Association",
+    en: "Support the Association with donations and assistance",
   },
 ];
 
@@ -129,7 +129,7 @@ export default function AboutPage() {
             <p className="leading-relaxed text-slate-700">
               {t(
                 "«Монголын даатгалын эмч нарын холбоо» (товчилбол «МДЭНХ») нь Монгол Улсын Үндсэн хуульд заасан чиг үүргийг хэрэгжүүлэх, даатгалын эмч нарын холбооны гишүүнчлэл, гишүүдийн эрх, үүрэг, үйл ажиллагаа, бүтэц, зохион байгуулалт, удирдлага, санхүүжилт, даатгалын үйл ажиллагаа эрхлэхтэй холбоотойгоор даатгалын эмч болон даатгалын эмч нарын холбооны хооронд үүсэх харилцааг зохицуулахад, тэдгээрийг дэмжих хүмүүсийн сайн дурын үндсэн дээр байгуулагдсан олон нийтийн байгууллага мөн.",
-                "The Mongolian Health Insurance Doctors Association (MHIDA) is a voluntary public organization established to fulfil the functions set out in the Constitution of Mongolia and to regulate the relations between insurance doctors and their association — covering membership, members' rights and duties, activities, structure and organization, governance, financing, and the conduct of insurance-related work — founded on the goodwill of those who support insurance doctors."
+                "The Mongolian Health Insurance Doctors Association (MHIDA) is a voluntary public organization founded by people who support insurance doctors. It carries out functions set out in the Constitution of Mongolia and governs the relationship between insurance doctors and the Association: membership, members' rights and duties, activities, structure, management, financing and insurance work."
               )}
             </p>
           </section>
@@ -142,7 +142,7 @@ export default function AboutPage() {
             <p className="leading-relaxed text-slate-700">
               {t(
                 "МДЭНХ-ны зорилго нь Монгол Улсад эрүүл мэндийн даатгалын салбарыг бүхий л чиглэлээр хөгжүүлэх, үр ашгийг олонд таниулах, даатгалын эмч нарын мэргэжлийн чадавхыг дээшлүүлэх, хамгаалах, дэмжиж ажиллах, иргэн бүрт эрүүл мэндийн бүхий л үйл ажиллагааг хүртээмжтэй байлгах, эрүүл мэндийн өндөр зардлаас урьдчилан сэргийлэхэд оршино.",
-                "Our mission is to develop Mongolia's health insurance sector in all its dimensions, raise public awareness of its benefits, strengthen, protect, and support the professional capacity of insurance doctors, make healthcare accessible to every citizen, and help prevent catastrophic health expenditures."
+                "Our mission is to develop Mongolia's health insurance sector in every respect, raise public awareness of its benefits, build, protect and support insurance doctors' professional capacity, make healthcare accessible to every citizen, and help protect people from catastrophic health costs."
               )}
             </p>
           </section>

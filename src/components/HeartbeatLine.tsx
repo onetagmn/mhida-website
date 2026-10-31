@@ -1,6 +1,6 @@
-// A red heartbeat pulse running across the hero along an invisible ECG
-// line — the home page's "alive" touch, fitting for a doctors'
-// association. The pulse is three dashes of the same path (a long faint
+// A heartbeat pulse running across the hero along an invisible ECG
+// line, slowly turning from red to blue and back (.ecg-line) — the
+// home page's "alive" touch, fitting for a doctors' association. The pulse is three dashes of the same path (a long faint
 // trail, a shorter brighter one and a glowing head) moving together
 // (globals.css, .ecg-*). The line stretches to the hero's width; its
 // stroke stays 2px thanks to non-scaling-stroke. Hidden for reduced
@@ -19,10 +19,10 @@ const PATH =
 export default function HeartbeatLine({ className = "" }: { className?: string }) {
   const line = { d: PATH, pathLength: 1, fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", vectorEffect: "non-scaling-stroke" } as const;
   return (
-    <svg aria-hidden="true" viewBox="0 0 1200 100" preserveAspectRatio="none" className={`pointer-events-none ${className}`}>
-      <path {...line} stroke="var(--brand-red)" strokeOpacity={0.2} className="ecg-trail" />
-      <path {...line} stroke="var(--brand-red)" strokeOpacity={0.45} className="ecg-mid" />
-      <path {...line} stroke="var(--brand-red)" strokeWidth={3} className="ecg-head" />
+    <svg aria-hidden="true" viewBox="0 0 1200 100" preserveAspectRatio="none" className={`ecg-line pointer-events-none ${className}`}>
+      <path {...line} stroke="currentColor" strokeOpacity={0.2} className="ecg-trail" />
+      <path {...line} stroke="currentColor" strokeOpacity={0.45} className="ecg-mid" />
+      <path {...line} stroke="currentColor" strokeWidth={3} className="ecg-head" />
     </svg>
   );
 }

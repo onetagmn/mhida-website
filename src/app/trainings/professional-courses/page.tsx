@@ -137,7 +137,7 @@ const COURSES: Course[] = [
     titleEn: "Infection Prevention & Outbreak Response",
     provider: "World Health Organization · OpenWHO",
     descMn: "ДЭМБ-аас өөрөө боловсруулсан, эхнээс нь дуустал бүрэн үнэгүй сургалт — курс болон албан ёсны гэрчилгээ хоёулаа үнэ төлбөргүй.",
-    descEn: "Straight from WHO itself — genuinely free from start to finish, including the official certificate.",
+    descEn: "Run by WHO itself — completely free, including the official certificate.",
     format: "Богино хугацаатай · видео + шалгалт",
     url: "https://openwho.org",
     freeForAll: true,

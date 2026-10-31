@@ -202,7 +202,7 @@ export default function EnglishProgressPage() {
               </table>
             </div>
             <p className="mt-3 text-xs text-slate-400">
-              {t(`Нийт ${totalLessons} өдрийн курс.`, `Course totals ${totalLessons} days.`)}
+              {t(`Нийт ${totalLessons} өдрийн курс.`, `The course has ${totalLessons} days.`)}
             </p>
           </>
         )}

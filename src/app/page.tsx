@@ -43,7 +43,7 @@ const quickActions: {
     kind: "file",
     href: "/docs/MHIDA_NAME_CARD_TEMPLATE.pptx",
     mn: "Нэрийн карт",
-    en: "Name Card",
+    en: "Business Card",
     live: true,
     noteMn: "Загвар татах (PPTX)",
     noteEn: "Download template (PPTX)",
@@ -146,22 +146,17 @@ export default function Home() {
   return (
     <div>
       {/* Hero — with a heartbeat pulse running along a faint ECG line
-          behind it (HeartbeatLine), blue and red lights drifting behind
-          it, a red band sweeping through the headline (.hero-glow,
-          .hero-sweep) and the logo floating gently. */}
+          behind it (HeartbeatLine), slowly turning from red to blue and
+          back, and the logo gently breathing. */}
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
-        <span className="hero-glow hero-glow-a -left-24 -top-28 h-80 w-80 sm:h-96 sm:w-96" />
-        <span className="hero-glow hero-glow-b -bottom-24 right-[6%] h-72 w-72 sm:h-96 sm:w-96" />
         <HeartbeatLine className="absolute inset-x-0 bottom-1 h-16 w-full sm:bottom-2 sm:h-20" />
         <div className="container-page relative grid items-center gap-8 py-10 sm:py-14 md:grid-cols-2">
           <div>
             <h1 className="hero-rise text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
-              <span className="hero-sweep">
-                {t(
-                  "Монголын Даатгалын Эмч Нарын Холбоо",
-                  "Mongolian Health Insurance Doctors Association"
-                )}
-              </span>
+              {t(
+                "Монголын Даатгалын Эмч Нарын Холбоо",
+                "Mongolian Health Insurance Doctors Association"
+              )}
             </h1>
             <p className="hero-rise hero-delay-1 mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
               {t(
@@ -185,7 +180,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex justify-center md:justify-end">
-            <div className="logo-float">
+            <div className="logo-breathe">
               <Image
                 src={asset("/logo.png")}
                 alt="MHIDA logo"
@@ -265,7 +260,7 @@ export default function Home() {
                           <span className="block text-[15px] font-extrabold leading-none text-slate-900">
                             <CountUp value={memberSummary.provincesCovered} /> /{memberSummary.totalProvinces}
                           </span>
-                          <span className="text-[10.5px] font-semibold text-slate-500">{t("Аймаг, хот", "Regions")}</span>
+                          <span className="text-[10.5px] font-semibold text-slate-500">{t("Аймаг, хот", "Provinces")}</span>
                         </span>
                       </div>
                     </div>
@@ -302,7 +297,7 @@ export default function Home() {
                             <span className="font-extrabold text-slate-900"><CountUp value={courseStats.enrolled_members} /></span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">📈 {t("Дундаж өдөр", "Avg. day")}</span>
+                            <span className="text-slate-500">📈 {t("Дундаж өдөр", "Average day")}</span>
                             <span className="font-extrabold text-slate-900">
                               {courseStats.avg_completed}/{courseStats.total_lessons}
                             </span>
@@ -315,7 +310,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
-                      <span>{t("Дэлгэрэнгүй хүснэгт харах", "Full table")}</span>
+                      <span>{t("Дэлгэрэнгүй хүснэгт харах", "View full table")}</span>
                       <span>→</span>
                     </div>
                   </Link>

@@ -52,12 +52,14 @@ export default function DashboardPage() {
         .select("id, member_id, first_name, last_name, birth_date, gender, membership, workplace, position, years_worked, facebook, province, email, phone, is_admin, upgrade_requested")
         .eq("id", session.user.id)
         .single(),
-      supabase.from("course_lessons").select("id", { count: "exact", head: true }),
+      // Stage 1 of the English course only; Stage 2 shows its own certificate.
+      supabase.from("course_lessons").select("id", { count: "exact", head: true }).eq("course", "a1b1"),
       supabase
         .from("course_progress")
-        .select("lesson_id", { count: "exact", head: true })
+        .select("lesson_id, course_lessons!inner(course)", { count: "exact", head: true })
         .eq("member_id", session.user.id)
-        .eq("completed", true),
+        .eq("completed", true)
+        .eq("course_lessons.course", "a1b1"),
     ]);
     setMember(memberRes.data);
     setCourseDone(!!totalRes.count && totalRes.count > 0 && doneRes.count === totalRes.count);
@@ -159,7 +161,7 @@ export default function DashboardPage() {
             <p className="mt-1 text-sm text-slate-600">
               {t(
                 "Open Frequency English — 30 өдрийн видео, сонсох-давтах, ярианы курс. Үргэлжлүүлэхийн тулд дарна уу.",
-                "Open Frequency English — the 30-day video, listen-and-repeat speaking course. Click to continue where you left off."
+                "Open Frequency English — a 30-day speaking course with video lessons and listen-and-repeat practice. Click to continue where you left off."
               )}
             </p>
           </Link>

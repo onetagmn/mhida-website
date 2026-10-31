@@ -501,7 +501,7 @@ function ApplyContent() {
                   <input id="major" className={inputClass("major")} value={form.major} onChange={set("major")} />
                 </div>
                 <div>
-                  <label className={label} htmlFor="yearAttained">{t("Хугацаа (жилээр)", "Year Attained")}</label>
+                  <label className={label} htmlFor="yearAttained">{t("Хугацаа (жилээр)", "Duration (years)")}</label>
                   <input id="yearAttained" className={inputClass("yearAttained")} value={form.yearAttained} onChange={set("yearAttained")} placeholder={t("ж.нь 6", "e.g. 6")} />
                 </div>
               </div>

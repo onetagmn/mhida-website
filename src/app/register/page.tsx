@@ -119,7 +119,7 @@ export default function RegisterPage() {
       e.email = t("И-мэйл буруу байна", "Invalid email");
     if (!req(form.phone)) e.phone = msg;
     else if (!/^\d{8}$/.test(form.phone.replace(/[\s-]/g, "")))
-      e.phone = t("8 оронтой дугаар оруулна уу", "Enter an 8-digit number");
+      e.phone = t("8 оронтой дугаар оруулна уу", "Enter an 8-digit phone number");
     if (!form.membershipType) e.membershipType = msg;
     if (form.password.length < 8)
       e.password = t("Багадаа 8 тэмдэгт", "At least 8 characters");
@@ -214,8 +214,8 @@ export default function RegisterPage() {
                 <span className="text-lg font-extrabold text-[var(--brand-blue)]">{memberId}</span>
                 <br />
                 {t(
-                  "Энэ дугаараа хадгалаарай — нэвтрэхэд ашиглагдана.",
-                  "Save this ID — you'll use it to log in."
+                  "Энэ дугаараа хадгалаарай — төлбөр төлөх болон МДЭНХ-той холбогдоход хэрэг болно.",
+                  "Save this ID — you'll need it for payments and when contacting MHIDA."
                 )}
               </p>
             ) : (
@@ -352,7 +352,7 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <label className={label} htmlFor="yearsWorked">
-                    {t("Даатгалын эмчээр ажилласан жил", "Years as insurance doctor")} *
+                    {t("Даатгалын эмчээр ажилласан жил", "Years as an insurance doctor")} *
                   </label>
                   <select
                     id="yearsWorked"
@@ -420,7 +420,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className={label} htmlFor="facebookId">
-                  {t("Facebook хаяг", "Facebook ID")}
+                  {t("Facebook хаяг", "Facebook profile")}
                 </label>
                 <input id="facebookId" className={inputClass("facebookId")} value={form.facebookId} onChange={set("facebookId")} />
               </div>
@@ -480,8 +480,8 @@ export default function RegisterPage() {
               </legend>
               <p className="text-sm text-slate-600">
                 {t(
-                  "Та гишүүний дугаар болон нууц үгээрээ нэвтэрнэ. Гишүүний дугаарыг бүртгэл баталгаажсаны дараа олгоно.",
-                  "You'll log in with your member ID and password. Your member ID is assigned once registration is confirmed."
+                  "Та и-мэйл хаяг болон энэ нууц үгээрээ нэвтэрнэ. Гишүүний дугаарыг бүртгэл баталгаажсаны дараа олгоно.",
+                  "You'll log in with your email address and this password. Your member ID is assigned once registration is confirmed."
                 )}
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
