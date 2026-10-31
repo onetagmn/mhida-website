@@ -13,6 +13,7 @@ import { MAP_KEY_TO_MN, MAP_KEYS_WEST_TO_EAST, countColor } from "@/lib/map-prov
 import { PROVINCES, mergeFacilityStats } from "@/lib/provinces";
 import PartnerLogos from "@/components/PartnerLogos";
 import HeartbeatLine from "@/components/HeartbeatLine";
+import { ProvinceTip, useProvinceTip } from "@/components/ProvinceTip";
 import { useInView } from "@/lib/use-in-view";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
@@ -101,26 +102,31 @@ export default function Home() {
       setMapStatsLoaded(true);
       setCourseStats((courseRes.data as CourseStats) ?? null);
     })();
-    const update = () => setMapSize(Math.min(680, window.innerWidth - 48));
+    // The map spans the page column (72rem less its 1rem side padding).
+    const update = () => setMapSize(Math.min(1120, document.documentElement.clientWidth - 32));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  const mapColors = useMemo(() => {
+  const provinceCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const s of mapStats) {
       if (!s.province) continue;
       counts.set(s.province, (counts.get(s.province) ?? 0) + Number(s.member_count));
     }
+    return counts;
+  }, [mapStats]);
+  const mapColors = useMemo(() => {
     const colors: Record<string, string> = {};
     for (const [mapKey, mn] of Object.entries(MAP_KEY_TO_MN)) {
-      colors[mapKey] = countColor(counts.get(mn) ?? 0);
+      colors[mapKey] = countColor(provinceCounts.get(mn) ?? 0);
     }
     return colors;
-  }, [mapStats]);
+  }, [provinceCounts]);
   const [mapRef, mapSeen] = useInView<HTMLDivElement>();
   const mapFill = useMapFillIn(mapColors, mapSeen);
+  const mapTip = useProvinceTip(provinceCounts);
 
   const memberSummary = useMemo(() => {
     const totalMembers = mapStats.reduce((a, s) => a + Number(s.member_count), 0);
@@ -140,24 +146,30 @@ export default function Home() {
   return (
     <div>
       {/* Hero — with a heartbeat pulse running along a faint ECG line
-          behind it (HeartbeatLine) and the logo floating gently. */}
+          behind it (HeartbeatLine), blue and red lights drifting behind
+          it, a red band sweeping through the headline (.hero-glow,
+          .hero-sweep) and the logo floating gently. */}
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
+        <span className="hero-glow hero-glow-a -left-24 -top-28 h-80 w-80 sm:h-96 sm:w-96" />
+        <span className="hero-glow hero-glow-b -bottom-24 right-[6%] h-72 w-72 sm:h-96 sm:w-96" />
         <HeartbeatLine className="absolute inset-x-0 bottom-1 h-16 w-full sm:bottom-2 sm:h-20" />
-        <div className="container-page relative grid items-center gap-10 py-16 sm:py-20 md:grid-cols-2">
+        <div className="container-page relative grid items-center gap-8 py-10 sm:py-14 md:grid-cols-2">
           <div>
             <h1 className="hero-rise text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
-              {t(
-                "Монголын Даатгалын Эмч Нарын Холбоо",
-                "Mongolian Health Insurance Doctors Association"
-              )}
+              <span className="hero-sweep">
+                {t(
+                  "Монголын Даатгалын Эмч Нарын Холбоо",
+                  "Mongolian Health Insurance Doctors Association"
+                )}
+              </span>
             </h1>
-            <p className="hero-rise hero-delay-1 mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            <p className="hero-rise hero-delay-1 mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
               {t(
                 "Даатгалын эмч нарын мэргэжлийн холбоо — сургалт, эрх зүйн мэдээлэл, туршлага солилцоо нэг дороос.",
                 "The professional association for health insurance doctors — training, legal resources, and shared expertise in one place."
               )}
             </p>
-            <div className="hero-rise hero-delay-3 mt-7 flex flex-wrap items-center gap-4">
+            <div className="hero-rise hero-delay-3 mt-6 flex flex-wrap items-center gap-4">
               <Link
                 href="/register"
                 className="btn-shine rounded-lg bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--brand-red-dark)]"
@@ -179,7 +191,7 @@ export default function Home() {
                 alt="MHIDA logo"
                 width={320}
                 height={330}
-                className="hero-rise hero-delay-2 h-56 w-auto sm:h-72"
+                className="hero-rise hero-delay-2 h-40 w-auto sm:h-60"
                 priority
               />
             </div>
@@ -190,8 +202,8 @@ export default function Home() {
       {/* Latest news (from the live database) */}
       {(latest.length > 0 || courseStats || mapStatsLoaded) && (
         <section className="border-b border-slate-200 bg-white">
-          <div className="container-page py-14">
-            <div className="reveal mb-6 flex items-end justify-between">
+          <div className="container-page py-10">
+            <div className="reveal mb-5 flex items-end justify-between">
               <h2 className="text-2xl font-bold text-slate-900">{t("Сүүлийн мэдээ", "Latest News")}</h2>
               <Link href="/news" className="text-sm font-semibold text-[var(--brand-red)] hover:opacity-80">
                 {t("Бүх мэдээ →", "All news →")}
@@ -347,8 +359,8 @@ export default function Home() {
       )}
 
       {/* Partnership / News */}
-      <section className="container-page py-14">
-        <h2 className="reveal mb-8 text-2xl font-bold text-slate-900">
+      <section className="container-page py-10">
+        <h2 className="reveal mb-5 text-2xl font-bold text-slate-900">
           {t("Түншлэл ба мэдээ", "Partnership & News")}
         </h2>
 
@@ -397,9 +409,9 @@ export default function Home() {
       </section>
 
       {/* Quick actions */}
-      <section className="border-y border-slate-200 bg-slate-50 py-14">
+      <section className="border-y border-slate-200 bg-slate-50 py-10">
         <div className="container-page">
-          <h2 className="reveal mb-6 text-2xl font-bold text-slate-900">
+          <h2 className="reveal mb-5 text-2xl font-bold text-slate-900">
             {t("Түргэн холбоос", "Quick Actions")}
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -461,19 +473,19 @@ export default function Home() {
       </section>
 
       {/* Member map — live preview, click anywhere to open the full page */}
-      <section className="container-page py-14">
-        <h2 className="reveal mb-6 text-2xl font-bold text-slate-900">
+      <section className="container-page py-10">
+        <h2 className="reveal mb-5 text-2xl font-bold text-slate-900">
           {t("Гишүүдийн газрын зураг", "Member Map")}
         </h2>
         {/* Provinces with members colour in one after another, west to
-            east, when the map scrolls into view (useMapFillIn). */}
+            east, when the map scrolls into view (useMapFillIn). No frame:
+            the map sits straight on the page, full width. */}
         <div
           ref={mapRef}
           onClick={() => router.push("/map")}
-          className={`reveal flex cursor-pointer justify-center rounded-2xl border border-slate-200 p-4 transition-shadow hover:shadow-md ${
-            mapFill.filling ? "map-filling" : ""
-          }`}
-          title={t("Дэлгэрэнгүй газрын зураг нээх", "Open the full map")}
+          onMouseMove={mapTip.onMouseMove}
+          onMouseLeave={mapTip.onMouseLeave}
+          className={`reveal flex cursor-pointer justify-center ${mapFill.filling ? "map-filling" : ""}`}
         >
           <Mongolia
             type="select-single"
@@ -488,6 +500,7 @@ export default function Home() {
             onSelect={() => router.push("/map")}
           />
         </div>
+        <ProvinceTip tip={mapTip.tip} />
         <div className="mt-4 text-center">
           <Link
             href="/map"

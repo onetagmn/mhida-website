@@ -203,7 +203,7 @@ export default function RegisterPage() {
     return (
       <div>
         <PageHeader eyebrow={t("Бүртгэл", "Registration")} title={t("Гишүүнээр элсэх", "Become a Member")} />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-lg rounded-2xl border border-green-200 bg-green-50 p-8 text-center">
             <h2 className="text-xl font-bold text-slate-900">
               {t("Бүртгэл амжилттай!", "Registration successful!")}
@@ -264,7 +264,7 @@ export default function RegisterPage() {
         )}
       />
 
-      <div className="container-page py-12">
+      <div className="container-page py-8 sm:py-10">
         <div className="mx-auto max-w-2xl">
           <form onSubmit={onSubmit} noValidate className="mt-2 space-y-8">
             {/* Personal info */}

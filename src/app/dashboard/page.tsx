@@ -104,7 +104,7 @@ export default function DashboardPage() {
         subtitle={member ? `${t("Гишүүний дугаар", "Member ID")}: ${member.member_id}` : undefined}
       />
 
-      <div className="container-page grid gap-8 py-12 md:grid-cols-3">
+      <div className="container-page grid gap-8 py-8 sm:py-10 md:grid-cols-3">
         <div className="space-y-6 md:col-span-2">
           {member && (
             <EditProfileForm

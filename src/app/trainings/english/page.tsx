@@ -298,7 +298,7 @@ export default function EnglishCoursePage() {
           title={t("Англи хэлний курс", "English Course")}
           subtitle={`Open Frequency English — ${TOTAL_DAYS}-Day Speaking Course (CEFR A1–B1)`}
         />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-md rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
             <p className="text-4xl">🔒</p>
             <h2 className="mt-4 text-xl font-bold text-slate-900">
@@ -344,7 +344,7 @@ export default function EnglishCoursePage() {
           title={openLesson.title}
           subtitle={openLesson.title_mn}
         />
-        <div className="container-page py-10">
+        <div className="container-page py-8">
           <div className="mx-auto max-w-3xl space-y-10">
             <div className="flex items-center justify-between">
               <button onClick={() => setOpenLesson(null)} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]">
@@ -685,7 +685,7 @@ export default function EnglishCoursePage() {
         title={t("Англи хэлний курс", "English Course")}
         subtitle={`Open Frequency English — ${TOTAL_DAYS}-Day Speaking Course (CEFR A1–B1)`}
       />
-      <div className="container-page py-10">
+      <div className="container-page py-8">
         <div className="mx-auto max-w-3xl space-y-8">
           {/* Progress */}
           <div className="rounded-2xl border border-slate-200 p-6">

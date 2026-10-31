@@ -18,7 +18,7 @@ export default function EHealthPage() {
         )}
       />
 
-      <div className="container-page py-12">
+      <div className="container-page py-8 sm:py-10">
         <div className="mx-auto max-w-3xl">
           <ContentSection
             section="ehealth"

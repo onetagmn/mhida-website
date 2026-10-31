@@ -33,7 +33,7 @@ export default function NewsPage() {
         title={t("Мэдээ мэдээлэл", "News & Announcements")}
       />
 
-      <div className="container-page py-12">
+      <div className="container-page py-8 sm:py-10">
         {loading && (
           <p className="py-12 text-center text-slate-400">{t("Ачааллаж байна...", "Loading...")}</p>
         )}
@@ -43,7 +43,7 @@ export default function NewsPage() {
           </p>
         )}
 
-        <div className="mx-auto max-w-2xl space-y-10">
+        <div className="mx-auto max-w-2xl space-y-6">
           {posts.map((p) => (
             <article key={p.id} className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
               {p.image_urls.length > 0 && (

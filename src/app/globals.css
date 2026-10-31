@@ -97,6 +97,40 @@ body {
   filter: drop-shadow(0 0 4px var(--brand-red));
 }
 
+/* Hero colour: a red band sweeps through the blue headline, and two soft
+   lights behind the hero drift and fade between the brand blue and red,
+   each the opposite way round. */
+@keyframes hero-sweep {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.hero-sweep {
+  background: linear-gradient(90deg, var(--brand-blue) 0%, var(--brand-blue) 33%, var(--brand-red) 50%, var(--brand-blue) 67%, var(--brand-blue) 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hero-sweep 9s ease-in-out infinite;
+}
+
+@keyframes hero-glow-a {
+  0%, 100% { transform: translate(0, 0) scale(1); background-color: var(--brand-blue); }
+  50% { transform: translate(18%, 14%) scale(1.15); background-color: var(--brand-red); }
+}
+@keyframes hero-glow-b {
+  0%, 100% { transform: translate(0, 0) scale(1.1); background-color: var(--brand-red); }
+  50% { transform: translate(-16%, -10%) scale(0.95); background-color: var(--brand-blue); }
+}
+.hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+.hero-glow-a { background-color: var(--brand-blue); animation: hero-glow-a 14s ease-in-out infinite; }
+.hero-glow-b { background-color: var(--brand-red); animation: hero-glow-b 16s ease-in-out infinite; }
+
 @keyframes logo-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
@@ -157,8 +191,14 @@ body {
   }
   .logo-float,
   .btn-shine::after,
-  .reveal {
+  .reveal,
+  .hero-glow {
     animation: none;
+  }
+  .hero-sweep {
+    animation: none;
+    background: none;
+    color: var(--brand-blue);
   }
   .ring-fill,
   .map-filling path {

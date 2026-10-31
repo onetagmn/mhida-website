@@ -122,7 +122,7 @@ export default function AboutPage() {
         )}
       />
 
-      <div className="container-page grid gap-12 py-12 md:grid-cols-3">
+      <div className="container-page grid gap-10 py-8 sm:py-10 md:grid-cols-3">
         <div className="space-y-12 md:col-span-2">
           {/* Intro */}
           <section>

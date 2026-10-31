@@ -131,7 +131,7 @@ export default function LoginPage() {
         }
       />
 
-      <div className="container-page py-12">
+      <div className="container-page py-8 sm:py-10">
         <div className="mx-auto max-w-md">
           {EMAIL_LINK_ENABLED && (
             <div className="mb-6 grid grid-cols-2 rounded-lg border border-slate-200 p-1 text-sm font-semibold">

@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { MAP_KEY_TO_MN, MN_TO_MAP_KEY, countColor } from "@/lib/map-provinces";
 import { PROVINCES, mergeFacilityStats } from "@/lib/provinces";
+import { ProvinceTip, useProvinceTip } from "@/components/ProvinceTip";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
 
@@ -22,8 +23,6 @@ const MN_TO_EN: Record<string, string> = Object.fromEntries(
   PROVINCES.map((p) => [p.mn, p.en])
 );
 
-type Tooltip = { x: number; y: number; mn: string; en: string; count: number };
-
 export default function MapPage() {
   const { t, lang } = useLanguage();
   const [stats, setStats] = useState<FacilityStat[]>([]);
@@ -35,7 +34,6 @@ export default function MapPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, FacilityMember[]>>({});
   const [mapSize, setMapSize] = useState(760);
-  const [tip, setTip] = useState<Tooltip | null>(null);
   const mapBox = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
 
@@ -154,22 +152,7 @@ export default function MapPage() {
   const totalFacilities = stats.length;
   const unknownList = byProvince.get("__unknown__") ?? [];
 
-  // Custom bilingual tooltip: the SVG paths carry ids like "<code>-<n>",
-  // so hover resolves the province and we render our own label.
-  function handleMapMove(e: React.MouseEvent) {
-    const path = (e.target as Element).closest?.("path");
-    if (!path?.id) { setTip(null); return; }
-    const key = Object.keys(MAP_KEY_TO_MN).find((k) => path.id.startsWith(k + "-"));
-    if (!key) { setTip(null); return; }
-    const mn = MAP_KEY_TO_MN[key];
-    setTip({
-      x: e.clientX,
-      y: e.clientY,
-      mn,
-      en: MN_TO_EN[mn] ?? key,
-      count: provinceCounts.get(mn) ?? 0,
-    });
-  }
+  const mapTip = useProvinceTip(provinceCounts);
 
   return (
     <div>
@@ -179,14 +162,13 @@ export default function MapPage() {
         subtitle={`${totalMembers} ${t("гишүүн", "members")} · ${totalFacilities} ${t("эмнэлэг, байгууллага", "facilities")} · ${provinceCounts.size} ${t("аймаг/хот", "provinces")}`}
       />
 
-      <div className="container-page py-10">
-        {/* Map — the full width of the page */}
+      <div className="container-page py-8">
+        {/* Map — the full width of the page, with no frame around it */}
         <div>
           <div
             ref={mapBox}
-            className="rounded-2xl border border-slate-200 p-2 sm:p-4"
-            onMouseMove={handleMapMove}
-            onMouseLeave={() => setTip(null)}
+            onMouseMove={mapTip.onMouseMove}
+            onMouseLeave={mapTip.onMouseLeave}
           >
             {loading ? (
               <div className="flex h-72 items-center justify-center text-slate-400">
@@ -207,17 +189,7 @@ export default function MapPage() {
               />
             )}
           </div>
-          {tip && (
-            <div
-              className="pointer-events-none fixed z-50 rounded-md bg-[#0f2f4f] px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
-              style={{ left: tip.x + 14, top: tip.y + 14 }}
-            >
-              {lang === "mn" ? tip.mn : tip.en}
-              <span className="ml-1.5 font-normal opacity-75">
-                · {tip.count} {t("гишүүн", "members")}
-              </span>
-            </div>
-          )}
+          <ProvinceTip tip={mapTip.tip} />
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="font-semibold">{t("Гишүүдийн тоо:", "Members:")}</span>
             {[["0", "#EDF1F6"], ["1–2", "#BBD2E8"], ["3–5", "#7AA6CE"], ["6–10", "#3E7BB0"], ["10+", "#015196"]].map(([label, color]) => (

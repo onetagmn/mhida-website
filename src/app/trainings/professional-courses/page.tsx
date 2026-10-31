@@ -195,7 +195,7 @@ export default function ProfessionalCoursesPage() {
             "Free video courses from top universities worldwide"
           )}
         />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-md rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
             <p className="text-4xl">🔒</p>
             <h2 className="mt-4 text-xl font-bold text-slate-900">{t("Зөвхөн гишүүдэд", "Members Only")}</h2>
@@ -232,7 +232,7 @@ export default function ProfessionalCoursesPage() {
         )}
       />
 
-      <div className="container-page py-12">
+      <div className="container-page py-8 sm:py-10">
         {!isProfessional && (
           <div className="mx-auto mb-8 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <p className="font-semibold">

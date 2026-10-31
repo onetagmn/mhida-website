@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-slate-200 bg-slate-50">
-      <div className="container-page grid gap-8 py-10 sm:grid-cols-3">
+      <div className="container-page grid gap-8 py-8 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-2">
             <Image src={asset("/logo.png")} alt="MHIDA" width={32} height={32} className="h-8 w-auto" />

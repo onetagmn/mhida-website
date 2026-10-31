@@ -210,7 +210,7 @@ function ApplyContent() {
     return (
       <div>
         <PageHeader eyebrow={t("Сургалт", "Training")} title={t("Сургалтад бүртгүүлэх", "Training Application")} />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-md rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
             <p className="text-4xl">🔒</p>
             <h2 className="mt-4 text-xl font-bold text-slate-900">{t("Эхлээд нэвтэрнэ үү", "Log in first")}</h2>
@@ -235,7 +235,7 @@ function ApplyContent() {
     return (
       <div>
         <PageHeader eyebrow={t("Сургалт", "Training")} title={t("Сургалтад бүртгүүлэх", "Training Application")} />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-lg rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center">
             <p className="text-4xl">🎓</p>
             <h2 className="mt-4 text-xl font-bold text-slate-900">
@@ -263,7 +263,7 @@ function ApplyContent() {
     return (
       <div>
         <PageHeader eyebrow={t("Сургалт", "Training")} title={t("Сургалтад бүртгүүлэх", "Training Application")} />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-lg rounded-2xl border border-blue-200 bg-blue-50 p-10 text-center">
             <p className="text-4xl">✅</p>
             <h2 className="mt-4 text-xl font-bold text-slate-900">{t("Та өргөдлөө аль хэдийн илгээсэн байна", "You've already applied")}</h2>
@@ -286,7 +286,7 @@ function ApplyContent() {
     return (
       <div>
         <PageHeader eyebrow={t("Сургалт", "Training")} title={t("Сургалтад бүртгүүлэх", "Training Application")} />
-        <div className="container-page py-16">
+        <div className="container-page py-10 sm:py-12">
           <div className="mx-auto max-w-lg rounded-2xl border border-green-200 bg-green-50 p-10 text-center">
             <p className="text-4xl">🎉</p>
             <h2 className="mt-4 text-xl font-bold text-slate-900">{t("Өргөдөл амжилттай илгээгдлээ!", "Application submitted!")}</h2>
@@ -317,7 +317,7 @@ function ApplyContent() {
         }
       />
 
-      <div className="container-page py-12">
+      <div className="container-page py-8 sm:py-10">
         <div className="mx-auto max-w-2xl">
           <form onSubmit={onSubmit} noValidate className="mt-2 space-y-8">
             {/* Personal information */}
