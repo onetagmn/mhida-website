@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { MAP_KEY_TO_MN, MN_TO_MAP_KEY, countColor } from "@/lib/map-provinces";
-import { PROVINCES } from "@/lib/provinces";
+import { PROVINCES, mergeFacilityStats } from "@/lib/provinces";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
 
@@ -50,7 +50,7 @@ export default function MapPage() {
         supabase.rpc("facility_stats"),
         supabase.auth.getSession(),
       ]);
-      setStats((data as FacilityStat[]) ?? []);
+      setStats(mergeFacilityStats((data as FacilityStat[]) ?? []));
       setLoggedIn(!!session);
       // The directory (facility_members) only opens up once an admin has
       // approved the account (status = 'active') — see

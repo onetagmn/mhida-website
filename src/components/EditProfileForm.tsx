@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
-import { PROVINCES } from "@/lib/provinces";
+import { PROVINCES, findProvince } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
 
 export type ProfileMember = {
@@ -41,7 +41,7 @@ function toForm(m: ProfileMember): FormState {
     first_name: m.first_name ?? "",
     birth_date: m.birth_date ?? "",
     gender: m.gender ?? "",
-    province: m.province ?? "",
+    province: findProvince(m.province)?.code ?? m.province ?? "",
     workplace: m.workplace ?? "",
     position: m.position ?? "",
     years_worked: m.years_worked ?? "",
@@ -54,7 +54,7 @@ const genderLabel = (g: string | null, t: (mn: string, en: string) => string) =>
   g === "female" ? t("Эмэгтэй", "Female") : g === "male" ? t("Эрэгтэй", "Male") : g === "other" ? t("Бусад", "Other") : "—";
 
 const provinceLabel = (code: string | null, lang: "mn" | "en") => {
-  const p = PROVINCES.find((p) => p.code === code);
+  const p = findProvince(code);
   return p ? (lang === "mn" ? p.mn : p.en) : "—";
 };
 

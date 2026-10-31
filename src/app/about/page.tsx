@@ -5,6 +5,7 @@ import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import DraftNotice from "@/components/DraftNotice";
 import { supabase } from "@/lib/supabase";
+import { mergeFacilityStats } from "@/lib/provinces";
 
 type Leader = {
   id: string;
@@ -94,7 +95,7 @@ export default function AboutPage() {
           .order("is_president", { ascending: false })
           .order("sort_order"),
       ]);
-      const rows = (statsRes.data as { province: string | null; workplace: string; member_count: number }[]) ?? [];
+      const rows = mergeFacilityStats((statsRes.data as { province: string | null; workplace: string; member_count: number }[]) ?? []);
       setStats({
         members: rows.reduce((a, r) => a + Number(r.member_count), 0),
         facilities: rows.length,

@@ -10,7 +10,7 @@ import { asset } from "@/lib/asset";
 import { supabase } from "@/lib/supabase";
 import { NewsPost, formatDate, firstYoutubeThumb, pdfHref, pdfName } from "@/lib/news";
 import { MAP_KEY_TO_MN, MAP_KEYS_WEST_TO_EAST, countColor } from "@/lib/map-provinces";
-import { PROVINCES } from "@/lib/provinces";
+import { PROVINCES, mergeFacilityStats } from "@/lib/provinces";
 import PartnerLogos from "@/components/PartnerLogos";
 import HeartbeatLine from "@/components/HeartbeatLine";
 import { useInView } from "@/lib/use-in-view";
@@ -97,7 +97,7 @@ export default function Home() {
       ]);
       setLatest(newsRes.data ?? []);
       setPartner(partnerRes.data ?? []);
-      setMapStats((statsRes.data as FacilityStat[]) ?? []);
+      setMapStats(mergeFacilityStats((statsRes.data as FacilityStat[]) ?? []));
       setMapStatsLoaded(true);
       setCourseStats((courseRes.data as CourseStats) ?? null);
     })();
