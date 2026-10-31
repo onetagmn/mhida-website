@@ -322,7 +322,7 @@ export default function Home() {
                 return (
                 <Link
                   key={p.id}
-                  href="/news"
+                  href={`/news?id=${p.id}`}
                   className="reveal group overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md"
                 >
                   {thumb && (

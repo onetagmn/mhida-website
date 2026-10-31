@@ -8,6 +8,10 @@ import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { pdfName, storagePath } from "@/lib/news";
 import type { ContentItem } from "@/components/ContentSection";
+import { LEGAL_SHELVES, shelfOf } from "@/lib/legal";
+
+// Legal Acts items also carry a shelf, number and year (migration24).
+type Item = ContentItem & { category?: string | null; doc_no?: string | null; doc_year?: number | null };
 
 type Section = "axis" | "ehealth" | "english" | "legal" | "partnership";
 
@@ -21,7 +25,7 @@ const SECTIONS: { value: Section; mn: string; en: string }[] = [
 export default function AdminContentPage() {
   const { t } = useLanguage();
   const router = useRouter();
-  const [items, setItems] = useState<ContentItem[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [section, setSection] = useState<Section>("axis");
@@ -31,6 +35,9 @@ export default function AdminContentPage() {
   const [body, setBody] = useState("");
   const [pdfs, setPdfs] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState("100");
+  const [category, setCategory] = useState("law");
+  const [docNo, setDocNo] = useState("");
+  const [docYear, setDocYear] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -43,7 +50,7 @@ export default function AdminContentPage() {
     if (!me?.is_admin) { setDenied(true); setLoading(false); return; }
     const { data } = await supabase
       .from("content_items")
-      .select("id, section, title, body, pdf_urls, sort_order, published, created_at")
+      .select("*")
       .order("sort_order")
       .order("created_at");
     setItems(data ?? []);
@@ -57,11 +64,13 @@ export default function AdminContentPage() {
 
   function resetEditor() {
     setEditingId(null); setTitle(""); setBody(""); setPdfs([]); setSortOrder("100"); setMsg(null);
+    setCategory("law"); setDocNo(""); setDocYear("");
   }
 
-  function startEdit(it: ContentItem) {
+  function startEdit(it: Item) {
     setEditingId(it.id); setTitle(it.title); setBody(it.body);
     setPdfs(it.pdf_urls ?? []); setSortOrder(String(it.sort_order));
+    setCategory(shelfOf(it.category).key); setDocNo(it.doc_no ?? ""); setDocYear(it.doc_year ? String(it.doc_year) : "");
     setSection(it.section as Section);
     setMsg(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -94,6 +103,9 @@ export default function AdminContentPage() {
       body: body.trim(),
       pdf_urls: pdfs,
       sort_order: parseInt(sortOrder) || 100,
+      category: section === "legal" ? category : null,
+      doc_no: section === "legal" ? docNo.trim() || null : null,
+      doc_year: section === "legal" ? parseInt(docYear) || null : null,
     };
     const { error } = editingId
       ? await supabase.from("content_items").update(payload).eq("id", editingId)
@@ -105,13 +117,13 @@ export default function AdminContentPage() {
     setMsg(t("Хадгалагдлаа!", "Saved!"));
   }
 
-  async function togglePublish(it: ContentItem) {
+  async function togglePublish(it: Item) {
     const { error } = await supabase
       .from("content_items").update({ published: !it.published }).eq("id", it.id);
     if (!error) setItems((xs) => xs.map((x) => x.id === it.id ? { ...x, published: !it.published } : x));
   }
 
-  async function remove(it: ContentItem) {
+  async function remove(it: Item) {
     if (!window.confirm(t(`«${it.title}» устгах уу?`, `Delete "${it.title}"?`))) return;
     const { error } = await supabase.from("content_items").delete().eq("id", it.id);
     if (!error) setItems((xs) => xs.filter((x) => x.id !== it.id));
@@ -160,6 +172,30 @@ export default function AdminContentPage() {
               ))}
             </select>
           </div>
+          {section === "legal" && (
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Тавиур (төрөл)", "Shelf (type)")}</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-blue)]"
+                >
+                  {LEGAL_SHELVES.map((s) => (
+                    <option key={s.key} value={s.key}>{t(s.mn, s.en)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Дугаар", "Number")}</label>
+                <input className="w-24 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-blue)]" value={docNo} onChange={(e) => setDocNo(e.target.value)} placeholder="А/57" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Он", "Year")}</label>
+                <input inputMode="numeric" className="w-20 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-blue)]" value={docYear} onChange={(e) => setDocYear(e.target.value.replace(/[^\d]/g, "").slice(0, 4))} placeholder="2026" />
+              </div>
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-semibold text-slate-700">{t("Гарчиг", "Title")}</label>
             <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[var(--brand-blue)]" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -225,6 +261,7 @@ export default function AdminContentPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-slate-900">{it.title}</p>
                   <p className="text-xs text-slate-400">
+                    {it.section === "legal" && `${t(shelfOf(it.category).mn, shelfOf(it.category).en)}${it.doc_no ? ` №${it.doc_no}` : ""}${it.doc_year ? ` (${it.doc_year})` : ""} · `}
                     {(it.pdf_urls ?? []).length > 0 && `${it.pdf_urls.length} PDF · `}
                     {it.published ? t("Нийтэд харагдана", "Public") : t("Нуугдсан", "Hidden")}
                   </p>

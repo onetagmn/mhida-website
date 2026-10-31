@@ -10,6 +10,7 @@ import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
 import MemberCard from "@/components/MemberCard";
 import CourseCertificate from "@/components/CourseCertificate";
+import { COURSES, CourseId } from "@/lib/courses";
 import EditProfileForm from "@/components/EditProfileForm";
 
 type Member = {
@@ -38,7 +39,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [pwMsg, setPwMsg] = useState<string | null>(null);
-  const [courseDone, setCourseDone] = useState(false);
+  const [doneStages, setDoneStages] = useState<CourseId[]>([]);
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -46,23 +47,30 @@ export default function DashboardPage() {
       router.replace("/login/");
       return;
     }
-    const [memberRes, totalRes, doneRes] = await Promise.all([
+    // A stage of the English course is finished when every one of its lessons is.
+    const stageDone = async (course: CourseId) => {
+      const [total, done] = await Promise.all([
+        supabase.from("course_lessons").select("id", { count: "exact", head: true }).eq("course", course),
+        supabase
+          .from("course_progress")
+          .select("lesson_id, course_lessons!inner(course)", { count: "exact", head: true })
+          .eq("member_id", session.user.id)
+          .eq("completed", true)
+          .eq("course_lessons.course", course),
+      ]);
+      return !!total.count && done.count === total.count;
+    };
+    const stages: CourseId[] = ["a1b1", "b1b2"];
+    const [memberRes, done] = await Promise.all([
       supabase
         .from("members")
         .select("id, member_id, first_name, last_name, birth_date, gender, membership, workplace, position, years_worked, facebook, province, email, phone, is_admin, upgrade_requested")
         .eq("id", session.user.id)
         .single(),
-      // Stage 1 of the English course only; Stage 2 shows its own certificate.
-      supabase.from("course_lessons").select("id", { count: "exact", head: true }).eq("course", "a1b1"),
-      supabase
-        .from("course_progress")
-        .select("lesson_id, course_lessons!inner(course)", { count: "exact", head: true })
-        .eq("member_id", session.user.id)
-        .eq("completed", true)
-        .eq("course_lessons.course", "a1b1"),
+      Promise.all(stages.map(stageDone)),
     ]);
     setMember(memberRes.data);
-    setCourseDone(!!totalRes.count && totalRes.count > 0 && doneRes.count === totalRes.count);
+    setDoneStages(stages.filter((_, i) => done[i]));
     setLoading(false);
   }, [router]);
 
@@ -185,9 +193,15 @@ export default function DashboardPage() {
         <aside className="space-y-4">
           {member && <MemberCard member={member} />}
 
-          {courseDone && member && (
-            <CourseCertificate name={`${member.first_name} ${member.last_name}`.trim()} lang={lang} compact />
-          )}
+          {member && doneStages.map((c) => (
+            <CourseCertificate
+              key={c}
+              name={`${member.first_name} ${member.last_name}`.trim()}
+              lang={lang}
+              compact
+              course={COURSES[c].certificate}
+            />
+          ))}
 
           {member?.is_admin && (
             <Link
