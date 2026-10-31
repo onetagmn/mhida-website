@@ -42,10 +42,13 @@ export default function LegalPage() {
         .eq("section", "legal")
         .order("sort_order")
         .order("created_at");
+      // "New" = a document of this year added in the last NEW_DAYS days
+      // (an older law that was only just put on the site is not new).
       const now = Date.now();
+      const year = new Date().getFullYear();
       setDocs(((data as LegalDoc[]) ?? []).map((d) => ({
         ...d,
-        isNew: now - new Date(d.created_at).getTime() < NEW_DAYS * 86_400_000,
+        isNew: (d.doc_year ?? 0) >= year && now - new Date(d.created_at).getTime() < NEW_DAYS * 86_400_000,
       })));
     })();
   }, []);
