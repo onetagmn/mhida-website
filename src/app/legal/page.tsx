@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { pdfHref, pdfName } from "@/lib/news";
 import { LEGAL_SHELVES, LegalCategory, shelfOf } from "@/lib/legal";
 import type { ContentItem } from "@/components/ContentSection";
+import LegalIcon from "@/components/LegalIcon";
 
 type LegalDoc = ContentItem & { category?: string | null; doc_no?: string | null; doc_year?: number | null; isNew?: boolean };
 
@@ -92,7 +93,7 @@ export default function LegalPage() {
             {/* Shelves */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               <ShelfTile
-                icon="🗂️"
+                icon="all"
                 label={t("Бүгд", "All documents")}
                 count={docs.length}
                 active={shelf === "all"}
@@ -101,7 +102,7 @@ export default function LegalPage() {
               {LEGAL_SHELVES.filter((s) => counts.get(s.key)).map((s) => (
                 <ShelfTile
                   key={s.key}
-                  icon={s.icon}
+                  icon={s.key}
                   label={t(s.mn, s.en)}
                   count={counts.get(s.key) ?? 0}
                   active={shelf === s.key}
@@ -138,7 +139,7 @@ export default function LegalPage() {
                   {LEGAL_SHELVES.filter((s) => counts.get(s.key)).map((s) => (
                     <section key={s.key}>
                       <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-900">
-                        <span aria-hidden="true">{s.icon}</span>
+                        <LegalIcon name={s.key} className="h-6 w-6" />
                         {t(s.mn, s.en)}
                         <span className="text-sm font-semibold text-slate-400">{counts.get(s.key)}</span>
                       </h2>
@@ -163,7 +164,7 @@ export default function LegalPage() {
   );
 }
 
-function ShelfTile({ icon, label, count, active, onClick }: { icon: string; label: string; count: number; active: boolean; onClick: () => void }) {
+function ShelfTile({ icon, label, count, active, onClick }: { icon: LegalCategory | "all"; label: string; count: number; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -171,7 +172,9 @@ function ShelfTile({ icon, label, count, active, onClick }: { icon: string; labe
         active ? "border-[var(--brand-blue)] bg-[var(--brand-blue)] text-white" : "border-slate-200 bg-white text-slate-800"
       }`}
     >
-      <span className="text-2xl" aria-hidden="true">{icon}</span>
+      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${active ? "bg-white" : "bg-blue-50"}`}>
+        <LegalIcon name={icon} className="h-7 w-7" />
+      </span>
       <span className="min-w-0">
         <span className="block text-sm font-bold leading-snug">{label}</span>
         <span className={`text-xs ${active ? "text-white/75" : "text-slate-500"}`}>{count}</span>
@@ -209,7 +212,10 @@ function DocCard({ doc }: { doc: LegalDoc }) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-md bg-[var(--brand-red)] px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
             >
-              📄 {t("PDF татах", "Download PDF")}{doc.pdf_urls.length > 1 ? ` ${i + 1}` : ""}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-3.5 w-3.5">
+                <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14" />
+              </svg>
+              {t("PDF татах", "Download PDF")}{doc.pdf_urls.length > 1 ? ` ${i + 1}` : ""}
             </a>
           ))}
           {links.map((l) => (
