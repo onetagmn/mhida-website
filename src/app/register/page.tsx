@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { PROVINCES } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
+import { useWorkplaceNames } from "@/lib/workplaces";
 import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
 import Faq from "@/components/Faq";
@@ -47,6 +48,7 @@ const EMPTY: FormState = {
 
 export default function RegisterPage() {
   const { t, lang } = useLanguage();
+  const workplaceNames = useWorkplaceNames();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -338,7 +340,13 @@ export default function RegisterPage() {
                 <label className={label} htmlFor="workplace">
                   {t("Ажлын газар", "Workplace")} *
                 </label>
-                <input id="workplace" className={inputClass("workplace")} value={form.workplace} onChange={set("workplace")} />
+                <input id="workplace" list="workplace-names" autoComplete="off" className={inputClass("workplace")} value={form.workplace} onChange={set("workplace")} />
+                <datalist id="workplace-names">
+                  {workplaceNames.map((n) => <option key={n} value={n} />)}
+                </datalist>
+                <p className="mt-1 text-xs text-slate-500">
+                  {t("Бичиж эхлэхэд гарах жагсаалтаас өөрийн байгууллагыг сонгоно уу.", "Start typing and pick your workplace from the list if it is there.")}
+                </p>
                 {err("workplace")}
               </div>
 

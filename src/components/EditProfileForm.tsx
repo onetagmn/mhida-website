@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { PROVINCES, findProvince } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
+import { useWorkplaceNames } from "@/lib/workplaces";
 
 export type ProfileMember = {
   id: string;
@@ -75,6 +76,7 @@ export default function EditProfileForm({
   onSaved: (updated: ProfileMember) => void;
 }) {
   const { t, lang } = useLanguage();
+  const workplaceNames = useWorkplaceNames();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(() => toForm(member));
   const [saving, setSaving] = useState(false);
@@ -262,7 +264,10 @@ export default function EditProfileForm({
         </div>
         <div className="sm:col-span-2">
           <label className={label} htmlFor="ep-workplace">{t("Ажлын газар", "Workplace")}</label>
-          <input id="ep-workplace" className={inputClass} value={form.workplace} onChange={set("workplace")} />
+          <input id="ep-workplace" list="ep-workplace-names" autoComplete="off" className={inputClass} value={form.workplace} onChange={set("workplace")} />
+          <datalist id="ep-workplace-names">
+            {workplaceNames.map((n) => <option key={n} value={n} />)}
+          </datalist>
         </div>
         <div>
           <label className={label} htmlFor="ep-position">{t("Албан тушаал", "Position")}</label>
