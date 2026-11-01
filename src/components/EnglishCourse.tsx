@@ -187,6 +187,8 @@ export default function EnglishCourse({ course }: { course: CourseId }) {
   // quiz state for the open lesson
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [quizResult, setQuizResult] = useState<{ score: number; total: number } | null>(null);
+  const [quizSending, setQuizSending] = useState(false);
+  const [quizError, setQuizError] = useState(false);
   const [showMn, setShowMn] = useState(true);
 
   // dialogue sequenced-playback state
@@ -235,6 +237,7 @@ export default function EnglishCourse({ course }: { course: CourseId }) {
     stopSpeech();
     setOpenLesson(l);
     setAnswers({});
+    setQuizError(false);
     setDialogueLine(null);
     setTranscriptShown(false);
     const p = progress[l.id];
@@ -242,25 +245,24 @@ export default function EnglishCourse({ course }: { course: CourseId }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // The quiz is graded by the database (submit_quiz, migration28), which
+  // also saves the progress: a lesson only counts as done (and so towards
+  // the certificate) through a passed quiz.
   async function submitQuiz() {
     if (!openLesson || !userId) return;
-    const quiz = openLesson.content.quiz;
-    let score = 0;
-    quiz.forEach((q, i) => { if (answers[i] === q.answer) score++; });
-    const result = { score, total: quiz.length };
-    setQuizResult(result);
-    const passed = score >= Math.ceil(quiz.length * 0.6);
-    await supabase.from("course_progress").upsert({
-      member_id: userId,
-      lesson_id: openLesson.id,
-      quiz_score: score,
-      quiz_total: quiz.length,
-      completed: passed,
-      completed_at: passed ? new Date().toISOString() : null,
-    });
+    const lesson = openLesson;
+    setQuizSending(true);
+    setQuizError(false);
+    const { data, error } = await supabase
+      .rpc("submit_quiz", { p_lesson_id: lesson.id, p_answers: lesson.content.quiz.map((_, i) => answers[i] ?? -1) })
+      .single();
+    setQuizSending(false);
+    if (error || !data) { setQuizError(true); return; }
+    const { score, total, completed } = data as { score: number; total: number; completed: boolean };
+    setQuizResult({ score, total });
     setProgress((p) => ({
       ...p,
-      [openLesson.id]: { lesson_id: openLesson.id, completed: passed, quiz_score: score, quiz_total: quiz.length },
+      [lesson.id]: { lesson_id: lesson.id, completed, quiz_score: score, quiz_total: total },
     }));
   }
 
@@ -616,13 +618,20 @@ export default function EnglishCourse({ course }: { course: CourseId }) {
                 ))}
               </div>
               {quizResult === null ? (
-                <button
-                  onClick={submitQuiz}
-                  disabled={Object.keys(answers).length < c.quiz.length}
-                  className="mt-6 w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-                >
-                  {t("Шалгалт өгөх", "Submit Quiz")}
-                </button>
+                <>
+                  <button
+                    onClick={submitQuiz}
+                    disabled={quizSending || Object.keys(answers).length < c.quiz.length}
+                    className="mt-6 w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                  >
+                    {quizSending ? t("Шалгаж байна...", "Checking...") : t("Шалгалт өгөх", "Submit Quiz")}
+                  </button>
+                  {quizError && (
+                    <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {t("Хариултыг илгээж чадсангүй. Интернэтээ шалгаад дахин оролдоно уу.", "Your answers could not be sent. Check your internet connection and try again.")}
+                    </p>
+                  )}
+                </>
               ) : (
                 <div className="mt-6 space-y-3">
                   <p className={`rounded-md px-4 py-3 text-sm font-bold ${
