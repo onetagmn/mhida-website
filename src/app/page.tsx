@@ -257,6 +257,53 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {sectorSummary && (
+                <Link
+                  href="/news?tab=sector"
+                  className="reveal group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div>
+                    <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
+                      <LiveDot />
+                      <StatIcon name="news" /> {t("Салбарын мэдээ", "Sector News")}
+                    </p>
+                    <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
+                      {t("Даатгал, эмч нарын мэдээ", "Insurance & health workforce")}
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {[
+                        { value: sectorSummary.total, mn: "Нийт мэдээ", en: "Headlines" },
+                        { value: sectorSummary.lastWeek, mn: "7 хоногт шинэ", en: "New, 7 days" },
+                        { value: sectorSummary.sources, mn: "Эх сурвалж", en: "Sources" },
+                      ].map((x) => (
+                        <div key={x.en} className="rounded-lg bg-white/80 px-1 py-2 ring-1 ring-blue-100">
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900"><CountUp value={x.value} /></span>
+                          <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t(x.mn, x.en)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {sectorSummary.topics.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-1.5 text-[12px]">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">{t("Гол сэдвүүд", "Main topics")}</span>
+                        {sectorSummary.topics.slice(0, 3).map((tp) => (
+                          <div key={tp.key} className="flex items-center justify-between gap-2">
+                            <span className="truncate text-slate-600">{t(tp.mn, tp.en)}</span>
+                            <span className="font-extrabold text-slate-900">{tp.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-3 border-t border-blue-100 pt-2 text-[11.5px] leading-snug">
+                      <span className="font-bold text-[var(--brand-red)]">{t("Сүүлийнх", "Latest")} · {sectorSummary.latest.source}</span>
+                      <span className="mt-0.5 line-clamp-2 block text-slate-600">{sectorSummary.latest.title}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
+                    <span>{t("Салбарын мэдээ үзэх", "View sector news")}</span>
+                    <span>→</span>
+                  </div>
+                </Link>
+              )}
               {mapStatsLoaded && (
                 <Link
                   href="/map"
@@ -368,53 +415,6 @@ export default function Home() {
                   </Link>
                 );
               })()}
-              {sectorSummary && (
-                <Link
-                  href="/news?tab=sector"
-                  className="reveal group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div>
-                    <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
-                      <LiveDot />
-                      <StatIcon name="news" /> {t("Салбарын мэдээ", "Sector News")}
-                    </p>
-                    <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
-                      {t("Даатгал, эмч нарын мэдээ", "Insurance & health workforce")}
-                    </h3>
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      {[
-                        { value: sectorSummary.total, mn: "Нийт мэдээ", en: "Headlines" },
-                        { value: sectorSummary.lastWeek, mn: "7 хоногт шинэ", en: "New, 7 days" },
-                        { value: sectorSummary.sources, mn: "Эх сурвалж", en: "Sources" },
-                      ].map((x) => (
-                        <div key={x.en} className="rounded-lg bg-white/80 px-1 py-2 ring-1 ring-blue-100">
-                          <span className="block text-[15px] font-extrabold leading-none text-slate-900"><CountUp value={x.value} /></span>
-                          <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t(x.mn, x.en)}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {sectorSummary.topics.length > 0 && (
-                      <div className="mt-3 flex flex-col gap-1.5 text-[12px]">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">{t("Гол сэдвүүд", "Main topics")}</span>
-                        {sectorSummary.topics.slice(0, 3).map((tp) => (
-                          <div key={tp.key} className="flex items-center justify-between gap-2">
-                            <span className="truncate text-slate-600">{t(tp.mn, tp.en)}</span>
-                            <span className="font-extrabold text-slate-900">{tp.count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-3 border-t border-blue-100 pt-2 text-[11.5px] leading-snug">
-                      <span className="font-bold text-[var(--brand-red)]">{t("Сүүлийнх", "Latest")} · {sectorSummary.latest.source}</span>
-                      <span className="mt-0.5 line-clamp-2 block text-slate-600">{sectorSummary.latest.title}</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
-                    <span>{t("Салбарын мэдээ үзэх", "View sector news")}</span>
-                    <span>→</span>
-                  </div>
-                </Link>
-              )}
               {newsTiles.map((p) => {
                 const thumb = p.image_urls[0] ?? firstYoutubeThumb(p.body);
                 const isVideo = !p.image_urls[0] && !!thumb;
