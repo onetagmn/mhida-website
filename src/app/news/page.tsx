@@ -46,7 +46,10 @@ export default function NewsPage() {
 
 function News() {
   const { t } = useLanguage();
-  const id = useSearchParams().get("id");
+  const params = useSearchParams();
+  const id = params.get("id");
+  // ?tab=sector (from the home page's sector news card) opens that tab.
+  const startOnSector = params.get("tab") === "sector";
   const [posts, setPosts] = useState<NewsPost[] | null>(null);
   const [sector, setSector] = useState<SectorItem[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -85,20 +88,30 @@ function News() {
 
   const open = id ? posts.find((p) => p.id === id) : null;
   if (id && open) return <Article post={open} others={posts.filter((p) => p.id !== open.id).slice(0, 3)} />;
-  return <NewsList posts={posts} notFound={!!id} sector={sector} setSector={setSector} isAdmin={isAdmin} />;
+  return (
+    <NewsList
+      posts={posts}
+      notFound={!!id}
+      sector={sector}
+      setSector={setSector}
+      isAdmin={isAdmin}
+      startOnSector={startOnSector && sector.length > 0}
+    />
+  );
 }
 
 function NewsList({
-  posts, notFound, sector, setSector, isAdmin,
+  posts, notFound, sector, setSector, isAdmin, startOnSector,
 }: {
   posts: NewsPost[];
   notFound: boolean;
   sector: SectorItem[];
   setSector: React.Dispatch<React.SetStateAction<SectorItem[]>>;
   isAdmin: boolean;
+  startOnSector: boolean;
 }) {
   const { t, lang } = useLanguage();
-  const [tab, setTab] = useState<"all" | "news" | "partner" | "sector">("all");
+  const [tab, setTab] = useState<"all" | "news" | "partner" | "sector">(startOnSector ? "sector" : "all");
   const [query, setQuery] = useState("");
   const [shownCount, setShownCount] = useState(PAGE_SIZE);
 

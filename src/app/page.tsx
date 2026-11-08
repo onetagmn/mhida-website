@@ -15,9 +15,27 @@ import PartnerLogos from "@/components/PartnerLogos";
 import HeartbeatLine from "@/components/HeartbeatLine";
 import { ProvinceTip, useProvinceTip } from "@/components/ProvinceTip";
 import LegalIcon from "@/components/LegalIcon";
+import StatIcon from "@/components/StatIcon";
 import { shelfOf } from "@/lib/legal";
 
 type LegalDoc = { id: string; title: string; category: string | null; doc_no: string | null; doc_year: number | null };
+
+// Sector news card: main topics of the collected headlines, by keywords
+// in the headline (one headline can count under several topics).
+const SECTOR_TOPICS = [
+  { key: "insurance", mn: "Эрүүл мэндийн даатгал", en: "Health insurance", re: /даатгал|(?<!\p{L})ЭМД/iu },
+  { key: "workers", mn: "Эмч, ажилтан", en: "Health workers", re: /ажилт|(?<!\p{L})эмч(?!илгээ)|сувилагч|цалин/iu },
+  { key: "law", mn: "Хууль, шийдвэр", en: "Laws & decisions", re: /хууль|тогтоол|тушаал|журам/iu },
+  { key: "finance", mn: "Санхүүжилт, төсөв", en: "Funding & budget", re: /төсөв|санхүүжилт|тэрбум/iu },
+];
+type SectorHeadline = { title: string; source: string; published_at: string | null };
+type SectorSummary = {
+  total: number;
+  lastWeek: number;
+  sources: number;
+  topics: { key: string; mn: string; en: string; count: number }[];
+  latest: SectorHeadline;
+};
 import { useInView } from "@/lib/use-in-view";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
@@ -80,13 +98,14 @@ export default function Home() {
   const [mapStatsLoaded, setMapStatsLoaded] = useState(false);
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
   const [legalNew, setLegalNew] = useState<LegalDoc[]>([]);
+  const [sectorSummary, setSectorSummary] = useState<SectorSummary | null>(null);
   const [mapSize, setMapSize] = useState(640);
 
   // Fetch latest news, partner posts, map stats, course progress and the
   // newest legal acts.
   useEffect(() => {
     (async () => {
-      const [newsRes, partnerRes, statsRes, courseRes, legalRes] = await Promise.all([
+      const [newsRes, partnerRes, statsRes, courseRes, legalRes, sectorRes] = await Promise.all([
         supabase
           .from("news")
           .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
@@ -108,8 +127,27 @@ export default function Home() {
           .order("doc_year", { ascending: false, nullsFirst: false })
           .order("created_at", { ascending: false })
           .limit(3),
+        supabase
+          .from("sector_news")
+          .select("title, source, published_at")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(500),
       ]);
       setLegalNew((legalRes.data as LegalDoc[]) ?? []);
+      const sectorRows = (sectorRes.data as SectorHeadline[]) ?? [];
+      if (sectorRows.length > 0) {
+        const weekAgo = Date.now() - 7 * 86_400_000;
+        setSectorSummary({
+          total: sectorRows.length,
+          lastWeek: sectorRows.filter((r) => r.published_at && new Date(r.published_at).getTime() >= weekAgo).length,
+          sources: new Set(sectorRows.map((r) => r.source)).size,
+          topics: SECTOR_TOPICS
+            .map(({ re, ...tp }) => ({ ...tp, count: sectorRows.filter((r) => re.test(r.title)).length }))
+            .filter((tp) => tp.count > 0)
+            .sort((a, b) => b.count - a.count),
+          latest: sectorRows[0],
+        });
+      }
       setLatest(newsRes.data ?? []);
       setPartner(partnerRes.data ?? []);
       setMapStats(mergeFacilityStats((statsRes.data as FacilityStat[]) ?? []));
@@ -154,7 +192,7 @@ export default function Home() {
   const NEWS_GRID_TILES = 8;
   const newsTiles = latest.slice(
     0,
-    NEWS_GRID_TILES - (mapStatsLoaded ? 1 : 0) - (courseStats ? 1 : 0)
+    NEWS_GRID_TILES - (mapStatsLoaded ? 1 : 0) - (courseStats ? 1 : 0) - (sectorSummary ? 1 : 0)
   );
 
   return (
@@ -227,7 +265,7 @@ export default function Home() {
                   <div>
                     <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
                       <LiveDot />
-                      🗺️ {t("Гишүүдийн тархалт", "Member Map")}
+                      <StatIcon name="map" /> {t("Гишүүдийн тархалт", "Member Map")}
                     </p>
                     <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
                       {t("Бүх орон даяар өргөжиж байна", "Growing across the country")}
@@ -298,7 +336,7 @@ export default function Home() {
                     <div>
                       <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
                         <LiveDot />
-                        🎓 {t("Англи хэлний курс", "English Course")}
+                        <StatIcon name="cap" /> {t("Англи хэлний курс", "English Course")}
                       </p>
                       <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
                         {t("Гишүүдийн явц бодит цагаар", "Live member progress")}
@@ -307,17 +345,17 @@ export default function Home() {
                         <CourseRing pct={pct} avgLabel={t("ДУНДАЖ", "AVG")} />
                         <div className="flex flex-1 flex-col gap-1.5 text-[12.5px]">
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">👥 {t("Элссэн гишүүд", "Enrolled")}</span>
+                            <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="people" /> {t("Элссэн гишүүд", "Enrolled")}</span>
                             <span className="font-extrabold text-slate-900"><CountUp value={courseStats.enrolled_members} /></span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">📈 {t("Дундаж өдөр", "Average day")}</span>
+                            <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trend" /> {t("Дундаж өдөр", "Average day")}</span>
                             <span className="font-extrabold text-slate-900">
                               {courseStats.avg_completed}/{courseStats.total_lessons}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">🏆 {t("Төгссөн", "Finished")}</span>
+                            <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trophy" /> {t("Төгссөн", "Finished")}</span>
                             <span className="font-extrabold text-slate-900"><CountUp value={courseStats.completed_members} /></span>
                           </div>
                         </div>
@@ -330,6 +368,53 @@ export default function Home() {
                   </Link>
                 );
               })()}
+              {sectorSummary && (
+                <Link
+                  href="/news?tab=sector"
+                  className="reveal group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div>
+                    <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--brand-blue)]">
+                      <LiveDot />
+                      <StatIcon name="news" /> {t("Салбарын мэдээ", "Sector News")}
+                    </p>
+                    <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
+                      {t("Даатгал, эмч нарын мэдээ", "Insurance & health workforce")}
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {[
+                        { value: sectorSummary.total, mn: "Нийт мэдээ", en: "Headlines" },
+                        { value: sectorSummary.lastWeek, mn: "7 хоногт шинэ", en: "New, 7 days" },
+                        { value: sectorSummary.sources, mn: "Эх сурвалж", en: "Sources" },
+                      ].map((x) => (
+                        <div key={x.en} className="rounded-lg bg-white/80 px-1 py-2 ring-1 ring-blue-100">
+                          <span className="block text-[15px] font-extrabold leading-none text-slate-900"><CountUp value={x.value} /></span>
+                          <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t(x.mn, x.en)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {sectorSummary.topics.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-1.5 text-[12px]">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">{t("Гол сэдвүүд", "Main topics")}</span>
+                        {sectorSummary.topics.slice(0, 3).map((tp) => (
+                          <div key={tp.key} className="flex items-center justify-between gap-2">
+                            <span className="truncate text-slate-600">{t(tp.mn, tp.en)}</span>
+                            <span className="font-extrabold text-slate-900">{tp.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-3 border-t border-blue-100 pt-2 text-[11.5px] leading-snug">
+                      <span className="font-bold text-[var(--brand-red)]">{t("Сүүлийнх", "Latest")} · {sectorSummary.latest.source}</span>
+                      <span className="mt-0.5 line-clamp-2 block text-slate-600">{sectorSummary.latest.title}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
+                    <span>{t("Салбарын мэдээ үзэх", "View sector news")}</span>
+                    <span>→</span>
+                  </div>
+                </Link>
+              )}
               {newsTiles.map((p) => {
                 const thumb = p.image_urls[0] ?? firstYoutubeThumb(p.body);
                 const isVideo = !p.image_urls[0] && !!thumb;
