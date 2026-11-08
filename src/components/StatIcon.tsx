@@ -3,7 +3,7 @@
 const B = "var(--brand-blue)";
 const R = "var(--brand-red)";
 
-export type StatIconName = "map" | "cap" | "people" | "trend" | "trophy" | "news";
+export type StatIconName = "map" | "cap" | "people" | "trend" | "trophy" | "news" | "person";
 
 const ICONS: Record<StatIconName, React.ReactNode> = {
   // Folded map with a red pin
@@ -46,6 +46,13 @@ const ICONS: Record<StatIconName, React.ReactNode> = {
       <path d="M7 4h10v5a5 5 0 0 1-10 0z" stroke={B} />
       <path d="M7 6H4.5a2.5 2.5 0 0 0 2.5 4M17 6h2.5a2.5 2.5 0 0 1-2.5 4M12 14v3.5M8.5 20.5h7M9.5 17.5h5" stroke={B} />
       <path d="M12 6.2l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z" fill={R} stroke="none" />
+    </>
+  ),
+  // One member (filled red), for the new-member pictogram
+  person: (
+    <>
+      <circle cx="12" cy="7.5" r="3.6" fill={R} stroke="none" />
+      <path d="M5 21v-1.5a7 7 0 0 1 14 0V21z" fill={R} stroke="none" />
     </>
   ),
   // Newspaper with red headline lines

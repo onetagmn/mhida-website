@@ -371,10 +371,11 @@ export default function Home() {
                       </div>
                     </div>
                     {growth && (
-                      <div className="mt-4 rounded-lg bg-white/80 px-1 py-2 text-center ring-1 ring-blue-100">
-                        <span className="block text-[15px] font-extrabold leading-none text-[var(--brand-red)]">+<CountUp value={growth.last_30_days} /></span>
-                        <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t("30 хоногт шинэ", "New, 30 days")}</span>
-                      </div>
+                      <NewMembersGraphic
+                        count={growth.last_30_days}
+                        label={t("Сүүлийн 30 хоногт шинээр элссэн", "Joined in the last 30 days")}
+                        none={t("Энэ 30 хоногт шинэ гишүүн алга", "No new members in the last 30 days")}
+                      />
                     )}
                   </div>
                   <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
@@ -703,6 +704,35 @@ function CourseStatsBlock({ stats, color }: { stats: CourseStats; color?: string
           <span className="font-extrabold text-slate-900"><CountUp value={stats.completed_members} /></span>
         </div>
       </div>
+    </div>
+  );
+}
+
+// New members in the last 30 days as a pictogram: one figure per member
+// (up to 12, then "+N"), popping in one after another when in view.
+const PICTO_MAX = 12;
+function NewMembersGraphic({ count, label, none }: { count: number; label: string; none: string }) {
+  const [ref, seen] = useInView<HTMLDivElement>();
+  const shown = Math.min(count, PICTO_MAX);
+  return (
+    <div ref={ref} className="mt-4 rounded-xl bg-white/80 p-3 ring-1 ring-blue-100">
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          <span className="block text-[22px] font-extrabold leading-none text-[var(--brand-red)]">+<CountUp value={count} /></span>
+          <span className="mt-1 block text-[10.5px] font-semibold leading-tight text-slate-500">{count > 0 ? label : none}</span>
+        </span>
+        <StatIcon name="trend" className="h-7 w-7" />
+      </div>
+      {count > 0 && (
+        <div className="mt-2.5 flex flex-wrap items-end gap-1">
+          {Array.from({ length: shown }, (_, i) => (
+            <span key={i} className={seen ? "picto-pop" : "opacity-0"} style={{ animationDelay: `${i * 120}ms` }}>
+              <StatIcon name="person" className="h-6 w-6" />
+            </span>
+          ))}
+          {count > PICTO_MAX && <span className="ml-1 text-xs font-extrabold text-slate-500">+{count - PICTO_MAX}</span>}
+        </div>
+      )}
     </div>
   );
 }

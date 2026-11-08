@@ -139,6 +139,20 @@ body {
   transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* New-member pictogram on the member card: each figure pops in after
+   the one before it (NewMembersGraphic in page.tsx). */
+@keyframes picto-pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+.picto-pop {
+  display: inline-block;
+  animation: picto-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .picto-pop { animation: none; }
+}
+
 /* The member map filling in, province by province (useMapFillIn in
    page.tsx) — fades only while that runs, so hovering stays instant. */
 .map-filling path {
