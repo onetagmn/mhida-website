@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
-import { pdfHref, pdfName } from "@/lib/news";
+import { formatDate, pdfHref, pdfName } from "@/lib/news";
 import { LEGAL_SHELVES, LegalCategory, shelfOf } from "@/lib/legal";
 import type { ContentItem } from "@/components/ContentSection";
 import LegalIcon from "@/components/LegalIcon";
@@ -34,15 +34,21 @@ export default function LegalPage() {
   const [docs, setDocs] = useState<LegalDoc[] | null>(null);
   const [shelf, setShelf] = useState<LegalCategory | "all">("all");
   const [query, setQuery] = useState("");
+  // When the weekly check of emd.gov.mn last ran (legal-watch.mjs).
+  const [watch, setWatch] = useState<{ last_checked: string | null; sources: number } | null>(null);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("content_items")
-        .select("*")
-        .eq("section", "legal")
-        .order("sort_order")
-        .order("created_at");
+      const [{ data }, statusRes] = await Promise.all([
+        supabase
+          .from("content_items")
+          .select("*")
+          .eq("section", "legal")
+          .order("sort_order")
+          .order("created_at"),
+        supabase.rpc("legal_watch_status").maybeSingle(),
+      ]);
+      setWatch((statusRes.data as { last_checked: string | null; sources: number } | null) ?? null);
       // "New" = a document of this year added in the last NEW_DAYS days
       // (an older law that was only just put on the site is not new).
       const now = Date.now();
@@ -124,6 +130,15 @@ export default function LegalPage() {
                 {shown.length} {t("баримт бичиг", "documents")}
               </p>
             </div>
+            {watch?.last_checked && (
+              <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" aria-hidden="true" />
+                {t(
+                  `ЭМДЕГ-ын цахим хуудасны ${watch.sources} жагсаалтыг долоо хоног бүр автоматаар шалгадаг · Сүүлд шалгасан: ${formatDate(watch.last_checked, "mn")}`,
+                  `${watch.sources} legal lists on the health insurance agency's website are checked automatically every week · Last checked: ${formatDate(watch.last_checked, "en")}`
+                )}
+              </p>
+            )}
 
             {/* Documents */}
             <div className="mt-6">

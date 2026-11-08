@@ -69,6 +69,12 @@ export default function DashboardPage() {
         .single(),
       Promise.all(stages.map(stageDone)),
     ]);
+    // Email confirmed with a code but the registration form not filled in
+    // yet: finish it first.
+    if (memberRes.data && !memberRes.data.first_name && !memberRes.data.last_name) {
+      router.replace("/register/");
+      return;
+    }
     setMember(memberRes.data);
     setDoneStages(stages.filter((_, i) => done[i]));
     setLoading(false);

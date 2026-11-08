@@ -40,6 +40,8 @@ export default function AdminPage() {
   const [toolMsg, setToolMsg] = useState<string | null>(null);
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
   const [emailDraft, setEmailDraft] = useState("");
+  // Hidden legal drafts added by the weekly check, waiting for review.
+  const [legalDrafts, setLegalDrafts] = useState(0);
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -47,11 +49,19 @@ export default function AdminPage() {
     const { data: me } = await supabase
       .from("members").select("is_admin").eq("id", session.user.id).single();
     if (!me?.is_admin) { setDenied(true); setLoading(false); return; }
-    const { data } = await supabase
-      .from("members")
-      .select("id, member_id, first_name, last_name, membership, workplace, province, phone, email, birth_date, gender, position, upgrade_requested, status")
-      .order("member_id");
+    const [{ data }, draftsRes] = await Promise.all([
+      supabase
+        .from("members")
+        .select("id, member_id, first_name, last_name, membership, workplace, province, phone, email, birth_date, gender, position, upgrade_requested, status")
+        .order("member_id"),
+      supabase
+        .from("content_items")
+        .select("id", { count: "exact", head: true })
+        .eq("section", "legal")
+        .eq("published", false),
+    ]);
     setRows(data ?? []);
+    setLegalDrafts(draftsRes.count ?? 0);
     setLoading(false);
   }, [router]);
 
@@ -222,6 +232,20 @@ export default function AdminPage() {
       />
 
       <div className="container-page py-10">
+        {legalDrafts > 0 && (
+          <Link
+            href="/admin/content?section=legal"
+            className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+          >
+            <span>
+              {t(
+                `Хууль эрх зүйн ${legalDrafts} шинэ баримт бичиг шалгаж нийтлэхийг хүлээж байна`,
+                `${legalDrafts} new legal document${legalDrafts > 1 ? "s" : ""} waiting for review`
+              )}
+            </span>
+            <span className="shrink-0">{t("Шалгах →", "Review →")}</span>
+          </Link>
+        )}
         <div className="mb-6 flex flex-wrap gap-2">
           <Link
             href="/admin/news"
@@ -328,8 +352,17 @@ export default function AdminPage() {
               {filtered.map((r) => (
                 <tr key={r.id} className="hover:bg-slate-50">
                   <td className="px-4 py-2.5 font-mono font-semibold text-[var(--brand-blue)]">{r.member_id}</td>
-                  <td className="px-4 py-2.5">{r.last_name}</td>
-                  <td className="px-4 py-2.5">{r.first_name}</td>
+                  {r.first_name || r.last_name ? (
+                    <>
+                      <td className="px-4 py-2.5">{r.last_name}</td>
+                      <td className="px-4 py-2.5">{r.first_name}</td>
+                    </>
+                  ) : (
+                    // Email confirmed with a code, registration form not filled in yet.
+                    <td colSpan={2} className="px-4 py-2.5 text-xs font-semibold text-amber-700">
+                      {t("Бүртгэлээ бөглөж дуусаагүй", "Registration form not completed")}
+                    </td>
+                  )}
                   <td className="max-w-[260px] truncate px-4 py-2.5 text-slate-600">{r.workplace}</td>
                   <td className="px-4 py-2.5 text-slate-600">{r.phone}</td>
                   <td className="px-4 py-2.5">

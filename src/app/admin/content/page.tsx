@@ -28,7 +28,11 @@ export default function AdminContentPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
-  const [section, setSection] = useState<Section>("axis");
+  // ?section=legal (from the admin home's "drafts waiting" link) opens that tab.
+  const [section, setSection] = useState<Section>(() => {
+    const s = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("section");
+    return SECTIONS.some((x) => x.value === s) ? (s as Section) : "axis";
+  });
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");

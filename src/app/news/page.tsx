@@ -13,6 +13,8 @@ import PdfAttachments from "@/components/PdfAttachments";
 
 const PAGE_SIZE = 9;
 
+type SectorItem = { id: number; url: string; title: string; source: string; published_at: string | null; hidden: boolean };
+
 const CATEGORIES = [
   { key: "news", mn: "Мэдээ", en: "News" },
   { key: "partner", mn: "Түншлэл, сургалт", en: "Partnerships & training" },
@@ -46,14 +48,29 @@ function News() {
   const { t } = useLanguage();
   const id = useSearchParams().get("id");
   const [posts, setPosts] = useState<NewsPost[] | null>(null);
+  const [sector, setSector] = useState<SectorItem[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("news")
-        .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
-        .order("created_at", { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      const [{ data }, sectorRes, meRes] = await Promise.all([
+        supabase
+          .from("news")
+          .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("sector_news")
+          .select("id, url, title, source, published_at, hidden")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(80),
+        session
+          ? supabase.from("members").select("is_admin").eq("id", session.user.id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
       setPosts(data ?? []);
+      setSector((sectorRes.data as SectorItem[]) ?? []);
+      setIsAdmin(!!(meRes.data as { is_admin?: boolean } | null)?.is_admin);
     })();
   }, []);
 
@@ -68,12 +85,20 @@ function News() {
 
   const open = id ? posts.find((p) => p.id === id) : null;
   if (id && open) return <Article post={open} others={posts.filter((p) => p.id !== open.id).slice(0, 3)} />;
-  return <NewsList posts={posts} notFound={!!id} />;
+  return <NewsList posts={posts} notFound={!!id} sector={sector} setSector={setSector} isAdmin={isAdmin} />;
 }
 
-function NewsList({ posts, notFound }: { posts: NewsPost[]; notFound: boolean }) {
+function NewsList({
+  posts, notFound, sector, setSector, isAdmin,
+}: {
+  posts: NewsPost[];
+  notFound: boolean;
+  sector: SectorItem[];
+  setSector: React.Dispatch<React.SetStateAction<SectorItem[]>>;
+  isAdmin: boolean;
+}) {
   const { t, lang } = useLanguage();
-  const [tab, setTab] = useState<"all" | "news" | "partner">("all");
+  const [tab, setTab] = useState<"all" | "news" | "partner" | "sector">("all");
   const [query, setQuery] = useState("");
   const [shownCount, setShownCount] = useState(PAGE_SIZE);
 
@@ -109,7 +134,11 @@ function NewsList({ posts, notFound }: { posts: NewsPost[]; notFound: boolean })
         {/* Tabs and search */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2">
-            {[{ key: "all" as const, mn: "Бүгд", en: "All" }, ...CATEGORIES].map((c) => (
+            {[
+              { key: "all" as const, mn: "Бүгд", en: "All" },
+              ...CATEGORIES,
+              ...(sector.length > 0 || isAdmin ? [{ key: "sector" as const, mn: "Салбарын мэдээ", en: "Sector news" }] : []),
+            ].map((c) => (
               <button
                 key={c.key}
                 onClick={() => { setTab(c.key); setShownCount(PAGE_SIZE); }}
@@ -119,7 +148,11 @@ function NewsList({ posts, notFound }: { posts: NewsPost[]; notFound: boolean })
               >
                 {t(c.mn, c.en)}{" "}
                 <span className="opacity-70">
-                  {c.key === "all" ? posts.length : posts.filter((p) => p.category === c.key).length}
+                  {c.key === "all"
+                    ? posts.length
+                    : c.key === "sector"
+                      ? sector.filter((x) => !x.hidden).length
+                      : posts.filter((p) => p.category === c.key).length}
                 </span>
               </button>
             ))}
@@ -133,6 +166,10 @@ function NewsList({ posts, notFound }: { posts: NewsPost[]; notFound: boolean })
           />
         </div>
 
+        {tab === "sector" ? (
+          <SectorList items={sector} query={query} isAdmin={isAdmin} setSector={setSector} />
+        ) : (
+        <>
         {filtered.length === 0 && (
           <p className="mt-8 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
             {posts.length === 0 ? t("Одоогоор мэдээ алга.", "No news yet.") : t("Хайлтад тохирох мэдээ олдсонгүй.", "No stories match your search.")}
@@ -185,7 +222,77 @@ function NewsList({ posts, notFound }: { posts: NewsPost[]; notFound: boolean })
             </button>
           </div>
         )}
+        </>
+        )}
       </div>
+    </div>
+  );
+}
+
+// Headlines about health insurance and health workers from other
+// Mongolian sources, collected every 3 hours (sector-news.mjs in the
+// private repo). Only headline, source and date are shown; the link opens
+// the original article. Admins can hide an item.
+function SectorList({
+  items, query, isAdmin, setSector,
+}: {
+  items: SectorItem[];
+  query: string;
+  isAdmin: boolean;
+  setSector: React.Dispatch<React.SetStateAction<SectorItem[]>>;
+}) {
+  const { t, lang } = useLanguage();
+  const q = query.trim().toLowerCase();
+  const shown = items.filter((x) => (isAdmin || !x.hidden) && (!q || `${x.title} ${x.source}`.toLowerCase().includes(q)));
+
+  async function toggleHidden(item: SectorItem) {
+    const { error } = await supabase.from("sector_news").update({ hidden: !item.hidden }).eq("id", item.id);
+    if (!error) setSector((xs) => xs.map((x) => (x.id === item.id ? { ...x, hidden: !item.hidden } : x)));
+  }
+
+  return (
+    <div className="mt-6">
+      <p className="mb-4 text-xs text-slate-500">
+        {t(
+          "Эрүүл мэндийн даатгал, эрүүл мэндийн ажилтан, Эрүүл мэндийн яам, ЭМДЕГ-тай холбоотой бусад эх сурвалжийн мэдээ. 3 цаг тутам автоматаар шинэчлэгддэг; дэлгэрэнгүйг эх сайтаас уншина уу.",
+          "Headlines about health insurance, health workers, the Ministry of Health and the health insurance agency from other sources. Updated automatically every 3 hours; read the full story on the source's site."
+        )}
+      </p>
+      {shown.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+          {t("Одоогоор салбарын мэдээ алга.", "No sector news yet.")}
+        </p>
+      ) : (
+        <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+          {shown.map((x) => (
+            <li key={x.id} className={`flex items-start gap-3 px-5 py-4 ${x.hidden ? "bg-slate-50 opacity-60" : ""}`}>
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-600">{x.source}</span>
+                  {x.published_at && <span className="text-slate-400">{formatDate(x.published_at, lang)}</span>}
+                  {x.hidden && <span className="text-amber-700">{t("Нуугдсан", "Hidden")}</span>}
+                </p>
+                <a
+                  href={x.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 block font-semibold leading-snug text-slate-900 hover:text-[var(--brand-red)]"
+                >
+                  {x.title} <span className="text-slate-400">↗</span>
+                </a>
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={() => toggleHidden(x)}
+                  className="shrink-0 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]"
+                >
+                  {x.hidden ? t("Нээх", "Show") : t("Нуух", "Hide")}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -194,10 +301,24 @@ function Article({ post, others }: { post: NewsPost; others: NewsPost[] }) {
   const { t, lang } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [first, ...morePhotos] = post.image_urls;
+  // Share the story's own share page (with its picture and title for
+  // Facebook) once the site has been rebuilt with it; until then the
+  // plain story link.
+  const [shareUrl, setShareUrl] = useState(`https://mhida.org/news/?id=${post.id}`);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(asset(`/news/p/${post.id}/`), { method: "HEAD" });
+        if (res.ok) setShareUrl(`https://mhida.org/news/p/${post.id}/`);
+      } catch {
+        // Offline: keep the plain story link.
+      }
+    })();
+  }, [post.id]);
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -242,7 +363,7 @@ function Article({ post, others }: { post: NewsPost; others: NewsPost[] }) {
         <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-6 text-sm">
           <span className="font-semibold text-slate-500">{t("Хуваалцах:", "Share:")}</span>
           <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://mhida.org/news/?id=${post.id}`)}`}
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-md bg-[#1877f2] px-4 py-2 font-bold text-white transition-opacity hover:opacity-90"

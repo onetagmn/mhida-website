@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import emailjs from "@emailjs/browser";
 import { useLanguage } from "@/lib/language-context";
 import PageHeader from "@/components/PageHeader";
 import { PROVINCES } from "@/lib/provinces";
 import { supabase } from "@/lib/supabase";
+import { asset } from "@/lib/asset";
 import { useWorkplaceNames } from "@/lib/workplaces";
 import { PAYMENT } from "@/lib/payment";
 import PaymentInfo from "@/components/PaymentInfo";
@@ -58,6 +60,92 @@ export default function RegisterPage() {
   const [yearsSelect, setYearsSelect] = useState("");
   const [consented, setConsented] = useState(false);
   const [wasProfessional, setWasProfessional] = useState(false);
+
+  // Registration starts by confirming the email with a 6-digit code
+  // (Supabase email OTP). The code also logs the person in, so the form
+  // can be filled in now or later: whoever logs in with an unfinished
+  // registration is sent back here (see the dashboard).
+  const [stage, setStage] = useState<"checking" | "email" | "code" | "form" | "already">("checking");
+  const [otpEmail, setOtpEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
+
+  // Signed in: finished members go to "already registered", the rest to the form.
+  const routeSignedIn = useCallback(async (userId: string, email: string) => {
+    const { data: row } = await supabase.from("members").select("first_name, last_name").eq("id", userId).maybeSingle();
+    if (row && (row.first_name || row.last_name)) { setStage("already"); return; }
+    setForm((f) => ({ ...f, email }));
+    setStage("form");
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      if (session?.user) await routeSignedIn(session.user.id, session.user.email ?? "");
+      else setStage("email");
+    })();
+    // Clicking the link in the email (instead of typing the code) signs in here too.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) void routeSignedIn(session.user.id, session.user.email ?? "");
+    });
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, [routeSignedIn]);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
+
+  async function sendCode(ev?: React.FormEvent) {
+    ev?.preventDefault();
+    const email = otpEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setOtpError(t("И-мэйл хаягаа зөв оруулна уу.", "Please enter a valid email address."));
+      return;
+    }
+    setOtpBusy(true);
+    setOtpError(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}${asset("/register/")}` },
+    });
+    setOtpBusy(false);
+    if (error) {
+      setOtpError(
+        /rate limit|too many|security purposes/i.test(error.message)
+          ? t("Түр хүлээгээд дахин оролдоно уу (хэт олон хүсэлт).", "Please wait a moment and try again (too many requests).")
+          : error.message
+      );
+      return;
+    }
+    setOtpEmail(email);
+    setCode("");
+    setStage("code");
+    setResendIn(60);
+  }
+
+  async function verifyCode(ev: React.FormEvent) {
+    ev.preventDefault();
+    const token = code.replace(/\D/g, "");
+    if (token.length < 6) {
+      setOtpError(t("И-мэйлээр ирсэн кодыг бүтнээр нь оруулна уу.", "Enter the full code from the email."));
+      return;
+    }
+    setOtpBusy(true);
+    setOtpError(null);
+    const { data, error } = await supabase.auth.verifyOtp({ email: otpEmail, token, type: "email" });
+    setOtpBusy(false);
+    if (error || !data.user) {
+      setOtpError(t("Код буруу эсвэл хугацаа нь дууссан байна. Дахин илгээгээд оролдоно уу.", "The code is wrong or has expired. Send a new one and try again."));
+      return;
+    }
+    await routeSignedIn(data.user.id, data.user.email ?? otpEmail);
+  }
 
   const set = (key: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -137,39 +225,36 @@ export default function RegisterPage() {
     setSubmitting(true);
     setServerError(null);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email.trim(),
-        password: form.password,
-        options: {
-          data: {
-            last_name: form.lastName.trim(),
-            first_name: form.firstName.trim(),
-            birth_date: form.birthDate,
-            gender: form.gender,
-            province: form.province,
-            workplace: form.workplace.trim(),
-            position: form.position.trim(),
-            years_worked: String(form.yearsWorked).trim(),
-            facebook: form.facebookId.trim(),
-            phone: form.phone.replace(/[\s-]/g, ""),
-            membership: form.membershipType,
-          },
-        },
-      });
-      if (error) throw error;
+      // The account already exists (made when the email code was
+      // confirmed, with an empty member row); fill in the member row and set
+      // the login password. Names in capitals and phone as plain digits, as
+      // the signup trigger does (migration21).
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setStage("email"); throw new Error(t("Эхлээд и-мэйлээ баталгаажуулна уу.", "Please confirm your email first.")); }
+      const { error: rowError } = await supabase
+        .from("members")
+        .update({
+          last_name: form.lastName.trim().toUpperCase(),
+          first_name: form.firstName.trim().toUpperCase(),
+          birth_date: form.birthDate || null,
+          gender: form.gender || null,
+          province: form.province || null,
+          workplace: form.workplace.trim() || null,
+          position: form.position.trim() || null,
+          years_worked: String(form.yearsWorked).trim() || null,
+          facebook: form.facebookId.trim() || null,
+          phone: form.phone.replace(/\D/g, "") || null,
+          upgrade_requested: form.membershipType === "professional",
+        })
+        .eq("id", user.id);
+      if (rowError) throw rowError;
+      const { error: pwError } = await supabase.auth.updateUser({ password: form.password });
+      if (pwError) throw pwError;
 
-      // Fetch the assigned member ID (available when a session exists,
-      // i.e. when email confirmation is disabled in Supabase).
-      if (data.session && data.user) {
-        const { data: row } = await supabase
-          .from("members")
-          .select("member_id")
-          .eq("id", data.user.id)
-          .single();
-        if (row?.member_id) {
-          setMemberId(row.member_id);
-          void sendWelcomeEmail(row.member_id);
-        }
+      const { data: row } = await supabase.from("members").select("member_id").eq("id", user.id).single();
+      if (row?.member_id) {
+        setMemberId(row.member_id);
+        void sendWelcomeEmail(row.member_id);
       }
       setWasProfessional(form.membershipType === "professional");
       setSubmitted(true);
@@ -255,14 +340,102 @@ export default function RegisterPage() {
     );
   }
 
+  if (stage !== "form") {
+    const box = "mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm";
+    const field = "w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-[var(--brand-blue)]";
+    const button = "mt-4 w-full rounded-md bg-[var(--brand-red)] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40";
+    return (
+      <div>
+        <PageHeader
+          eyebrow={t("Бүртгэл", "Registration")}
+          title={t("Гишүүнээр элсэх", "Become a Member")}
+          subtitle={t(
+            "Эхлээд и-мэйлээ 6 оронтой кодоор баталгаажуулна, дараа нь бүртгэлийн маягтаа бөглөнө.",
+            "First confirm your email with a 6-digit code, then fill in the registration form."
+          )}
+        />
+        <div className="container-page py-8 sm:py-10">
+          {stage === "checking" && <p className="py-12 text-center text-slate-400">{t("Ачааллаж байна...", "Loading...")}</p>}
+
+          {stage === "already" && (
+            <div className={`${box} text-center`}>
+              <h2 className="text-lg font-bold text-slate-900">{t("Та бүртгэлтэй байна", "You are already registered")}</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                {t("Энэ и-мэйлээр бүртгэл аль хэдийн бүрэн хийгдсэн байна.", "This email already has a complete registration.")}
+              </p>
+              <Link href="/dashboard" className="mt-5 inline-block rounded-md bg-[var(--brand-blue)] px-6 py-2.5 text-sm font-bold text-white hover:opacity-90">
+                {t("Миний булан →", "My dashboard →")}
+              </Link>
+            </div>
+          )}
+
+          {stage === "email" && (
+            <form onSubmit={sendCode} className={box} noValidate>
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand-red)]">{t("Алхам 1 / 3", "Step 1 of 3")}</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-900">{t("И-мэйлээ баталгаажуулах", "Confirm your email")}</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                {t("Таны и-мэйл рүү 6 оронтой код илгээнэ.", "We'll send a 6-digit code to your email.")}
+              </p>
+              <label className="mb-1 mt-5 block text-sm font-semibold text-slate-700" htmlFor="otp-email">{t("И-мэйл", "Email")}</label>
+              <input id="otp-email" type="email" autoComplete="email" className={field} value={otpEmail} onChange={(e) => { setOtpEmail(e.target.value); setOtpError(null); }} />
+              {otpError && <p className="mt-2 text-sm text-red-600">{otpError}</p>}
+              <button type="submit" disabled={otpBusy} className={button}>
+                {otpBusy ? t("Илгээж байна...", "Sending...") : t("Код илгээх", "Send code")}
+              </button>
+              <p className="mt-4 text-center text-xs text-slate-500">
+                {t("Бүртгэлтэй юу?", "Already a member?")}{" "}
+                <Link href="/login" className="font-semibold text-[var(--brand-blue)]">{t("Нэвтрэх", "Log in")}</Link>
+              </p>
+            </form>
+          )}
+
+          {stage === "code" && (
+            <form onSubmit={verifyCode} className={box} noValidate>
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand-red)]">{t("Алхам 2 / 3", "Step 2 of 3")}</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-900">{t("Кодоо оруулна уу", "Enter your code")}</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                {t(
+                  `${otpEmail} хаяг руу код илгээлээ. Ирэхгүй бол Spam хавтсаа шалгана уу. И-мэйл дэх холбоос дээр дарж болно.`,
+                  `We sent a code to ${otpEmail}. Check your Spam folder if it doesn't arrive. You can also click the link in the email.`
+                )}
+              </p>
+              <input
+                id="otp-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={8}
+                placeholder="000000"
+                className={`${field} mt-5 text-center font-mono text-2xl tracking-[0.4em]`}
+                value={code}
+                onChange={(e) => { setCode(e.target.value.replace(/\D/g, "")); setOtpError(null); }}
+              />
+              {otpError && <p className="mt-2 text-sm text-red-600">{otpError}</p>}
+              <button type="submit" disabled={otpBusy} className={button}>
+                {otpBusy ? t("Шалгаж байна...", "Checking...") : t("Баталгаажуулах", "Confirm")}
+              </button>
+              <div className="mt-4 flex items-center justify-between text-xs">
+                <button type="button" onClick={() => { setStage("email"); setOtpError(null); }} className="font-semibold text-slate-500 hover:text-[var(--brand-blue)]">
+                  ← {t("И-мэйл солих", "Change email")}
+                </button>
+                <button type="button" disabled={resendIn > 0 || otpBusy} onClick={() => void sendCode()} className="font-semibold text-[var(--brand-blue)] disabled:text-slate-400">
+                  {resendIn > 0 ? t(`Дахин илгээх (${resendIn})`, `Resend (${resendIn})`) : t("Дахин илгээх", "Resend code")}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
         eyebrow={t("Бүртгэл", "Registration")}
         title={t("Гишүүнээр элсэх", "Become a Member")}
         subtitle={t(
-          "Маягтыг бөглөж илгээснээр та МДЭНХ-ны гишүүнээр бүртгүүлж, нэвтрэх эрхтэй болно.",
-          "Fill in the form to register as an MHIDA member and create your login."
+          "Алхам 3 / 3 — и-мэйл баталгаажлаа. Маягтаа одоо эсвэл дараа нэвтэрч бөглөж болно.",
+          "Step 3 of 3 — your email is confirmed. Fill in the form now, or log in later to finish."
         )}
       />
 
@@ -414,7 +587,8 @@ export default function RegisterPage() {
                   <label className={label} htmlFor="email">
                     {t("И-мэйл", "Email")} *
                   </label>
-                  <input id="email" type="email" className={inputClass("email")} value={form.email} onChange={set("email")} />
+                  <input id="email" type="email" readOnly className={`${inputClass("email")} bg-slate-50 text-slate-600`} value={form.email} />
+                  <p className="mt-1 text-xs font-semibold text-green-700">{t("Баталгаажсан ✓", "Confirmed ✓")}</p>
                   {err("email")}
                 </div>
                 <div>

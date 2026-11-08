@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Rebuild every 6 hours so new news stories get their share page
+  # (/news/p/<id>/ with the story's picture and title for Facebook).
+  schedule:
+    - cron: '41 */6 * * *'
   workflow_dispatch:
 
 permissions:

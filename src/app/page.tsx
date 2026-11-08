@@ -14,6 +14,10 @@ import { PROVINCES, mergeFacilityStats } from "@/lib/provinces";
 import PartnerLogos from "@/components/PartnerLogos";
 import HeartbeatLine from "@/components/HeartbeatLine";
 import { ProvinceTip, useProvinceTip } from "@/components/ProvinceTip";
+import LegalIcon from "@/components/LegalIcon";
+import { shelfOf } from "@/lib/legal";
+
+type LegalDoc = { id: string; title: string; category: string | null; doc_no: string | null; doc_year: number | null };
 import { useInView } from "@/lib/use-in-view";
 
 const Mongolia = dynamic(() => import("@react-map/mongolia"), { ssr: false });
@@ -49,13 +53,13 @@ const quickActions: {
     noteEn: "Download template (PPTX)",
   },
   {
-    kind: "external",
-    href: "https://app.jotform.com/233173421900446?utm_source=copy-link&utm_medium=website&utm_campaign=portal-app&utm_term=233173421900446",
-    mn: "Гар утасны апп",
-    en: "Mobile App",
+    kind: "internal",
+    href: "/legal",
+    mn: "Хууль, эрх зүй",
+    en: "Legal Acts",
     live: true,
-    noteMn: "Jotform апп нээх / татах",
-    noteEn: "Open / install Jotform app",
+    noteMn: "Хууль, тогтоол, тушаал",
+    noteEn: "Laws, resolutions, orders",
   },
 ];
 
@@ -75,12 +79,14 @@ export default function Home() {
   const [mapStats, setMapStats] = useState<FacilityStat[]>([]);
   const [mapStatsLoaded, setMapStatsLoaded] = useState(false);
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
+  const [legalNew, setLegalNew] = useState<LegalDoc[]>([]);
   const [mapSize, setMapSize] = useState(640);
 
-  // Fetch latest news, partner posts, map stats, and course progress.
+  // Fetch latest news, partner posts, map stats, course progress and the
+  // newest legal acts.
   useEffect(() => {
     (async () => {
-      const [newsRes, partnerRes, statsRes, courseRes] = await Promise.all([
+      const [newsRes, partnerRes, statsRes, courseRes, legalRes] = await Promise.all([
         supabase
           .from("news")
           .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
@@ -95,7 +101,15 @@ export default function Home() {
           .limit(4),
         supabase.rpc("facility_stats"),
         supabase.rpc("course_progress_stats").maybeSingle(),
+        supabase
+          .from("content_items")
+          .select("*")
+          .eq("section", "legal")
+          .order("doc_year", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })
+          .limit(3),
       ]);
+      setLegalNew((legalRes.data as LegalDoc[]) ?? []);
       setLatest(newsRes.data ?? []);
       setPartner(partnerRes.data ?? []);
       setMapStats(mergeFacilityStats((statsRes.data as FacilityStat[]) ?? []));
@@ -402,6 +416,44 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Newest legal acts (from the Legal Acts page) */}
+      {legalNew.length > 0 && (
+        <section className="container-page py-10">
+          <div className="reveal mb-5 flex items-end justify-between">
+            <h2 className="text-2xl font-bold text-slate-900">{t("Эрх зүйн шинэ актууд", "Latest Legal Acts")}</h2>
+            <Link href="/legal" className="text-sm font-semibold text-[var(--brand-red)] hover:opacity-80">
+              {t("Бүх акт →", "All acts →")}
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {legalNew.map((d) => {
+              const s = shelfOf(d.category);
+              return (
+                <Link
+                  key={d.id}
+                  href="/legal"
+                  className="reveal group flex gap-4 rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                    <LegalIcon name={s.key} className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-bold text-slate-500">
+                      {t(s.mn, s.en)}
+                      {d.doc_no ? ` · №${d.doc_no}` : ""}
+                      {d.doc_year ? ` · ${d.doc_year}` : ""}
+                    </span>
+                    <span className="mt-1 line-clamp-3 block font-bold leading-snug text-slate-900 group-hover:text-[var(--brand-red)]">
+                      {d.title}
+                    </span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Quick actions */}
       <section className="border-y border-slate-200 bg-slate-50 py-10">
