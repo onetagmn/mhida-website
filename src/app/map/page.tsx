@@ -33,7 +33,11 @@ export default function MapPage() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, FacilityMember[]>>({});
-  const [mapSize, setMapSize] = useState(760);
+  // Start at the screen's width (the page column), so the map never draws
+  // at desktop width on a phone before its box has been measured.
+  const [mapSize, setMapSize] = useState(() =>
+    typeof window === "undefined" ? 760 : Math.min(1120, document.documentElement.clientWidth - 32)
+  );
   const mapBox = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
 
@@ -167,6 +171,7 @@ export default function MapPage() {
         <div>
           <div
             ref={mapBox}
+            className="overflow-hidden"
             onMouseMove={mapTip.onMouseMove}
             onMouseLeave={mapTip.onMouseLeave}
           >
@@ -336,8 +341,8 @@ export default function MapPage() {
               </summary>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {unknownList.map((f) => (
-                  <div key={f.workplace} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                    <span className="truncate">{f.workplace}</span>
+                  <div key={f.workplace} className="flex min-w-0 items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                    <span className="min-w-0 truncate">{f.workplace}</span>
                     <span className="ml-2 shrink-0 text-xs font-bold text-slate-400">{f.member_count}</span>
                   </div>
                 ))}
