@@ -30,7 +30,7 @@ export default function PartnerLogos() {
   if (links.length === 0) return null;
 
   return (
-    <section className="border-t border-slate-200 bg-white py-8">
+    <section className="bg-white py-6">
       <div className="container-page">
         <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-slate-400">
           {t("Холбоос ба түншүүд", "Links & Partners")}

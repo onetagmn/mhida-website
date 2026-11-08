@@ -207,9 +207,9 @@ export default function Home() {
       {/* Hero — with a heartbeat pulse running along a faint ECG line
           behind it (HeartbeatLine), slowly turning from red to blue and
           back, and the logo gently breathing. */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-blue-50 via-white to-white">
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 via-white to-white">
         <HeartbeatLine className="absolute inset-x-0 bottom-1 h-16 w-full sm:bottom-2 sm:h-20" />
-        <div className="container-page relative grid items-center gap-8 py-10 sm:py-14 md:grid-cols-2">
+        <div className="container-page relative grid items-center gap-8 pb-8 pt-8 sm:pb-10 sm:pt-12 md:grid-cols-2">
           <div>
             <h1 className="hero-rise text-3xl font-extrabold leading-tight text-[var(--brand-blue)] sm:text-4xl md:text-5xl">
               {t(
@@ -255,9 +255,9 @@ export default function Home() {
 
       {/* Latest news (from the live database) */}
       {(latest.length > 0 || courseStats || mapStatsLoaded) && (
-        <section className="border-b border-slate-200 bg-white">
-          <div className="container-page py-10">
-            <div className="reveal mb-5 flex items-end justify-between">
+        <section className="bg-white">
+          <div className="container-page py-6">
+            <div className="reveal mb-4 flex items-end justify-between">
               <h2 className="text-2xl font-bold text-slate-900">{t("Сүүлийн мэдээ", "Latest News")}</h2>
               <Link href="/news" className="text-sm font-semibold text-[var(--brand-red)] hover:opacity-80">
                 {t("Бүх мэдээ →", "All news →")}
@@ -457,8 +457,8 @@ export default function Home() {
       )}
 
       {/* Partnership / News */}
-      <section className="container-page py-10">
-        <h2 className="reveal mb-5 text-2xl font-bold text-slate-900">
+      <section className="container-page py-6">
+        <h2 className="reveal mb-4 text-2xl font-bold text-slate-900">
           {t("Түншлэл ба мэдээ", "Partnership & News")}
         </h2>
 
@@ -508,8 +508,8 @@ export default function Home() {
 
       {/* Newest legal acts (from the Legal Acts page) */}
       {legalNew.length > 0 && (
-        <section className="container-page py-10">
-          <div className="reveal mb-5 flex items-end justify-between">
+        <section className="container-page py-6">
+          <div className="reveal mb-4 flex items-end justify-between">
             <h2 className="text-2xl font-bold text-slate-900">{t("Эрх зүйн шинэ актууд", "Latest Legal Acts")}</h2>
             <Link href="/legal" className="text-sm font-semibold text-[var(--brand-red)] hover:opacity-80">
               {t("Бүх акт →", "All acts →")}
@@ -545,9 +545,9 @@ export default function Home() {
       )}
 
       {/* Quick actions */}
-      <section className="border-y border-slate-200 bg-slate-50 py-10">
+      <section className="border-y border-slate-200 bg-slate-50 py-6">
         <div className="container-page">
-          <h2 className="reveal mb-5 text-2xl font-bold text-slate-900">
+          <h2 className="reveal mb-4 text-2xl font-bold text-slate-900">
             {t("Түргэн холбоос", "Quick Actions")}
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -609,8 +609,8 @@ export default function Home() {
       </section>
 
       {/* Member map — live preview, click anywhere to open the full page */}
-      <section className="container-page py-10">
-        <h2 className="reveal mb-5 text-2xl font-bold text-slate-900">
+      <section className="container-page py-6">
+        <h2 className="reveal mb-4 text-2xl font-bold text-slate-900">
           {t("Гишүүдийн газрын зураг", "Member Map")}
         </h2>
         {/* Provinces with members colour in one after another, west to
