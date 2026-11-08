@@ -371,23 +371,9 @@ export default function Home() {
                       </div>
                     </div>
                     {growth && (
-                      <div className="mt-4 border-t border-blue-100 pt-3">
-                        <div className="grid grid-cols-2 gap-2 text-center">
-                          {[
-                            { value: growth.last_30_days, mn: "30 хоногт шинэ", en: "New, 30 days" },
-                            { value: growth.last_6_months, mn: "6 сард шинэ", en: "New, 6 months" },
-                          ].map((x) => (
-                            <div key={x.en} className="rounded-lg bg-white/80 px-1 py-2 ring-1 ring-blue-100">
-                              <span className="block text-[15px] font-extrabold leading-none text-[var(--brand-red)]">+<CountUp value={x.value} /></span>
-                              <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t(x.mn, x.en)}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <MonthBars months={growth.months} counts={growth.per_month} label={t("Сар бүрийн шинэ гишүүд", "New members by month")} />
-                        <p className="mt-2 flex items-center justify-between text-[11.5px]">
-                          <span className="text-slate-500">{t("Мэргэжлийн гишүүн", "Professional members")}</span>
-                          <span className="font-extrabold text-slate-900"><CountUp value={growth.professional} /></span>
-                        </p>
+                      <div className="mt-4 rounded-lg bg-white/80 px-1 py-2 text-center ring-1 ring-blue-100">
+                        <span className="block text-[15px] font-extrabold leading-none text-[var(--brand-red)]">+<CountUp value={growth.last_30_days} /></span>
+                        <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t("30 хоногт шинэ", "New, 30 days")}</span>
                       </div>
                     )}
                   </div>
@@ -716,37 +702,6 @@ function CourseStatsBlock({ stats, color }: { stats: CourseStats; color?: string
           <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trophy" /> {t("Төгссөн", "Finished")}</span>
           <span className="font-extrabold text-slate-900"><CountUp value={stats.completed_members} /></span>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// New members per month (last 6 months) as small bars; the current month
-// in red. Heights are relative to the busiest month.
-function MonthBars({ months, counts, label }: { months: string[]; counts: number[]; label: string }) {
-  const max = Math.max(1, ...counts);
-  return (
-    <div className="mt-3">
-      <span className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">{label}</span>
-      <div className="mt-1.5 flex h-14 items-end gap-1.5">
-        {counts.map((n, i) => (
-          <div key={months[i]} className="flex flex-1 flex-col items-center justify-end gap-0.5">
-            <span className="text-[9.5px] font-bold text-slate-600">{n}</span>
-            <span
-              className="w-full rounded-t-sm"
-              style={{
-                height: `${Math.max(3, Math.round((n / max) * 34))}px`,
-                background: i === counts.length - 1 ? "var(--brand-red)" : "var(--brand-blue)",
-                opacity: i === counts.length - 1 ? 1 : 0.75,
-              }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="mt-1 flex gap-1.5">
-        {months.map((m) => (
-          <span key={m} className="flex-1 text-center text-[9.5px] font-semibold text-slate-400">{Number(m.slice(5, 7))}</span>
-        ))}
       </div>
     </div>
   );
