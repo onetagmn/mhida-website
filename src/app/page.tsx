@@ -29,6 +29,7 @@ const SECTOR_TOPICS = [
   { key: "finance", mn: "Санхүүжилт, төсөв", en: "Funding & budget", re: /төсөв|санхүүжилт|тэрбум/iu },
 ];
 type SectorHeadline = { title: string; source: string; published_at: string | null };
+type MemberGrowth = { last_30_days: number; last_6_months: number; professional: number; months: string[]; per_month: number[] };
 type SectorSummary = {
   total: number;
   lastWeek: number;
@@ -97,6 +98,8 @@ export default function Home() {
   const [mapStats, setMapStats] = useState<FacilityStat[]>([]);
   const [mapStatsLoaded, setMapStatsLoaded] = useState(false);
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
+  const [courseStats2, setCourseStats2] = useState<CourseStats | null>(null);
+  const [growth, setGrowth] = useState<MemberGrowth | null>(null);
   const [legalNew, setLegalNew] = useState<LegalDoc[]>([]);
   const [sectorSummary, setSectorSummary] = useState<SectorSummary | null>(null);
   const [mapSize, setMapSize] = useState(640);
@@ -105,7 +108,7 @@ export default function Home() {
   // newest legal acts.
   useEffect(() => {
     (async () => {
-      const [newsRes, partnerRes, statsRes, courseRes, legalRes, sectorRes] = await Promise.all([
+      const [newsRes, partnerRes, statsRes, courseRes, legalRes, sectorRes, course2Res, growthRes] = await Promise.all([
         supabase
           .from("news")
           .select("id, title, body, image_urls, pdf_urls, category, published, created_at")
@@ -132,7 +135,11 @@ export default function Home() {
           .select("title, source, published_at")
           .order("published_at", { ascending: false, nullsFirst: false })
           .limit(500),
+        supabase.rpc("course_progress_stats", { p_course: "b1b2" }).maybeSingle(),
+        supabase.rpc("member_growth_stats").maybeSingle(),
       ]);
+      setCourseStats2((course2Res.data as CourseStats) ?? null);
+      setGrowth((growthRes.data as MemberGrowth) ?? null);
       setLegalNew((legalRes.data as LegalDoc[]) ?? []);
       const sectorRows = (sectorRes.data as SectorHeadline[]) ?? [];
       if (sectorRows.length > 0) {
@@ -363,6 +370,26 @@ export default function Home() {
                         </span>
                       </div>
                     </div>
+                    {growth && (
+                      <div className="mt-4 border-t border-blue-100 pt-3">
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          {[
+                            { value: growth.last_30_days, mn: "30 хоногт шинэ", en: "New, 30 days" },
+                            { value: growth.last_6_months, mn: "6 сард шинэ", en: "New, 6 months" },
+                          ].map((x) => (
+                            <div key={x.en} className="rounded-lg bg-white/80 px-1 py-2 ring-1 ring-blue-100">
+                              <span className="block text-[15px] font-extrabold leading-none text-[var(--brand-red)]">+<CountUp value={x.value} /></span>
+                              <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500">{t(x.mn, x.en)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <MonthBars months={growth.months} counts={growth.per_month} label={t("Сар бүрийн шинэ гишүүд", "New members by month")} />
+                        <p className="mt-2 flex items-center justify-between text-[11.5px]">
+                          <span className="text-slate-500">{t("Мэргэжлийн гишүүн", "Professional members")}</span>
+                          <span className="font-extrabold text-slate-900"><CountUp value={growth.professional} /></span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
                     <span>{t("Газрын зураг харах", "View the map")}</span>
@@ -371,9 +398,6 @@ export default function Home() {
                 </Link>
               )}
               {courseStats && (() => {
-                const pct = courseStats.total_lessons > 0
-                  ? Math.min(100, Math.round((courseStats.avg_completed / courseStats.total_lessons) * 100))
-                  : 0;
                 return (
                   <Link
                     href="/trainings/english-progress"
@@ -388,25 +412,18 @@ export default function Home() {
                       <h3 className="mb-3 font-extrabold text-slate-900 group-hover:text-[var(--brand-red)]">
                         {t("Гишүүдийн явц бодит цагаар", "Live member progress")}
                       </h3>
-                      <div className="flex items-center gap-4">
-                        <CourseRing pct={pct} avgLabel={t("ДУНДАЖ", "AVG")} />
-                        <div className="flex flex-1 flex-col gap-1.5 text-[12.5px]">
-                          <div className="flex items-center justify-between">
-                            <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="people" /> {t("Элссэн гишүүд", "Enrolled")}</span>
-                            <span className="font-extrabold text-slate-900"><CountUp value={courseStats.enrolled_members} /></span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trend" /> {t("Дундаж өдөр", "Average day")}</span>
-                            <span className="font-extrabold text-slate-900">
-                              {courseStats.avg_completed}/{courseStats.total_lessons}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trophy" /> {t("Төгссөн", "Finished")}</span>
-                            <span className="font-extrabold text-slate-900"><CountUp value={courseStats.completed_members} /></span>
-                          </div>
+                      <p className="mb-2 text-[10px] font-extrabold uppercase tracking-wide text-slate-400">
+                        {t("1-р шат · A1–B1", "Level 1 · A1–B1")}
+                      </p>
+                      <CourseStatsBlock stats={courseStats} />
+                      {courseStats2 && (
+                        <div className="mt-4 border-t border-blue-100 pt-3">
+                          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-wide text-slate-400">
+                            {t("2-р шат · B1–B2", "Level 2 · B1–B2")}
+                          </p>
+                          <CourseStatsBlock stats={courseStats2} color="var(--brand-red)" />
                         </div>
-                      </div>
+                      )}
                     </div>
                     <div className="mt-4 flex items-center justify-between rounded-lg bg-[var(--brand-blue)] px-3 py-2.5 text-[12.5px] font-bold text-white">
                       <span>{t("Дэлгэрэнгүй хүснэгт харах", "View full table")}</span>
@@ -678,9 +695,66 @@ function CountUp({ value }: { value: number }) {
   return <span ref={ref}>{shown}</span>;
 }
 
+// One level of the English course on the home page card: average-progress
+// ring plus enrolled / average day / finished.
+function CourseStatsBlock({ stats, color }: { stats: CourseStats; color?: string }) {
+  const { t } = useLanguage();
+  const pct = stats.total_lessons > 0 ? Math.min(100, Math.round((stats.avg_completed / stats.total_lessons) * 100)) : 0;
+  return (
+    <div className="flex items-center gap-4">
+      <CourseRing pct={pct} avgLabel={t("ДУНДАЖ", "AVG")} color={color} />
+      <div className="flex flex-1 flex-col gap-1.5 text-[12.5px]">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="people" /> {t("Элссэн гишүүд", "Enrolled")}</span>
+          <span className="font-extrabold text-slate-900"><CountUp value={stats.enrolled_members} /></span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trend" /> {t("Дундаж өдөр", "Average day")}</span>
+          <span className="font-extrabold text-slate-900">{stats.avg_completed}/{stats.total_lessons}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-slate-500"><StatIcon name="trophy" /> {t("Төгссөн", "Finished")}</span>
+          <span className="font-extrabold text-slate-900"><CountUp value={stats.completed_members} /></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// New members per month (last 6 months) as small bars; the current month
+// in red. Heights are relative to the busiest month.
+function MonthBars({ months, counts, label }: { months: string[]; counts: number[]; label: string }) {
+  const max = Math.max(1, ...counts);
+  return (
+    <div className="mt-3">
+      <span className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">{label}</span>
+      <div className="mt-1.5 flex h-14 items-end gap-1.5">
+        {counts.map((n, i) => (
+          <div key={months[i]} className="flex flex-1 flex-col items-center justify-end gap-0.5">
+            <span className="text-[9.5px] font-bold text-slate-600">{n}</span>
+            <span
+              className="w-full rounded-t-sm"
+              style={{
+                height: `${Math.max(3, Math.round((n / max) * 34))}px`,
+                background: i === counts.length - 1 ? "var(--brand-red)" : "var(--brand-blue)",
+                opacity: i === counts.length - 1 ? 1 : 0.75,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex gap-1.5">
+        {months.map((m) => (
+          <span key={m} className="flex-1 text-center text-[9.5px] font-semibold text-slate-400">{Number(m.slice(5, 7))}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // The English course's average-progress ring; it fills from empty and
 // the percentage counts up when the card scrolls into view.
-function CourseRing({ pct, avgLabel }: { pct: number; avgLabel: string }) {
+function CourseRing({ pct, avgLabel, color = "var(--brand-blue)" }: { pct: number; avgLabel: string; color?: string }) {
   const [ref, seen] = useInView<HTMLDivElement>();
   const r = 32;
   const c = 2 * Math.PI * r;
@@ -689,7 +763,7 @@ function CourseRing({ pct, avgLabel }: { pct: number; avgLabel: string }) {
       <svg width="76" height="76" viewBox="0 0 76 76" className="-rotate-90">
         <circle cx="38" cy="38" r={r} fill="none" stroke="#dbe9f5" strokeWidth="8" />
         <circle
-          cx="38" cy="38" r={r} fill="none" stroke="var(--brand-blue)" strokeWidth="8"
+          cx="38" cy="38" r={r} fill="none" stroke={color} strokeWidth="8"
           strokeLinecap="round" strokeDasharray={c} strokeDashoffset={seen ? c * (1 - pct / 100) : c}
           className="ring-fill"
         />
